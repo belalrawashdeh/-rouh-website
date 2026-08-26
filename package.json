@@ -1,0 +1,22 @@
+{
+  "name": "rouh-website",
+  "version": "1.0.0",
+  "description": "موقع عربي RTL قابل للإدارة بالكامل، يعمل بدون أي مكتبات خارجية باستخدام Node.js 22+ وSQLite المدمج.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/belalrawashdeh/-rouh-website.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/belalrawashdeh/-rouh-website/issues"
+  },
+  "homepage": "https://github.com/belalrawashdeh/-rouh-website#readme"
+}
