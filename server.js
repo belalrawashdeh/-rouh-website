@@ -314,4 +314,4 @@ const server=http.createServer(async (req,res)=>{
   if(!serveStatic(req,res)) send(res,404,'Not found','text/plain');
  } catch(e){ console.error(e); if(!res.headersSent) send(res,500,{error:'حدث خطأ داخلي'}); }
 });
-server.listen(PORT,()=>console.log(`Rouh website: http://localhost:${PORT}`));
+server.listen(PORT,'0.0.0.0',()=>console.log(`Rouh website: http://localhost:${PORT}`));
