@@ -12,3 +12,49 @@ async function load(){const d=await fetch('/api/public').then(r=>r.json());const
  if(s.stats_visible==='1'){ $('#statsSection').classList.remove('hidden');$('#sVolunteers').textContent='+'+d.stats.volunteers;$('#sEvents').textContent='+'+d.stats.events;$('#sHours').textContent='+'+d.stats.hours;$('#sBeneficiaries').textContent='+'+d.stats.beneficiaries; }
 }
 load().catch(console.error);
+
+const ideaForm=document.getElementById('ideaForm');
+
+if(ideaForm){
+ ideaForm.addEventListener('submit',async e=>{
+  e.preventDefault();
+
+  const msg=document.getElementById('ideaMessage');
+  const btn=ideaForm.querySelector('button[type="submit"]');
+
+  const data={
+   name:document.getElementById('ideaName').value.trim(),
+   contact:document.getElementById('ideaContact').value.trim(),
+   title:document.getElementById('ideaTitle').value.trim(),
+   category:document.getElementById('ideaCategory').value,
+   description:document.getElementById('ideaDescription').value.trim(),
+   problem:document.getElementById('ideaProblem').value.trim(),
+   expected_impact:document.getElementById('ideaImpact').value.trim()
+  };
+
+  try{
+   btn.disabled=true;
+   btn.textContent='جارٍ إرسال الفكرة...';
+   msg.textContent='';
+
+   const r=await fetch('/api/ideas',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(data)
+   });
+
+   const result=await r.json();
+
+   if(!r.ok) throw new Error(result.error||'تعذر إرسال الفكرة');
+
+   msg.textContent='✅ تم استلام فكرتك بنجاح، شكرًا لمساهمتك في صناعة الأثر.';
+   ideaForm.reset();
+
+  }catch(err){
+   msg.textContent='❌ '+err.message;
+  }finally{
+   btn.disabled=false;
+   btn.textContent='شارك فكرتك';
+  }
+ });
+}

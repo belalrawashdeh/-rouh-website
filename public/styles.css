@@ -2,3 +2,75 @@
 /* admin */.adminBody{background:#f4f1ec}.adminShell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}.sidebar{background:#223340;color:white;padding:26px;position:sticky;top:0;height:100vh}.sidebar .brand{margin-bottom:30px}.menu button{display:block;width:100%;text-align:right;background:transparent;color:#dce4e7;border:0;padding:12px 14px;border-radius:12px;cursor:pointer;margin:4px 0}.menu button:hover,.menu button.active{background:rgba(255,255,255,.10);color:white}.adminMain{padding:34px}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}.panel{background:white;border:1px solid var(--line);border-radius:22px;padding:24px;margin-bottom:22px}.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.full{grid-column:1/-1}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field input,.field textarea,.field select{width:100%;padding:12px 14px;border:1px solid #d9d5ce;border-radius:12px;background:#fff}.field textarea{min-height:120px;resize:vertical}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}.thumb{width:70px;height:50px;object-fit:cover;border-radius:9px}.rowActions{display:flex;gap:7px;flex-wrap:wrap}.small{padding:7px 11px;font-size:12px}.notice{padding:12px 16px;border-radius:12px;background:#edf3ec;margin-bottom:14px}.error{background:#f7e8e8;color:#7b3030}.hidden{display:none!important}.loginWrap{min-height:100vh;display:grid;place-items:center;background:linear-gradient(rgba(251,247,242,.85),rgba(251,247,242,.92)),url('/assets/rouh-cover.jpeg') center/cover}.loginCard{width:min(460px,92%);background:white;border-radius:28px;padding:34px;box-shadow:var(--shadow)}.loginCard h1{margin-top:0}.imagePreview{width:140px;height:90px;object-fit:cover;border-radius:12px;border:1px solid var(--line);margin-top:8px}.hamb{display:none}
 @media(max-width:900px){.links{display:none}.hamb{display:inline-flex}.grid3,.grid4,.stats,.split,.footerGrid{grid-template-columns:1fr 1fr}.hero{min-height:600px;background:linear-gradient(rgba(251,247,242,.82),rgba(251,247,242,.88)),url('/assets/rouh-cover.jpeg') center/cover}.adminShell{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.menu{display:flex;flex-wrap:wrap}.menu button{width:auto}.formGrid{grid-template-columns:1fr}.adminMain{padding:18px}}
 @media(max-width:620px){.grid3,.grid4,.stats,.split,.footerGrid{grid-template-columns:1fr}.section{padding:62px 0}.heroContent{padding:60px 0}.hero h1{font-size:58px}.join,.quote{padding:28px}.table{font-size:12px;display:block;overflow:auto}}
+
+/* Rouh Ideas Incubator */
+#ideas .card{
+  max-width:1000px;
+  margin:0 auto;
+  padding:32px;
+}
+
+#ideas form{
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+#ideas .grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+#ideas label{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  font-weight:700;
+  color:var(--ink);
+}
+
+#ideas input,
+#ideas select,
+#ideas textarea{
+  width:100%;
+  box-sizing:border-box;
+  padding:13px 14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fff;
+  font:inherit;
+  color:var(--ink);
+}
+
+#ideas textarea{
+  min-height:120px;
+  resize:vertical;
+}
+
+#ideas input:focus,
+#ideas select:focus,
+#ideas textarea:focus{
+  outline:none;
+  border-color:#748677;
+  box-shadow:0 0 0 3px rgba(116,134,119,.12);
+}
+
+#ideas .actions{
+  margin-top:4px;
+}
+
+#ideaMessage{
+  margin:0;
+  font-weight:700;
+}
+
+@media(max-width:700px){
+  #ideas .grid2{
+    grid-template-columns:1fr;
+  }
+
+  #ideas .card{
+    padding:22px;
+  }
+}

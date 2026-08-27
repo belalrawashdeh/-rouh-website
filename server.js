@@ -83,6 +83,20 @@ CREATE TABLE IF NOT EXISTS stats (
  key TEXT PRIMARY KEY,
  value INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS ideas (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ name TEXT NOT NULL,
+ contact TEXT NOT NULL,
+ title TEXT NOT NULL,
+ category TEXT DEFAULT '',
+ description TEXT NOT NULL,
+ problem TEXT DEFAULT '',
+ expected_impact TEXT DEFAULT '',
+ status TEXT NOT NULL DEFAULT 'new',
+ admin_notes TEXT DEFAULT '',
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS audit_log (
  id INTEGER PRIMARY KEY AUTOINCREMENT,
  user_id INTEGER,
@@ -207,8 +221,61 @@ const server=http.createServer(async (req,res)=>{
   }
   if(pathname==='/api/me' && req.method==='GET'){ const u=currentUser(req); return send(res,200,{user:u?{id:u.id,name:u.name,email:u.email,role:u.role}:null}); }
 
+  if(pathname==='/api/ideas' && req.method==='POST'){
+   const b=await body(req);
+
+   const name=String(b.name||'').trim();
+   const contact=String(b.contact||'').trim();
+   const title=String(b.title||'').trim();
+   const category=String(b.category||'').trim();
+   const description=String(b.description||'').trim();
+   const problem=String(b.problem||'').trim();
+   const expectedImpact=String(b.expected_impact||'').trim();
+
+   if(!name||!contact||!title||!description)
+    return send(res,400,{error:'الاسم ووسيلة التواصل وعنوان الفكرة ووصفها مطلوبة'});
+
+   if(name.length>100||contact.length>150||title.length>150||description.length>3000||problem.length>2000||expectedImpact.length>2000)
+    return send(res,400,{error:'بعض البيانات أطول من الحد المسموح'});
+
+   const r=db.prepare(`INSERT INTO ideas
+    (name,contact,title,category,description,problem,expected_impact)
+    VALUES(?,?,?,?,?,?,?)`)
+    .run(name,contact,title,category,description,problem,expectedImpact);
+
+   return send(res,201,{
+    ok:true,
+    id:r.lastInsertRowid,
+    message:'تم استلام فكرتك بنجاح'
+   });
+  }
+
   if(pathname.startsWith('/api/admin/')){
    const user=requireUser(req,res); if(!user) return;
+   if(pathname==='/api/admin/ideas' && req.method==='GET'){
+    const items=db.prepare('SELECT * FROM ideas ORDER BY id DESC').all();
+    return send(res,200,{items});
+   }
+
+   const ideaMatch=pathname.match(/^\/api\/admin\/ideas\/(\d+)$/);
+   if(ideaMatch && req.method==='PUT'){
+    const id=ideaMatch[1];
+    const b=await body(req);
+
+    const allowed=['new','reviewing','accepted','rejected','implemented'];
+    const status=allowed.includes(b.status)?b.status:'new';
+    const notes=String(b.admin_notes||'').trim();
+
+    const item=db.prepare('SELECT * FROM ideas WHERE id=?').get(id);
+    if(!item) return send(res,404,{error:'الفكرة غير موجودة'});
+
+    db.prepare('UPDATE ideas SET status=?,admin_notes=?,updated_at=CURRENT_TIMESTAMP WHERE id=?')
+      .run(status,notes,id);
+
+    audit(user,'update','idea',id,status);
+    return send(res,200,{ok:true});
+   }
+
    if(pathname==='/api/admin/dashboard' && req.method==='GET'){
     return send(res,200,{counts:{events:db.prepare('SELECT COUNT(*) c FROM events WHERE deleted_at IS NULL').get().c,achievements:db.prepare('SELECT COUNT(*) c FROM achievements WHERE deleted_at IS NULL').get().c,users:db.prepare('SELECT COUNT(*) c FROM users WHERE active=1').get().c,published:db.prepare("SELECT (SELECT COUNT(*) FROM events WHERE status='published' AND deleted_at IS NULL)+(SELECT COUNT(*) FROM achievements WHERE status='published' AND deleted_at IS NULL) c").get().c},audit:db.prepare('SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 15').all()});
    }

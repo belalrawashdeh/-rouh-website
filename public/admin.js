@@ -8,7 +8,7 @@ $('#authForm').onsubmit=async e=>{e.preventDefault();try{if(needsSetup){await ap
 function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${esc(me.role)}</span></p>`;document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;x.classList.toggle('hidden',need==='owner'?me.role!=='owner':!['owner','admin'].includes(me.role))});loadTab('dashboard')}
 $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=null;showAuth()};
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
-async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
+async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
 async function dashboard(){const d=await api('/api/admin/dashboard');content.innerHTML=`<div class="grid grid4"><div class="panel"><b>الفعاليات</b><h2>${d.counts.events}</h2></div><div class="panel"><b>الإنجازات</b><h2>${d.counts.achievements}</h2></div><div class="panel"><b>المسؤولون</b><h2>${d.counts.users}</h2></div><div class="panel"><b>المحتوى المنشور</b><h2>${d.counts.published}</h2></div></div><div class="panel"><h3>آخر التعديلات</h3>${d.audit.map(a=>`<p><b>${esc(a.user_name||'النظام')}</b> — ${esc(a.action)} ${esc(a.entity)} <span class="muted">${esc(a.created_at)}</span></p>`).join('')||'<p class="muted">لا يوجد سجل بعد.</p>'}</div>`}
 const cfg={events:{title:'فعالية',date:'event_date',fields:[['title','اسم الفعالية'],['summary','وصف مختصر'],['description','الوصف الكامل'],['event_date','التاريخ','date'],['event_time','الوقت','time'],['location','المكان'],['registration_url','رابط التسجيل'],['event_state','الحالة الظاهرة']],image:'cover_image'},achievements:{title:'إنجاز',date:'achievement_date',fields:[['title','عنوان الإنجاز'],['summary','وصف مختصر'],['description','الوصف الكامل'],['achievement_date','التاريخ','date'],['volunteers','عدد المتطوعين','number'],['beneficiaries','عدد المستفيدين','number'],['volunteer_hours','الساعات التطوعية','number']],image:'cover_image'}};
 async function listEntities(type){const d=await api('/api/admin/'+type);content.innerHTML=`<div class="panel"><button class="btn green" onclick="entityForm('${type}')">+ إضافة ${cfg[type].title}</button></div><div class="panel"><table class="table"><thead><tr><th>الصورة</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody>${d.items.map(x=>`<tr><td>${x.cover_image?`<img class="thumb" src="${esc(x.cover_image)}">`:''}</td><td>${esc(x.title)}</td><td>${esc(x.status)}</td><td>${esc(x[cfg[type].date])}</td><td><div class="rowActions"><button class="btn light small" onclick='entityForm("${type}",${JSON.stringify(x).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="removeEntity('${type}',${x.id})">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="5">لا يوجد محتوى بعد.</td></tr>'}</tbody></table></div>`}
@@ -25,3 +25,89 @@ async function users(){const d=await api('/api/admin/users');content.innerHTML=`
 window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userForm" class="formGrid"><div class="field"><label>الاسم</label><input name="name" value="${esc(u.name||'')}" required></div>${u.id?'':`<div class="field"><label>البريد</label><input name="email" type="email" required></div><div class="field"><label>كلمة المرور</label><input name="password" type="password" minlength="8" required></div>`}<div class="field"><label>الصلاحية</label><select name="role"><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option><option value="editor" ${u.role==='editor'?'selected':''}>Editor</option></select></div>${u.id?`<div class="field"><label>الحالة</label><select name="active"><option value="1" ${u.active?'selected':''}>فعال</option><option value="0" ${!u.active?'selected':''}>موقوف</option></select></div>`:''}<button class="btn green full">حفظ</button></form></div>`;$('#userForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());if(u.id)o.active=o.active==='1';try{await api('/api/admin/users'+(u.id?'/'+u.id:''),{method:u.id?'PUT':'POST',body:JSON.stringify(o)});flash('تم الحفظ');loadTab('users')}catch(ex){flash(ex.message,true)}}}
 async function audit(){const d=await api('/api/admin/audit');content.innerHTML=`<div class="panel"><table class="table"><tr><th>المسؤول</th><th>الإجراء</th><th>العنصر</th><th>التفاصيل</th><th>الوقت</th></tr>${d.items.map(a=>`<tr><td>${esc(a.user_name||'النظام')}</td><td>${esc(a.action)}</td><td>${esc(a.entity)} ${esc(a.entity_id)}</td><td>${esc(a.details)}</td><td>${esc(a.created_at)}</td></tr>`).join('')}</table></div>`}
 init().catch(e=>console.error(e));
+
+async function ideas(){
+ const d=await api('/api/admin/ideas');
+ const statusLabel={
+  new:'جديدة',
+  reviewing:'قيد الدراسة',
+  accepted:'مقبولة',
+  rejected:'مرفوضة',
+  implemented:'تم تنفيذها'
+ };
+
+ content.innerHTML=d.items.length?d.items.map(x=>`
+  <div class="panel">
+   <div class="topbar">
+    <div>
+     <h3>${esc(x.title)}</h3>
+     <div class="muted">${esc(x.created_at)}</div>
+    </div>
+    <span class="badge">${esc(statusLabel[x.status]||x.status)}</span>
+   </div>
+
+   <div class="formGrid">
+    <div class="field">
+     <label>الاسم</label>
+     <input value="${esc(x.name)}" disabled>
+    </div>
+
+    <div class="field">
+     <label>وسيلة التواصل</label>
+     <input value="${esc(x.contact)}" disabled>
+    </div>
+
+    <div class="field">
+     <label>المجال</label>
+     <input value="${esc(x.category||'غير محدد')}" disabled>
+    </div>
+
+    <div class="field">
+     <label>الحالة</label>
+     <select id="ideaStatus${x.id}">
+      ${Object.entries(statusLabel).map(([k,v])=>`<option value="${k}" ${x.status===k?'selected':''}>${v}</option>`).join('')}
+     </select>
+    </div>
+
+    <div class="field full">
+     <label>وصف الفكرة</label>
+     <textarea disabled>${esc(x.description)}</textarea>
+    </div>
+
+    <div class="field full">
+     <label>المشكلة التي تحاول الفكرة حلها</label>
+     <textarea disabled>${esc(x.problem||'')}</textarea>
+    </div>
+
+    <div class="field full">
+     <label>الأثر المتوقع</label>
+     <textarea disabled>${esc(x.expected_impact||'')}</textarea>
+    </div>
+
+    <div class="field full">
+     <label>ملاحظات الإدارة</label>
+     <textarea id="ideaNotes${x.id}">${esc(x.admin_notes||'')}</textarea>
+    </div>
+
+    <button class="btn green full" onclick="saveIdea(${x.id})">حفظ التحديث</button>
+   </div>
+  </div>
+ `).join(''):'<div class="panel"><p class="muted">لا توجد أفكار مرسلة حتى الآن.</p></div>';
+}
+
+async function saveIdea(id){
+ try{
+  const status=document.getElementById('ideaStatus'+id).value;
+  const admin_notes=document.getElementById('ideaNotes'+id).value;
+
+  await api('/api/admin/ideas/'+id,{
+   method:'PUT',
+   body:JSON.stringify({status,admin_notes})
+  });
+
+  flash('تم تحديث حالة الفكرة');
+  ideas();
+ }catch(e){
+  flash(e.message,true);
+ }
+}
