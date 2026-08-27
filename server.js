@@ -24,6 +24,18 @@ CREATE TABLE IF NOT EXISTS users (
  active INTEGER NOT NULL DEFAULT 1,
  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS volunteers (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ application_id INTEGER NOT NULL UNIQUE,
+ name TEXT NOT NULL,
+ email TEXT NOT NULL UNIQUE,
+ phone TEXT NOT NULL,
+ password_hash TEXT NOT NULL,
+ active INTEGER NOT NULL DEFAULT 1,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(application_id) REFERENCES volunteer_applications(id)
+);
+
 CREATE TABLE IF NOT EXISTS sessions (
  token TEXT PRIMARY KEY,
  user_id INTEGER NOT NULL,
@@ -94,6 +106,21 @@ CREATE TABLE IF NOT EXISTS ideas (
  expected_impact TEXT DEFAULT '',
  status TEXT NOT NULL DEFAULT 'new',
  admin_notes TEXT DEFAULT '',
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS volunteer_applications (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ name TEXT NOT NULL,
+ email TEXT NOT NULL UNIQUE,
+ phone TEXT NOT NULL,
+ major TEXT DEFAULT '',
+ level TEXT DEFAULT '',
+ city TEXT DEFAULT '',
+ status TEXT NOT NULL DEFAULT 'pending'
+   CHECK(status IN ('pending','accepted','rejected')),
+ accepted_at TEXT,
+ rejected_at TEXT,
  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -189,7 +216,7 @@ function publicData(){
 }
 function mime(file){ const ext=path.extname(file).toLowerCase(); return ({'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'application/javascript; charset=utf-8','.jpeg':'image/jpeg','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml','.ico':'image/x-icon'}[ext]||'application/octet-stream'); }
 function serveStatic(req,res){
- let url=decodeURIComponent(req.url.split('?')[0]); if(url==='/') url='/index.html'; if(url==='/admin') url='/admin.html';
+ let url=decodeURIComponent(req.url.split('?')[0]); if(url==='/') url='/index.html'; if(url==='/admin') url='/admin.html'; if(url==='/volunteer-register') url='/volunteer-register.html';
  const file=path.normalize(path.join(PUBLIC,url)); if(!file.startsWith(PUBLIC)) return send(res,403,'Forbidden','text/plain');
  if(fs.existsSync(file)&&fs.statSync(file).isFile()){res.writeHead(200,{'Content-Type':mime(file)}); fs.createReadStream(file).pipe(res); return true;} return false;
 }
@@ -220,6 +247,107 @@ const server=http.createServer(async (req,res)=>{
    const token=parseCookies(req).rouh_session; const u=currentUser(req); if(token) db.prepare('DELETE FROM sessions WHERE token=?').run(token); res.setHeader('Set-Cookie','rouh_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'); if(u)audit(u,'logout','session',''); return send(res,200,{ok:true});
   }
   if(pathname==='/api/me' && req.method==='GET'){ const u=currentUser(req); return send(res,200,{user:u?{id:u.id,name:u.name,email:u.email,role:u.role}:null}); }
+
+
+  if(pathname==='/api/volunteer/invite' && req.method==='GET'){
+   const url=new URL(req.url,'http://localhost');
+   const token=String(url.searchParams.get('token')||'').trim();
+
+   if(!token)
+    return send(res,400,{error:'رابط الدعوة غير صحيح'});
+
+   const app=db.prepare(`
+    SELECT id,name,email,phone,status,invite_token
+    FROM volunteer_applications
+    WHERE invite_token=?
+   `).get(token);
+
+   if(!app || app.status!=='accepted')
+    return send(res,404,{error:'رابط الدعوة غير صالح أو لم يعد متاحًا'});
+
+   const existing=db.prepare(
+    'SELECT id FROM volunteers WHERE application_id=?'
+   ).get(app.id);
+
+   if(existing)
+    return send(res,409,{error:'تم إنشاء حساب لهذا المتطوع مسبقًا'});
+
+   return send(res,200,{
+    ok:true,
+    volunteer:{
+     name:app.name,
+     email:app.email
+    }
+   });
+  }
+
+  if(pathname==='/api/volunteer/register' && req.method==='POST'){
+   const b=await body(req);
+
+   const token=String(b.token||'').trim();
+   const password=String(b.password||'');
+
+   if(!token)
+    return send(res,400,{error:'رابط الدعوة غير صحيح'});
+
+   if(password.length<8)
+    return send(res,400,{error:'كلمة المرور يجب أن تكون 8 أحرف على الأقل'});
+
+   const app=db.prepare(`
+    SELECT *
+    FROM volunteer_applications
+    WHERE invite_token=?
+   `).get(token);
+
+   if(!app || app.status!=='accepted')
+    return send(res,404,{error:'رابط الدعوة غير صالح أو لم يعد متاحًا'});
+
+   const existing=db.prepare(
+    'SELECT id FROM volunteers WHERE application_id=? OR email=?'
+   ).get(app.id,String(app.email).toLowerCase());
+
+   if(existing)
+    return send(res,409,{error:'تم إنشاء حساب لهذا المتطوع مسبقًا'});
+
+   try{
+    const result=db.prepare(`
+     INSERT INTO volunteers(
+      application_id,
+      name,
+      email,
+      phone,
+      password_hash
+     )
+     VALUES(?,?,?,?,?)
+    `).run(
+     app.id,
+     app.name,
+     String(app.email).toLowerCase(),
+     app.phone,
+     hashPassword(password)
+    );
+
+    db.prepare(`
+     UPDATE volunteer_applications
+     SET invite_token=NULL,
+         updated_at=CURRENT_TIMESTAMP
+     WHERE id=?
+    `).run(app.id);
+
+    return send(res,201,{
+     ok:true,
+     volunteer:{
+      id:Number(result.lastInsertRowid),
+      name:app.name,
+      email:app.email
+     }
+    });
+
+   }catch(e){
+    console.error(e);
+    return send(res,409,{error:'تعذر إنشاء الحساب'});
+   }
+  }
 
   if(pathname==='/api/ideas' && req.method==='POST'){
    const b=await body(req);
@@ -274,6 +402,80 @@ const server=http.createServer(async (req,res)=>{
 
     audit(user,'update','idea',id,status);
     return send(res,200,{ok:true});
+   }
+
+
+   // Volunteer applications - Owner/Admin only
+   if(pathname==='/api/admin/volunteers' && req.method==='GET'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const items=db.prepare(`
+     SELECT *
+     FROM volunteer_applications
+     ORDER BY
+      CASE status
+       WHEN 'pending' THEN 1
+       WHEN 'accepted' THEN 2
+       WHEN 'rejected' THEN 3
+       ELSE 4
+      END,
+      id DESC
+    `).all();
+
+    return send(res,200,{items});
+   }
+
+   const volunteerMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)$/);
+
+   if(volunteerMatch && req.method==='PUT'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const id=volunteerMatch[1];
+    const b=await body(req);
+
+    if(!['accepted','rejected'].includes(b.status))
+     return send(res,400,{error:'حالة الطلب غير صحيحة'});
+
+    const item=db.prepare(
+     'SELECT * FROM volunteer_applications WHERE id=?'
+    ).get(id);
+
+    if(!item)
+     return send(res,404,{error:'طلب المتطوع غير موجود'});
+
+    if(b.status==='accepted'){
+     const inviteToken=crypto.randomBytes(32).toString('hex');
+
+     db.prepare(`
+      UPDATE volunteer_applications
+      SET status='accepted',
+          accepted_at=CURRENT_TIMESTAMP,
+          rejected_at=NULL,
+          invite_token=?,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(inviteToken,id);
+    }
+
+    if(b.status==='rejected'){
+     db.prepare(`
+      UPDATE volunteer_applications
+      SET status='rejected',
+          rejected_at=CURRENT_TIMESTAMP,
+          accepted_at=NULL,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(id);
+    }
+
+    audit(user,'update','volunteer_application',id,b.status);
+
+    return send(res,200,{
+     ok:true,
+     status:b.status
+    });
    }
 
    if(pathname==='/api/admin/dashboard' && req.method==='GET'){

@@ -8,7 +8,7 @@ $('#authForm').onsubmit=async e=>{e.preventDefault();try{if(needsSetup){await ap
 function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${esc(me.role)}</span></p>`;document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;x.classList.toggle('hidden',need==='owner'?me.role!=='owner':!['owner','admin'].includes(me.role))});loadTab('dashboard')}
 $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=null;showAuth()};
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
-async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
+async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',volunteers:'طلبات المتطوعين','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='volunteers')return volunteers();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
 async function dashboard(){const d=await api('/api/admin/dashboard');content.innerHTML=`<div class="grid grid4"><div class="panel"><b>الفعاليات</b><h2>${d.counts.events}</h2></div><div class="panel"><b>الإنجازات</b><h2>${d.counts.achievements}</h2></div><div class="panel"><b>المسؤولون</b><h2>${d.counts.users}</h2></div><div class="panel"><b>المحتوى المنشور</b><h2>${d.counts.published}</h2></div></div><div class="panel"><h3>آخر التعديلات</h3>${d.audit.map(a=>`<p><b>${esc(a.user_name||'النظام')}</b> — ${esc(a.action)} ${esc(a.entity)} <span class="muted">${esc(a.created_at)}</span></p>`).join('')||'<p class="muted">لا يوجد سجل بعد.</p>'}</div>`}
 const cfg={events:{title:'فعالية',date:'event_date',fields:[['title','اسم الفعالية'],['summary','وصف مختصر'],['description','الوصف الكامل'],['event_date','التاريخ','date'],['event_time','الوقت','time'],['location','المكان'],['registration_url','رابط التسجيل'],['event_state','الحالة الظاهرة']],image:'cover_image'},achievements:{title:'إنجاز',date:'achievement_date',fields:[['title','عنوان الإنجاز'],['summary','وصف مختصر'],['description','الوصف الكامل'],['achievement_date','التاريخ','date'],['volunteers','عدد المتطوعين','number'],['beneficiaries','عدد المستفيدين','number'],['volunteer_hours','الساعات التطوعية','number']],image:'cover_image'}};
 async function listEntities(type){const d=await api('/api/admin/'+type);content.innerHTML=`<div class="panel"><button class="btn green" onclick="entityForm('${type}')">+ إضافة ${cfg[type].title}</button></div><div class="panel"><table class="table"><thead><tr><th>الصورة</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody>${d.items.map(x=>`<tr><td>${x.cover_image?`<img class="thumb" src="${esc(x.cover_image)}">`:''}</td><td>${esc(x.title)}</td><td>${esc(x.status)}</td><td>${esc(x[cfg[type].date])}</td><td><div class="rowActions"><button class="btn light small" onclick='entityForm("${type}",${JSON.stringify(x).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="removeEntity('${type}',${x.id})">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="5">لا يوجد محتوى بعد.</td></tr>'}</tbody></table></div>`}
@@ -25,6 +25,205 @@ async function users(){const d=await api('/api/admin/users');content.innerHTML=`
 window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userForm" class="formGrid"><div class="field"><label>الاسم</label><input name="name" value="${esc(u.name||'')}" required></div>${u.id?'':`<div class="field"><label>البريد</label><input name="email" type="email" required></div><div class="field"><label>كلمة المرور</label><input name="password" type="password" minlength="8" required></div>`}<div class="field"><label>الصلاحية</label><select name="role"><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option><option value="editor" ${u.role==='editor'?'selected':''}>Editor</option></select></div>${u.id?`<div class="field"><label>الحالة</label><select name="active"><option value="1" ${u.active?'selected':''}>فعال</option><option value="0" ${!u.active?'selected':''}>موقوف</option></select></div>`:''}<button class="btn green full">حفظ</button></form></div>`;$('#userForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());if(u.id)o.active=o.active==='1';try{await api('/api/admin/users'+(u.id?'/'+u.id:''),{method:u.id?'PUT':'POST',body:JSON.stringify(o)});flash('تم الحفظ');loadTab('users')}catch(ex){flash(ex.message,true)}}}
 async function audit(){const d=await api('/api/admin/audit');content.innerHTML=`<div class="panel"><table class="table"><tr><th>المسؤول</th><th>الإجراء</th><th>العنصر</th><th>التفاصيل</th><th>الوقت</th></tr>${d.items.map(a=>`<tr><td>${esc(a.user_name||'النظام')}</td><td>${esc(a.action)}</td><td>${esc(a.entity)} ${esc(a.entity_id)}</td><td>${esc(a.details)}</td><td>${esc(a.created_at)}</td></tr>`).join('')}</table></div>`}
 init().catch(e=>console.error(e));
+
+
+async function volunteers(){
+ const d=await api('/api/admin/volunteers');
+ d.items=d.items.filter(v=>v.status!=='rejected');
+
+ const statusText={
+  pending:'قيد المراجعة',
+  accepted:'مقبول',
+  rejected:'مرفوض'
+ };
+
+ if(!d.items.length){
+  content.innerHTML='<div class="panel"><h3>طلبات المتطوعين</h3><p class="muted">لا توجد طلبات متطوعين حتى الآن.</p></div>';
+  return;
+ }
+
+ content.innerHTML=`
+  <div class="panel">
+   <h3>طلبات المتطوعين</h3>
+   <p class="muted">يمكن للمالك أو المسؤول قبول أو رفض طلبات الانضمام.</p>
+
+   <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+     <thead>
+      <tr>
+       <th>الاسم</th>
+       <th>البريد</th>
+       <th>الهاتف</th>
+       <th>التخصص</th>
+       <th>المستوى</th>
+       <th>المدينة</th>
+       <th>الحالة</th>
+       <th>الإجراء</th>
+      </tr>
+     </thead>
+
+     <tbody>
+      ${d.items.map(v=>`
+       <tr>
+        <td>${esc(v.name||'')}</td>
+        <td>${esc(v.email||'')}</td>
+        <td>${esc(v.phone||'')}</td>
+        <td>${esc(v.major||'-')}</td>
+        <td>${esc(v.level||'-')}</td>
+        <td>${esc(v.city||'-')}</td>
+        <td><b>${esc(statusText[v.status]||v.status)}</b></td>
+
+        <td>
+         ${v.status!=='accepted'
+          ? `<button class="btn green" onclick="updateVolunteer(${v.id},'accepted')">قبول</button>`
+          : ''}
+
+         ${v.status!=='rejected'
+          ? `<button class="btn light" onclick="updateVolunteer(${v.id},'rejected')">رفض</button>`
+          : ''}
+
+         ${v.status==='accepted' && v.invite_token
+          ? `<button class="btn green" onclick='openVolunteerWhatsApp(${JSON.stringify(v)})'>إرسال رسالة القبول على واتساب</button>`
+          : ''}
+        </td>
+       </tr>
+      `).join('')}
+     </tbody>
+    </table>
+   </div>
+  </div>
+ `;
+}
+
+
+function normalizeWhatsAppPhone(phone){
+ let p=String(phone||'').replace(/\D/g,'');
+
+ if(p.startsWith('00962'))
+  p=p.slice(2);
+
+ if(p.startsWith('962'))
+  return p;
+
+ if(p.startsWith('0'))
+  return '962'+p.slice(1);
+
+ return p;
+}
+
+function openVolunteerWhatsApp(v){
+ if(!v || !v.phone || !v.invite_token){
+  alert('بيانات المتطوع أو رابط الدعوة غير مكتمل');
+  return;
+ }
+
+ const phone=normalizeWhatsAppPhone(v.phone);
+
+ const registerUrl=
+  window.location.origin+
+  '/volunteer-register?token='+
+  encodeURIComponent(v.invite_token);
+
+ const groupUrl=
+  'https://chat.whatsapp.com/HPFufR8WZ2TE4FD2KLxoEF?s=cl&p=i&mlu=4';
+
+ const message=
+`🎉 مبارك! تم قبولك رسميًا في مبادرة روح 💚
+
+أهلًا وسهلًا فيك بين عائلة روح 🌱
+متحمسين نشوف أفكارك، حماسك، وإنجازاتك معنا، ويلا نبدأ نصنع أثر حلو سوا! 🔥
+
+من اليوم إنت جزء من فريق روح، وكل فكرة، مشاركة، وخطوة بتعملها معنا إلها قيمة وأثر ✨
+
+🔐 أنشئ حسابك على موقع روح من خلال رابط التسجيل الخاص فيك:
+${registerUrl}
+
+👥 وانضم لمجموعة المتطوعين من هنا:
+${groupUrl}
+
+أهلًا فيك مرة ثانية، ومتحمسين نبدأ المشوار سوا 💚🌱
+فريق مبادرة روح`;
+
+ const url=
+  'https://wa.me/'+phone+
+  '?text='+encodeURIComponent(message);
+
+ window.open(url,'_blank','noopener,noreferrer');
+}
+
+window.openVolunteerWhatsApp=openVolunteerWhatsApp;
+
+
+async function rejectedVolunteers(){
+ const d=await api('/api/admin/volunteers');
+ const items=d.items.filter(v=>v.status==='rejected');
+
+ if(!items.length){
+  content.innerHTML=`
+   <div class="panel">
+    <h3>سجل المرفوضين</h3>
+    <p class="muted">لا توجد طلبات مرفوضة حتى الآن.</p>
+   </div>`;
+  return;
+ }
+
+ content.innerHTML=`
+  <div class="panel">
+   <h3>سجل المرفوضين</h3>
+   <p class="muted">
+    الطلبات التي تم رفضها محفوظة هنا ولا يتم حذفها.
+   </p>
+
+   <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+     <thead>
+      <tr>
+       <th>الاسم</th>
+       <th>البريد</th>
+       <th>الهاتف</th>
+       <th>التخصص</th>
+       <th>المستوى</th>
+       <th>المدينة</th>
+       <th>تاريخ الرفض</th>
+      </tr>
+     </thead>
+
+     <tbody>
+      ${items.map(v=>`
+       <tr>
+        <td>${esc(v.name||'')}</td>
+        <td>${esc(v.email||'')}</td>
+        <td>${esc(v.phone||'')}</td>
+        <td>${esc(v.major||'-')}</td>
+        <td>${esc(v.level||'-')}</td>
+        <td>${esc(v.city||'-')}</td>
+        <td>${esc(v.rejected_at||'-')}</td>
+       </tr>
+      `).join('')}
+     </tbody>
+    </table>
+   </div>
+  </div>`;
+}
+
+async function updateVolunteer(id,status){
+ const ok=confirm(status==='accepted'
+  ? 'هل تريد قبول هذا المتطوع؟'
+  : 'هل تريد رفض هذا الطلب؟');
+
+ if(!ok) return;
+
+ try{
+  await api('/api/admin/volunteers/'+id,{
+   method:'PUT',
+   body:JSON.stringify({status})
+  });
+
+  volunteers();
+ }catch(e){
+  alert(e.message);
+ }
+}
 
 async function ideas(){
  const d=await api('/api/admin/ideas');

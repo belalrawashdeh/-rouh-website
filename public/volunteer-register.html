@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إنشاء حساب متطوع | مبادرة روح</title>
+<link rel="stylesheet" href="/styles.css">
+
+<style>
+.volunteer-page{
+ min-height:100vh;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:30px 16px;
+ background:#f7f9f7;
+}
+
+.volunteer-card{
+ width:100%;
+ max-width:520px;
+ background:#fff;
+ border-radius:24px;
+ padding:32px;
+ box-shadow:0 15px 45px rgba(0,0,0,.08);
+}
+
+.volunteer-card h1{
+ margin:0 0 8px;
+ text-align:center;
+}
+
+.volunteer-card .subtitle{
+ text-align:center;
+ color:#68736c;
+ margin-bottom:25px;
+}
+
+.volunteer-info{
+ background:#f4f8f5;
+ border-radius:16px;
+ padding:15px;
+ margin-bottom:20px;
+ line-height:1.9;
+}
+
+.volunteer-note{
+ background:#fff8e6;
+ border:1px solid #f0d58a;
+ border-radius:14px;
+ padding:14px;
+ margin:18px 0;
+ line-height:1.8;
+ font-size:14px;
+}
+
+.volunteer-field{
+ margin-bottom:16px;
+}
+
+.volunteer-field label{
+ display:block;
+ margin-bottom:7px;
+ font-weight:700;
+}
+
+.volunteer-field input{
+ width:100%;
+ box-sizing:border-box;
+ padding:13px 14px;
+ border:1px solid #d8dfda;
+ border-radius:12px;
+ font:inherit;
+}
+
+.volunteer-field input:focus{
+ outline:none;
+ border-color:#48865c;
+}
+
+.volunteer-submit{
+ width:100%;
+ border:0;
+ border-radius:12px;
+ padding:14px;
+ cursor:pointer;
+ font:inherit;
+ font-weight:700;
+ background:#315f40;
+ color:#fff;
+}
+
+.volunteer-submit:disabled{
+ opacity:.6;
+ cursor:not-allowed;
+}
+
+.volunteer-message{
+ margin-top:15px;
+ padding:12px;
+ border-radius:12px;
+ display:none;
+}
+
+.volunteer-message.error{
+ display:block;
+ background:#fff0f0;
+ color:#9b2424;
+}
+
+.volunteer-message.success{
+ display:block;
+ background:#edf8ef;
+ color:#276638;
+}
+
+.loading{
+ text-align:center;
+ padding:20px;
+ color:#68736c;
+}
+</style>
+</head>
+
+<body>
+
+<main class="volunteer-page">
+
+<section class="volunteer-card">
+
+<h1>مبادرة روح 🌱</h1>
+<p class="subtitle">إنشاء حساب المتطوع</p>
+
+<div class="volunteer-note">
+<strong>ملاحظة:</strong>
+إذا قمت بتعبئة نموذج الانضمام إلى مبادرة روح، فلن تتمكن من إنشاء حساب أو تسجيل الدخول مباشرة.
+انتظر حتى يتم قبول طلبك وتصل إليك رسالة تفيد بقبولك، ثم يمكنك إنشاء حسابك على الموقع.
+</div>
+
+<div id="loading" class="loading">
+جارٍ التحقق من رابط الدعوة...
+</div>
+
+<div id="registerArea" style="display:none">
+
+<div class="volunteer-info">
+<div><strong>الاسم:</strong> <span id="volunteerName"></span></div>
+<div><strong>البريد الإلكتروني:</strong> <span id="volunteerEmail"></span></div>
+</div>
+
+<form id="registerForm">
+
+<div class="volunteer-field">
+<label for="password">كلمة المرور</label>
+<input
+ type="password"
+ id="password"
+ minlength="8"
+ required
+ autocomplete="new-password"
+ placeholder="8 أحرف على الأقل">
+</div>
+
+<div class="volunteer-field">
+<label for="confirmPassword">تأكيد كلمة المرور</label>
+<input
+ type="password"
+ id="confirmPassword"
+ minlength="8"
+ required
+ autocomplete="new-password"
+ placeholder="أعد كتابة كلمة المرور">
+</div>
+
+<button class="volunteer-submit" id="submitBtn" type="submit">
+إنشاء الحساب
+</button>
+
+</form>
+
+</div>
+
+<div id="message" class="volunteer-message"></div>
+
+</section>
+
+</main>
+
+<script>
+const params=new URLSearchParams(window.location.search);
+const token=params.get('token');
+
+const loading=document.getElementById('loading');
+const registerArea=document.getElementById('registerArea');
+const message=document.getElementById('message');
+const form=document.getElementById('registerForm');
+const submitBtn=document.getElementById('submitBtn');
+
+function showMessage(text,type='error'){
+ message.textContent=text;
+ message.className='volunteer-message '+type;
+}
+
+async function checkInvite(){
+
+ if(!token){
+  loading.style.display='none';
+  showMessage('رابط الدعوة غير صحيح.');
+  return;
+ }
+
+ try{
+
+  const response=await fetch(
+   '/api/volunteer/invite?token='+encodeURIComponent(token)
+  );
+
+  const data=await response.json();
+
+  if(!response.ok)
+   throw new Error(data.error||'تعذر التحقق من الدعوة');
+
+  document.getElementById('volunteerName').textContent=
+   data.volunteer.name;
+
+  document.getElementById('volunteerEmail').textContent=
+   data.volunteer.email;
+
+  loading.style.display='none';
+  registerArea.style.display='block';
+
+ }catch(error){
+
+  loading.style.display='none';
+  showMessage(error.message);
+
+ }
+}
+
+form.addEventListener('submit',async event=>{
+
+ event.preventDefault();
+
+ const password=document.getElementById('password').value;
+ const confirmPassword=
+  document.getElementById('confirmPassword').value;
+
+ if(password.length<8){
+  showMessage('كلمة المرور يجب أن تكون 8 أحرف على الأقل.');
+  return;
+ }
+
+ if(password!==confirmPassword){
+  showMessage('كلمتا المرور غير متطابقتين.');
+  return;
+ }
+
+ submitBtn.disabled=true;
+ submitBtn.textContent='جارٍ إنشاء الحساب...';
+
+ try{
+
+  const response=await fetch('/api/volunteer/register',{
+   method:'POST',
+   headers:{
+    'Content-Type':'application/json'
+   },
+   body:JSON.stringify({
+    token,
+    password
+   })
+  });
+
+  const data=await response.json();
+
+  if(!response.ok)
+   throw new Error(data.error||'تعذر إنشاء الحساب');
+
+  registerArea.style.display='none';
+
+  showMessage(
+   'تم إنشاء حسابك بنجاح 🎉 يمكنك الآن تسجيل الدخول إلى حساب المتطوع.',
+   'success'
+  );
+
+ }catch(error){
+
+  showMessage(error.message);
+  submitBtn.disabled=false;
+  submitBtn.textContent='إنشاء الحساب';
+
+ }
+
+});
+
+checkInvite();
+</script>
+
+</body>
+</html>
