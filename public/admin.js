@@ -129,8 +129,11 @@ async function openVolunteerWhatsApp(v){
  const groupUrl=
   'https://chat.whatsapp.com/HPFufR8WZ2TE4FD2KLxoEF?s=cl&p=i&mlu=4';
 
+ const department = v.department || 'لم يتم تحديد القسم';
+
  const message =
  '\u{1F389} مبارك! تم قبولك رسميًا في مبادرة روح \u{1F49A}\n\n' +
+ '\u{1F3E2} تم قبولك في قسم: ' + department + '\n\n' +
  'أهلًا وسهلًا فيك بين عائلة روح \u{1F331}\n' +
  'متحمسين نشوف أفكارك، حماسك، وإنجازاتك معنا، ويلا نبدأ نصنع أثر حلو سوا! \u{1F525}\n\n' +
  'من اليوم إنت جزء من فريق روح، وكل فكرة، مشاركة، وخطوة بتعملها معنا إلها قيمة وأثر \u{2728}\n\n' +

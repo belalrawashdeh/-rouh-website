@@ -303,7 +303,8 @@ const server=http.createServer(async (req,res)=>{
      name:v.name,
      username:v.username,
      email:v.email,
-     phone:v.phone
+     phone:v.phone,
+     department:v.department || ''
     }
    });
   }
