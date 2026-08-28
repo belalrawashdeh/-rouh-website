@@ -43,6 +43,13 @@ async function volunteers(){
  const d=await api('/api/admin/volunteers');
  const items=d.items.filter(v=>v.status!=='rejected');
 
+ const isHR=
+  me.role==='admin' &&
+  me.department==='إدارة الموارد البشرية (HR)';
+
+ const isOwnerOrHR=
+  me.role==='owner' || isHR;
+
  const statusText={
   pending:'قيد المراجعة',
   contacted:'تم التواصل معه',
@@ -58,9 +65,10 @@ async function volunteers(){
  content.innerHTML=`
   <div class="panel">
    <h3>طلبات المتطوعين</h3>
+
    <p class="muted">
-    تواصل مع المتقدم أولًا، وبعد معرفة قدراته واهتماماته
-    يمكنك قبوله وتحديد القسم المناسب له.
+    HR يراجع الطلب ويوجهه للقسم المناسب، وبعدها مسؤول القسم
+    يقرر قبول المتطوع ضمن فريقه أو رفضه.
    </p>
 
    <div class="volunteerTableWrap">
@@ -80,90 +88,167 @@ async function volunteers(){
      </thead>
 
      <tbody>
-      ${items.map(v=>`
-       <tr>
-        <td>${esc(v.name||'')}</td>
-        <td>${esc(v.email||'')}</td>
-        <td>${esc(v.phone||'')}</td>
-        <td>${esc(v.major||'-')}</td>
-        <td>${esc(v.level||'-')}</td>
-        <td>${esc(v.city||'-')}</td>
-        <td><b>${esc(statusText[v.status]||v.status)}</b></td>
-        <td>
-         ${v.department
-          ? `<b>${esc(v.department)}</b>`
-          : '<span class="muted">لم يحدد بعد</span>'}
-        </td>
+      ${items.map(v=>{
 
-        <td>
-         <div class="rowActions">
+       let stateText=statusText[v.status]||v.status;
 
-          ${v.status==='pending'
+       if(
+        v.status==='pending' &&
+        v.contacted_at &&
+        !v.department_approval
+       )
+        stateText='تم التواصل معه';
+
+       if(v.department_approval==='pending')
+        stateText='بانتظار موافقة القسم';
+
+       if(v.department_approval==='accepted')
+        stateText='مقبول من القسم';
+
+       let actions='';
+
+       if(
+        isOwnerOrHR &&
+        v.status==='pending' &&
+        !v.contacted_at &&
+        !v.department_approval
+       ){
+        actions+=`
+         <button class="btn light"
+          onclick="updateVolunteer(${v.id},'contacted')">
+          💬 تم التواصل
+         </button>
+        `;
+       }
+
+       if(
+        isOwnerOrHR &&
+        (v.status==='pending' || v.status==='contacted') &&
+        v.department_approval!=='pending'
+       ){
+        actions+=`
+         <button class="btn green"
+          onclick="updateVolunteer(${v.id},'route_to_department')">
+          🏢 توجيه إلى قسم
+         </button>
+        `;
+
+        actions+=`
+         <button class="btn danger"
+          onclick="updateVolunteer(${v.id},'rejected')">
+          ❌ رفض الطلب
+         </button>
+        `;
+       }
+
+       const canDepartmentDecide =
+        v.department_approval==='pending' &&
+        (
+         me.role==='owner' ||
+         (
+          me.role==='admin' &&
+          me.department===v.department
+         )
+        );
+
+       if(canDepartmentDecide){
+        actions+=`
+         <button class="btn green"
+          onclick="updateVolunteer(${v.id},'department_accepted')">
+          ✅ قبول للفريق
+         </button>
+
+         <button class="btn danger"
+          onclick="updateVolunteer(${v.id},'department_rejected')">
+          ❌ رفض من القسم
+         </button>
+        `;
+       }
+
+       if(v.status==='accepted' && v.invite_token){
+        actions+=`
+         <button class="btn green"
+          onclick='openVolunteerWhatsApp(${JSON.stringify(v)})'>
+          📱 إرسال رسالة القبول
+         </button>
+        `;
+       }
+
+       if(v.status==='accepted' && v.whatsapp_sent_at){
+        actions+=`
+         <span class="notice">
+          ✅ تم إرسال القبول
+         </span>
+        `;
+       }
+
+       if(!v.volunteer_id){
+        if(v.status==='accepted'){
+         actions+=`
+          <button class="btn danger"
+           onclick="deleteVolunteer(${v.id})">
+           🗑️ حذف وإتاحة التقديم من جديد
+          </button>
+         `;
+        }
+       }else{
+        actions+=`
+         <span class="notice">
+          👤 لديه حساب
+          ${v.volunteer_active ? '🟢 فعال' : '🔴 معطل'}
+         </span>
+
+         ${
+          isOwnerOrHR
            ? `<button class="btn light"
-                onclick="updateVolunteer(${v.id},'contacted')">
-                💬 تم التواصل
+                onclick="changeVolunteerDepartment(${v.id})">
+                ✏️ تغيير القسم
               </button>`
-           : ''}
+           : ''
+         }
 
-          ${v.status==='pending' || v.status==='contacted'
-           ? `<button class="btn green"
-                onclick="updateVolunteer(${v.id},'accepted')">
-                ✅ قبول وتحديد القسم
-              </button>`
-           : ''}
+         <button class="btn ${v.volunteer_active ? 'danger' : 'green'}"
+          onclick="toggleVolunteerAccount(${v.id},${v.volunteer_active ? 'false' : 'true'})">
+          ${v.volunteer_active ? '⛔ تعطيل الحساب' : '✅ تفعيل الحساب'}
+         </button>
+        `;
+       }
 
-          ${v.status!=='rejected' && v.status!=='accepted'
-           ? `<button class="btn danger"
-                onclick="updateVolunteer(${v.id},'rejected')">
-                ❌ رفض
-              </button>`
-           : ''}
+       return `
+        <tr>
+         <td>${esc(v.name||'')}</td>
+         <td>${esc(v.email||'')}</td>
+         <td>${esc(v.phone||'')}</td>
+         <td>${esc(v.major||'-')}</td>
+         <td>${esc(v.level||'-')}</td>
+         <td>${esc(v.city||'-')}</td>
 
-          ${v.status==='accepted' && v.invite_token
-           ? `<button class="btn green"
-                onclick='openVolunteerWhatsApp(${JSON.stringify(v)})'>
-                📱 إرسال رسالة القبول
-              </button>`
-           : ''}
+         <td>
+          <b>${esc(stateText)}</b>
+         </td>
 
-          ${v.status==='accepted' && v.whatsapp_sent_at
-           ? `<span class="notice">✅ تم إرسال القبول</span>`
-           : ''}
+         <td>
+          ${
+           v.department
+            ? `<b>${esc(v.department)}</b>`
+            : '<span class="muted">لم يحدد بعد</span>'
+          }
+         </td>
 
-          ${!v.volunteer_id
-           ? `<button class="btn danger"
-                onclick="deleteVolunteer(${v.id})">
-                🗑️ حذف وإتاحة التقديم من جديد
-              </button>`
-           : `
-              <span class="notice">
-               👤 لديه حساب
-               ${v.volunteer_active ? '🟢 فعال' : '🔴 معطل'}
-              </span>
-
-              <button class="btn light"
-               onclick="changeVolunteerDepartment(${v.id})">
-               ✏️ تغيير القسم
-              </button>
-
-              <button class="btn ${v.volunteer_active ? 'danger' : 'green'}"
-               onclick="toggleVolunteerAccount(${v.id},${v.volunteer_active ? 'false' : 'true'})">
-               ${v.volunteer_active ? '⛔ تعطيل الحساب' : '✅ تفعيل الحساب'}
-              </button>
-             `}
-
-         </div>
-        </td>
-       </tr>
-      `).join('')}
+         <td>
+          <div class="rowActions">
+           ${actions}
+          </div>
+         </td>
+        </tr>
+       `;
+      }).join('')}
      </tbody>
     </table>
    </div>
   </div>
  `;
 }
-
-
 
 
 function normalizeWhatsAppPhone(phone){
@@ -389,9 +474,7 @@ async function updateVolunteer(id,status){
   try{
    await api('/api/admin/volunteers/'+id,{
     method:'PUT',
-    body:JSON.stringify({
-     status:'contacted'
-    })
+    body:JSON.stringify({status:'contacted'})
    });
 
    flash('💬 تم تسجيل التواصل مع المتطوع');
@@ -404,7 +487,7 @@ async function updateVolunteer(id,status){
   return;
  }
 
- if(status==='accepted'){
+ if(status==='route_to_department'){
 
   const departments={
    '1':'الميداني',
@@ -415,8 +498,8 @@ async function updateVolunteer(id,status){
    '6':'فكرة'
   };
 
-  const department=prompt(
-   'اختر قسم المتطوع بعد التواصل معه:\\n\\n' +
+  const choice=prompt(
+   'اختر القسم الذي تريد توجيه المتطوع إليه:\\n\\n' +
    '1 - الميداني\\n' +
    '2 - إدارة الموارد البشرية (HR)\\n' +
    '3 - الأكاديمي\\n' +
@@ -426,15 +509,45 @@ async function updateVolunteer(id,status){
    'اكتب رقم القسم:'
   );
 
-  if(!department || !departments[department]){
-   alert('يجب اختيار قسم صحيح قبل قبول المتطوع');
+  if(!choice || !departments[choice]){
+   alert('يجب اختيار قسم صحيح');
    return;
   }
 
+  const department=departments[choice];
+
   const ok=confirm(
-   'قبول المتطوع في قسم:\\n\\n' +
-   departments[department] +
+   'توجيه المتطوع إلى قسم:\\n\\n' +
+   department +
    '؟\\n\\n' +
+   'بعدها سيكون بانتظار موافقة مسؤول القسم.'
+  );
+
+  if(!ok) return;
+
+  try{
+   await api('/api/admin/volunteers/'+id,{
+    method:'PUT',
+    body:JSON.stringify({
+     status:'route_to_department',
+     department
+    })
+   });
+
+   flash('🏢 تم توجيه المتطوع إلى '+department);
+   volunteers();
+
+  }catch(e){
+   alert(e.message);
+  }
+
+  return;
+ }
+
+ if(status==='department_accepted'){
+
+  const ok=confirm(
+   'هل تريد قبول هذا المتطوع رسميًا ضمن فريق القسم؟\\n\\n' +
    'بعد القبول سيصبح رابط إنشاء الحساب متاحًا.'
   );
 
@@ -444,16 +557,37 @@ async function updateVolunteer(id,status){
    await api('/api/admin/volunteers/'+id,{
     method:'PUT',
     body:JSON.stringify({
-     status:'accepted',
-     department:departments[department]
+     status:'department_accepted'
     })
    });
 
-   flash(
-    '✅ تم قبول المتطوع في قسم ' +
-    departments[department]
-   );
+   flash('✅ تم قبول المتطوع ضمن الفريق');
+   volunteers();
 
+  }catch(e){
+   alert(e.message);
+  }
+
+  return;
+ }
+
+ if(status==='department_rejected'){
+
+  const ok=confirm(
+   'هل تريد رفض انضمام هذا المتطوع إلى فريق القسم؟'
+  );
+
+  if(!ok) return;
+
+  try{
+   await api('/api/admin/volunteers/'+id,{
+    method:'PUT',
+    body:JSON.stringify({
+     status:'department_rejected'
+    })
+   });
+
+   flash('❌ تم رفض المتطوع من القسم');
    volunteers();
 
   }catch(e){
@@ -483,12 +617,10 @@ async function updateVolunteer(id,status){
   }catch(e){
    alert(e.message);
   }
+
+  return;
  }
 }
-
-
-
-
 
 async function complaints(){
  const d=await api('/api/admin/complaints');

@@ -167,6 +167,24 @@ try {
  if (!String(e.message).includes("duplicate column name")) throw e;
 }
 
+try {
+ db.exec("ALTER TABLE volunteer_applications ADD COLUMN department_approval TEXT NOT NULL DEFAULT ''");
+} catch(e) {
+ if (!String(e.message).includes("duplicate column name")) throw e;
+}
+
+try {
+ db.exec("ALTER TABLE volunteer_applications ADD COLUMN department_decided_at TEXT DEFAULT NULL");
+} catch(e) {
+ if (!String(e.message).includes("duplicate column name")) throw e;
+}
+
+try {
+ db.exec("ALTER TABLE volunteer_applications ADD COLUMN department_decided_by INTEGER DEFAULT NULL");
+} catch(e) {
+ if (!String(e.message).includes("duplicate column name")) throw e;
+}
+
 const defaults = {
  initiative_name: 'مبادرة روح',
  tagline: 'نزرع الأثر… ونصنع التغيير.',
@@ -404,8 +422,15 @@ const server=http.createServer(async (req,res)=>{
           level=?,
           city=?,
           status='pending',
+          department='',
+          department_approval='',
+          department_decided_at=NULL,
+          department_decided_by=NULL,
+          contacted_at=NULL,
           invite_token=NULL,
+          accepted_at=NULL,
           rejected_at=NULL,
+          whatsapp_sent_at=NULL,
           updated_at=CURRENT_TIMESTAMP
       WHERE id=?
      `).run(name,phone,major,level,city,existing.id);
@@ -486,7 +511,15 @@ const server=http.createServer(async (req,res)=>{
           level=?,
           city=?,
           status='pending',
+          department='',
+          department_approval='',
+          department_decided_at=NULL,
+          department_decided_by=NULL,
+          contacted_at=NULL,
           invite_token=NULL,
+          accepted_at=NULL,
+          rejected_at=NULL,
+          whatsapp_sent_at=NULL,
           updated_at=CURRENT_TIMESTAMP
       WHERE id=?
      `).run(name,phone,major,level,city,existing.id);
@@ -899,7 +932,15 @@ const server=http.createServer(async (req,res)=>{
     const id=volunteerMatch[1];
     const b=await body(req);
 
-    if(!['contacted','accepted','rejected'].includes(b.status))
+    const allowedActions=[
+     'contacted',
+     'route_to_department',
+     'department_accepted',
+     'department_rejected',
+     'rejected'
+    ];
+
+    if(!allowedActions.includes(b.status))
      return send(res,400,{error:'حالة الطلب غير صحيحة'});
 
     const departments=[
@@ -911,12 +952,6 @@ const server=http.createServer(async (req,res)=>{
      'فكرة'
     ];
 
-    if(
-     b.status==='accepted' &&
-     !departments.includes(String(b.department||''))
-    )
-     return send(res,400,{error:'يجب اختيار قسم صحيح للمتطوع'});
-
     const item=db.prepare(
      'SELECT * FROM volunteer_applications WHERE id=?'
     ).get(id);
@@ -924,14 +959,159 @@ const server=http.createServer(async (req,res)=>{
     if(!item)
      return send(res,404,{error:'طلب المتطوع غير موجود'});
 
-    if(!canManageVolunteer(user,item))
-     return send(res,403,{error:'لا يمكنك إدارة متطوع من قسم آخر'});
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    const isOwnerOrHR=
+     user.role==='owner' || isHRAdmin;
 
     if(b.status==='contacted'){
+     if(!isOwnerOrHR)
+      return send(res,403,{error:'التواصل الأولي من صلاحية المالك أو HR فقط'});
+
      db.prepare(`
       UPDATE volunteer_applications
-      SET status='contacted',
+      SET status='pending',
           contacted_at=CURRENT_TIMESTAMP,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(id);
+
+     audit(user,'update','volunteer_application',id,'contacted');
+
+     return send(res,200,{
+      ok:true,
+      status:'contacted'
+     });
+    }
+
+    if(b.status==='route_to_department'){
+     if(!isOwnerOrHR)
+      return send(res,403,{error:'توجيه المتطوع للأقسام من صلاحية المالك أو HR فقط'});
+
+     const department=String(b.department||'').trim();
+
+     if(!departments.includes(department))
+      return send(res,400,{error:'يجب اختيار قسم صحيح'});
+
+     db.prepare(`
+      UPDATE volunteer_applications
+      SET status='pending',
+          department=?,
+          department_approval='pending',
+          department_decided_at=NULL,
+          department_decided_by=NULL,
+          accepted_at=NULL,
+          rejected_at=NULL,
+          invite_token=NULL,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(department,id);
+
+     audit(
+      user,
+      'update',
+      'volunteer_application',
+      id,
+      'route_to_department:'+department
+     );
+
+     return send(res,200,{
+      ok:true,
+      status:'contacted',
+      department,
+      department_approval:'pending'
+     });
+    }
+
+    if(
+     b.status==='department_accepted' ||
+     b.status==='department_rejected'
+    ){
+     if(item.department_approval!=='pending')
+      return send(res,400,{error:'هذا الطلب ليس بانتظار موافقة القسم'});
+
+     const canDepartmentDecide =
+      user.role==='owner' ||
+      (
+       user.role==='admin' &&
+       item.department===user.department
+      );
+
+     if(!canDepartmentDecide)
+      return send(res,403,{error:'هذا الطلب تابع لقسم آخر'});
+
+     if(b.status==='department_accepted'){
+      const inviteToken=crypto.randomBytes(32).toString('hex');
+
+      db.prepare(`
+       UPDATE volunteer_applications
+       SET status='accepted',
+           department_approval='accepted',
+           department_decided_at=CURRENT_TIMESTAMP,
+           department_decided_by=?,
+           accepted_at=CURRENT_TIMESTAMP,
+           rejected_at=NULL,
+           invite_token=?,
+           updated_at=CURRENT_TIMESTAMP
+       WHERE id=?
+      `).run(user.id,inviteToken,id);
+
+      audit(
+       user,
+       'update',
+       'volunteer_application',
+       id,
+       'department_accepted'
+      );
+
+      return send(res,200,{
+       ok:true,
+       status:'accepted',
+       department_approval:'accepted'
+      });
+     }
+
+     db.prepare(`
+      UPDATE volunteer_applications
+      SET status='rejected',
+          department_approval='rejected',
+          department_decided_at=CURRENT_TIMESTAMP,
+          department_decided_by=?,
+          rejected_at=CURRENT_TIMESTAMP,
+          accepted_at=NULL,
+          invite_token=NULL,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(user.id,id);
+
+     audit(
+      user,
+      'update',
+      'volunteer_application',
+      id,
+      'department_rejected'
+     );
+
+     return send(res,200,{
+      ok:true,
+      status:'rejected',
+      department_approval:'rejected'
+     });
+    }
+
+    if(b.status==='rejected'){
+     if(!isOwnerOrHR)
+      return send(res,403,{error:'الرفض قبل التوجيه من صلاحية المالك أو HR فقط'});
+
+     db.prepare(`
+      UPDATE volunteer_applications
+      SET status='rejected',
+          department_approval='',
+          rejected_at=CURRENT_TIMESTAMP,
+          accepted_at=NULL,
+          invite_token=NULL,
           updated_at=CURRENT_TIMESTAMP
       WHERE id=?
      `).run(id);
@@ -941,56 +1121,15 @@ const server=http.createServer(async (req,res)=>{
       'update',
       'volunteer_application',
       id,
-      'contacted'
+      'rejected'
      );
 
      return send(res,200,{
       ok:true,
-      status:'contacted'
+      status:'rejected'
      });
     }
-
-    if(b.status==='accepted'){
-     const inviteToken=crypto.randomBytes(32).toString('hex');
-
-     db.prepare(`
-      UPDATE volunteer_applications
-      SET status='accepted',
-          department=?,
-          accepted_at=CURRENT_TIMESTAMP,
-          rejected_at=NULL,
-          invite_token=?,
-          updated_at=CURRENT_TIMESTAMP
-      WHERE id=?
-     `).run(b.department,inviteToken,id);
-    }
-
-    if(b.status==='rejected'){
-     db.prepare(`
-      UPDATE volunteer_applications
-      SET status='rejected',
-          rejected_at=CURRENT_TIMESTAMP,
-          accepted_at=NULL,
-          invite_token=NULL,
-          updated_at=CURRENT_TIMESTAMP
-      WHERE id=?
-     `).run(id);
-    }
-
-    audit(
-     user,
-     'update',
-     'volunteer_application',
-     id,
-     b.status
-    );
-
-    return send(res,200,{
-     ok:true,
-     status:b.status
-    });
    }
-
 
    const volunteerDeleteMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)$/);
 
@@ -1076,8 +1215,12 @@ const server=http.createServer(async (req,res)=>{
     if(!item)
      return send(res,404,{error:'طلب المتطوع غير موجود'});
 
-    if(!canManageVolunteer(user,item))
-     return send(res,403,{error:'لا يمكنك إدارة متطوع من قسم آخر'});
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    if(user.role!=='owner' && !isHRAdmin)
+     return send(res,403,{error:'تغيير قسم المتطوع متاح للمالك أو HR فقط'});
 
     if(item.status!=='accepted')
      return send(res,400,{error:'يجب أن يكون المتطوع مقبولًا أولًا'});
