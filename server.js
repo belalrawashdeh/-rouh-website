@@ -552,6 +552,36 @@ const server=http.createServer(async (req,res)=>{
     });
    }
 
+   const whatsappSentMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)\/whatsapp-sent$/);
+
+   if(whatsappSentMatch && req.method==='PUT'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const id=whatsappSentMatch[1];
+
+    const item=db.prepare(
+     'SELECT * FROM volunteer_applications WHERE id=?'
+    ).get(id);
+
+    if(!item)
+     return send(res,404,{error:'طلب المتطوع غير موجود'});
+
+    if(item.status!=='accepted')
+     return send(res,400,{error:'يجب قبول المتطوع أولاً'});
+
+    db.prepare(`
+     UPDATE volunteer_applications
+     SET whatsapp_sent_at=CURRENT_TIMESTAMP,
+         updated_at=CURRENT_TIMESTAMP
+     WHERE id=?
+    `).run(id);
+
+    audit(user,'update','volunteer_application',id,'whatsapp_sent');
+
+    return send(res,200,{ok:true});
+   }
+
    if(pathname==='/api/admin/dashboard' && req.method==='GET'){
     return send(res,200,{counts:{events:db.prepare('SELECT COUNT(*) c FROM events WHERE deleted_at IS NULL').get().c,achievements:db.prepare('SELECT COUNT(*) c FROM achievements WHERE deleted_at IS NULL').get().c,users:db.prepare('SELECT COUNT(*) c FROM users WHERE active=1').get().c,published:db.prepare("SELECT (SELECT COUNT(*) FROM events WHERE status='published' AND deleted_at IS NULL)+(SELECT COUNT(*) FROM achievements WHERE status='published' AND deleted_at IS NULL) c").get().c},audit:db.prepare('SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 15').all()});
    }

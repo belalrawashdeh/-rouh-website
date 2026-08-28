@@ -82,7 +82,9 @@ async function volunteers(){
           ? `<button class="btn light" onclick="updateVolunteer(${v.id},'rejected')">رفض</button>`
           : ''}
 
-         ${v.status==='accepted' && v.invite_token
+         ${v.status==='accepted' && v.whatsapp_sent_at
+          ? `<span class="notice">✅ تم إرسال القبول</span>`
+          : v.status==='accepted' && v.invite_token
           ? `<button class="btn green" onclick='openVolunteerWhatsApp(${JSON.stringify(v)})'>إرسال رسالة القبول على واتساب</button>`
           : ''}
         </td>
@@ -111,7 +113,7 @@ function normalizeWhatsAppPhone(phone){
  return p;
 }
 
-function openVolunteerWhatsApp(v){
+async function openVolunteerWhatsApp(v){
  if(!v || !v.phone || !v.invite_token){
   alert('بيانات المتطوع أو رابط الدعوة غير مكتمل');
   return;
@@ -148,7 +150,23 @@ ${groupUrl}
   'https://wa.me/'+phone+
   '?text='+encodeURIComponent(message);
 
- window.open(url,'_blank','noopener,noreferrer');
+ const whatsappWindow=window.open(url,'_blank','noopener,noreferrer');
+
+ if(!whatsappWindow){
+  alert('المتصفح منع فتح واتساب. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');
+  return;
+ }
+
+ try{
+  await api('/api/admin/volunteers/'+v.id+'/whatsapp-sent',{
+   method:'PUT',
+   body:JSON.stringify({})
+  });
+
+  await volunteers();
+ }catch(e){
+  alert('تم فتح واتساب، لكن تعذر تسجيل حالة الإرسال: '+e.message);
+ }
 }
 
 window.openVolunteerWhatsApp=openVolunteerWhatsApp;
