@@ -29,7 +29,7 @@ init().catch(e=>console.error(e));
 
 async function volunteers(){
  const d=await api('/api/admin/volunteers');
- d.items=d.items.filter(v=>v.status!=='rejected');
+ d.items=d.items.filter(v=>v.status==='pending' || (v.status==='accepted' && !v.whatsapp_sent_at));
 
  const statusText={
   pending:'قيد المراجعة',
