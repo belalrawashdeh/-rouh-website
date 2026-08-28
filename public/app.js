@@ -87,3 +87,49 @@ if(ideaForm){
   }
  });
 }
+
+
+// صندوق الشكاوى
+const complaintForm=document.getElementById('complaintForm');
+
+if(complaintForm){
+ complaintForm.addEventListener('submit',async e=>{
+  e.preventDefault();
+
+  const btn=document.getElementById('complaintSubmit');
+  const msg=document.getElementById('complaintMessage');
+
+  const data={
+   name:document.getElementById('complaintName').value.trim(),
+   phone:document.getElementById('complaintPhone').value.trim(),
+   email:document.getElementById('complaintEmail').value.trim(),
+   complaint:document.getElementById('complaintText').value.trim()
+  };
+
+  try{
+   btn.disabled=true;
+   btn.textContent='جارٍ إرسال الشكوى...';
+   msg.textContent='';
+
+   const r=await fetch('/api/complaints',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(data)
+   });
+
+   const result=await r.json();
+
+   if(!r.ok)
+    throw new Error(result.error||'تعذر إرسال الشكوى');
+
+   msg.textContent='✅ تم استلام شكواك بنجاح، وسيتم التعامل معها من قبل الجهة المختصة.';
+   complaintForm.reset();
+
+  }catch(err){
+   msg.textContent='❌ '+err.message;
+  }finally{
+   btn.disabled=false;
+   btn.textContent='إرسال الشكوى';
+  }
+ });
+}

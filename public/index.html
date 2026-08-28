@@ -1,9 +1,58 @@
 <!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>مبادرة روح التطوعية | نزرع الأثر ونصنع التغيير</title><meta name="description" content="مبادرة روح التطوعية هي مبادرة شبابية تسعى إلى تمكين الشباب وتعزيز ثقافة العمل التطوعي وتحويل الأفكار إلى أثر حقيقي ومستدام في المجتمع."><meta name="keywords" content="مبادرة روح التطوعية, مبادرة روح, روح للتطوع, Rouh Initiative, العمل التطوعي, مبادرات شبابية"><link rel="stylesheet" href="/styles.css"></head><body>
-<nav class="nav"><div class="container navin"><a class="brand" href="#home">روح<small>ROUH</small></a><div class="links"><a href="#about">عن روح</a><a href="#fields">مجالاتنا</a><a href="#ideas">حاضنة الأفكار</a><a href="#events">الفعاليات</a><a href="#achievements">الإنجازات</a><a href="#join">انضم إلينا</a><a href="#contact">تواصل معنا</a></div><a class="btn green" id="navJoin" target="_blank">انضم الآن</a></div></nav>
+<nav class="nav"><div class="container navin"><a class="brand" href="#home">روح<small>ROUH</small></a><div class="links"><a href="#about">عن روح</a><a href="#fields">مجالاتنا</a><a href="#ideas">حاضنة الأفكار</a><a href="#complaints">صندوق الشكاوى</a><a href="#events">الفعاليات</a><a href="#achievements">الإنجازات</a><a href="#join">انضم إلينا</a><a href="#contact">تواصل معنا</a></div><a class="btn green" id="navJoin" target="_blank">انضم الآن</a></div></nav>
 <header class="hero" id="home"><div class="container"><div class="heroContent"><div class="kicker">INSPIRE • EMPOWER • IMPACT</div><h1 id="initiativeName">مبادرة روح</h1><h2 id="tagline"></h2><p id="heroText"></p><p><b id="belief"></b></p><div class="actions"><a class="btn green" href="#about">تعرّف على روح</a><a class="btn light" id="heroJoin" target="_blank">انضم إلينا</a><a class="btn light" href="#events">تابع فعالياتنا</a></div></div></div></header>
 <section class="section alt" id="about"><div class="container"><div class="split"><div><span class="kicker">من روح نبدأ</span><h2 style="font-size:42px">كل فكرة صغيرة يمكن أن تصبح أثرًا كبيرًا.</h2><p id="aboutText"></p></div><div class="quote"><h2>روح</h2><h3>رسالتنا</h3><p id="mission"></p><h3>رؤيتنا</h3><p id="vision"></p></div></div></div></section>
 <section class="section"><div class="container"><div class="sectionTitle"><span class="kicker">قيمنا</span><h2>ما الذي يقودنا؟</h2></div><div class="grid grid3" id="values"></div></div></section>
 <section class="section alt" id="fields"><div class="container"><div class="sectionTitle"><span class="kicker">مجالاتنا</span><h2>مساحات لصناعة الأثر</h2><p>نمنح الشباب فرصًا مختلفة للمشاركة والتعلّم وتحويل الأفكار إلى عمل.</p></div><div class="grid grid3" id="fieldsGrid"></div></div></section>
+
+<section class="section alt" id="complaints">
+<div class="container">
+
+<div class="sectionTitle">
+<span class="kicker">صندوق شكاوى روح</span>
+<h2>صوتك يهمنا</h2>
+<p>يمكنك إرسال شكواك أو ملاحظتك، وسيتم التعامل معها من قبل الجهة المختصة بسرية واهتمام.</p>
+</div>
+
+<div class="card">
+<form id="complaintForm">
+
+<div class="grid grid2">
+
+<label>
+الاسم
+<input type="text" id="complaintName" maxlength="100" required>
+</label>
+
+<label>
+رقم الهاتف
+<input type="tel" id="complaintPhone" maxlength="30" required>
+</label>
+
+<label>
+البريد الإلكتروني
+<input type="email" id="complaintEmail" maxlength="150" required>
+</label>
+
+</div>
+
+<label>
+الشكوى
+<textarea id="complaintText" maxlength="5000" rows="7" required placeholder="اكتب شكواك بالتفصيل هنا..."></textarea>
+</label>
+
+<div class="actions">
+<button class="btn green" id="complaintSubmit" type="submit">إرسال الشكوى</button>
+</div>
+
+<p id="complaintMessage"></p>
+
+</form>
+</div>
+
+</div>
+</section>
+
 <section class="section" id="ideas">
 <div class="container">
 <div class="sectionTitle">

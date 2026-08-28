@@ -19,9 +19,11 @@ CREATE TABLE IF NOT EXISTS users (
  id INTEGER PRIMARY KEY AUTOINCREMENT,
  name TEXT NOT NULL,
  email TEXT UNIQUE NOT NULL,
+ phone TEXT NOT NULL DEFAULT '',
  password_hash TEXT NOT NULL,
  role TEXT NOT NULL CHECK(role IN ('owner','admin','editor')),
  active INTEGER NOT NULL DEFAULT 1,
+ department TEXT NOT NULL DEFAULT '',
  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS volunteers (
@@ -104,6 +106,17 @@ CREATE TABLE IF NOT EXISTS ideas (
  description TEXT NOT NULL,
  problem TEXT DEFAULT '',
  expected_impact TEXT DEFAULT '',
+ status TEXT NOT NULL DEFAULT 'new',
+ admin_notes TEXT DEFAULT '',
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS complaints (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ name TEXT NOT NULL,
+ phone TEXT NOT NULL,
+ email TEXT NOT NULL,
+ complaint TEXT NOT NULL,
  status TEXT NOT NULL DEFAULT 'new',
  admin_notes TEXT DEFAULT '',
  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -218,7 +231,7 @@ function verifyPassword(password, stored){
 }
 function currentUser(req){
  const token=parseCookies(req).rouh_session; if(!token) return null;
- const row=db.prepare(`SELECT u.id,u.name,u.email,u.role,u.active,s.expires_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=?`).get(token);
+ const row=db.prepare(`SELECT u.id,u.name,u.email,u.phone,u.role,u.department,u.active,s.expires_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=?`).get(token);
  if(!row || !row.active || new Date(row.expires_at)<new Date()){ if(token) db.prepare('DELETE FROM sessions WHERE token=?').run(token); return null; } return row;
 }
 function requireUser(req,res,roles=null){ const u=currentUser(req); if(!u){send(res,401,{error:'يجب تسجيل الدخول'}); return null;} if(roles && !roles.includes(u.role)){send(res,403,{error:'لا تملك الصلاحية'}); return null;} return u; }
@@ -260,7 +273,7 @@ const server=http.createServer(async (req,res)=>{
    const b=await body(req); const u=db.prepare('SELECT * FROM users WHERE email=?').get(String(b.email||'').toLowerCase());
    if(!u||!u.active||!verifyPassword(String(b.password||''),u.password_hash)) return send(res,401,{error:'بيانات الدخول غير صحيحة'});
    const token=crypto.randomBytes(32).toString('hex'); const exp=new Date(Date.now()+7*86400000).toISOString(); db.prepare('INSERT INTO sessions(token,user_id,expires_at) VALUES(?,?,?)').run(token,u.id,exp);
-   res.setHeader('Set-Cookie',`rouh_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${process.env.NODE_ENV==='production'?'; Secure':''}`); audit(u,'login','session',''); return send(res,200,{ok:true,user:{id:u.id,name:u.name,email:u.email,role:u.role}});
+   res.setHeader('Set-Cookie',`rouh_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${process.env.NODE_ENV==='production'?'; Secure':''}`); audit(u,'login','session',''); return send(res,200,{ok:true,user:{id:u.id,name:u.name,email:u.email,phone:u.phone,role:u.role,department:u.department}});
   }
   if(pathname==='/api/volunteer/login' && req.method==='POST'){
    const b=await body(req);
@@ -351,7 +364,7 @@ const server=http.createServer(async (req,res)=>{
   if(pathname==='/api/logout' && req.method==='POST'){
    const token=parseCookies(req).rouh_session; const u=currentUser(req); if(token) db.prepare('DELETE FROM sessions WHERE token=?').run(token); res.setHeader('Set-Cookie','rouh_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'); if(u)audit(u,'logout','session',''); return send(res,200,{ok:true});
   }
-  if(pathname==='/api/me' && req.method==='GET'){ const u=currentUser(req); return send(res,200,{user:u?{id:u.id,name:u.name,email:u.email,role:u.role}:null}); }
+  if(pathname==='/api/me' && req.method==='GET'){ const u=currentUser(req); return send(res,200,{user:u?{id:u.id,name:u.name,email:u.email,phone:u.phone,role:u.role,department:u.department}:null}); }
 
 
 
@@ -682,8 +695,104 @@ const server=http.createServer(async (req,res)=>{
    });
   }
 
+
+  if(pathname==='/api/complaints' && req.method==='POST'){
+   const b=await body(req);
+
+   const name=String(b.name||'').trim();
+   const phone=String(b.phone||'').trim();
+   const email=String(b.email||'').trim().toLowerCase();
+   const complaint=String(b.complaint||'').trim();
+
+   if(!name||!phone||!email||!complaint)
+    return send(res,400,{error:'الاسم ورقم الهاتف والبريد الإلكتروني والشكوى مطلوبة'});
+
+   if(!email.includes('@'))
+    return send(res,400,{error:'يرجى إدخال بريد إلكتروني صحيح'});
+
+   if(name.length>100||phone.length>30||email.length>150||complaint.length>5000)
+    return send(res,400,{error:'بعض البيانات أطول من الحد المسموح'});
+
+   const r=db.prepare(`
+    INSERT INTO complaints(name,phone,email,complaint)
+    VALUES(?,?,?,?)
+   `).run(name,phone,email,complaint);
+
+   return send(res,201,{
+    ok:true,
+    id:r.lastInsertRowid,
+    message:'تم استلام شكواك بنجاح'
+   });
+  }
+
   if(pathname.startsWith('/api/admin/')){
    const user=requireUser(req,res); if(!user) return;
+
+   if(pathname==='/api/admin/complaints' && req.method==='GET'){
+    const canAccessComplaints=
+     user.role==='owner' ||
+     (
+      user.role==='admin' &&
+      user.department==='إدارة الموارد البشرية (HR)'
+     );
+
+    if(!canAccessComplaints)
+     return send(res,403,{error:'الشكاوى متاحة للمالك والموارد البشرية فقط'});
+
+    const items=db.prepare(`
+     SELECT *
+     FROM complaints
+     ORDER BY
+      CASE status
+       WHEN 'new' THEN 1
+       WHEN 'reviewing' THEN 2
+       WHEN 'handled' THEN 3
+       WHEN 'closed' THEN 4
+       ELSE 5
+      END,
+      id DESC
+    `).all();
+
+    return send(res,200,{items});
+   }
+
+   const complaintMatch=pathname.match(/^\/api\/admin\/complaints\/(\d+)$/);
+
+   if(complaintMatch && req.method==='PUT'){
+    const canAccessComplaints=
+     user.role==='owner' ||
+     (
+      user.role==='admin' &&
+      user.department==='إدارة الموارد البشرية (HR)'
+     );
+
+    if(!canAccessComplaints)
+     return send(res,403,{error:'الشكاوى متاحة للمالك والموارد البشرية فقط'});
+
+    const id=complaintMatch[1];
+    const b=await body(req);
+
+    const allowed=['new','reviewing','handled','closed'];
+    if(!allowed.includes(b.status))
+     return send(res,400,{error:'حالة الشكوى غير صحيحة'});
+
+    const item=db.prepare('SELECT * FROM complaints WHERE id=?').get(id);
+    if(!item)
+     return send(res,404,{error:'الشكوى غير موجودة'});
+
+    const notes=String(b.admin_notes||'').trim();
+
+    db.prepare(`
+     UPDATE complaints
+     SET status=?,admin_notes=?,updated_at=CURRENT_TIMESTAMP
+     WHERE id=?
+    `).run(b.status,notes,id);
+
+    audit(user,'update','complaint',id,b.status);
+
+    return send(res,200,{ok:true});
+   }
+
    if(pathname==='/api/admin/ideas' && req.method==='GET'){
     const items=db.prepare('SELECT * FROM ideas ORDER BY id DESC').all();
     return send(res,200,{items});
@@ -709,29 +818,74 @@ const server=http.createServer(async (req,res)=>{
    }
 
 
+
+   function canManageVolunteer(user,item){
+    if(user.role==='owner') return true;
+
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    if(isHRAdmin) return true;
+
+    return (
+     user.role==='admin' &&
+     item &&
+     item.department===user.department
+    );
+   }
+
    // Volunteer applications - Owner/Admin only
    if(pathname==='/api/admin/volunteers' && req.method==='GET'){
     if(!['owner','admin'].includes(user.role))
      return send(res,403,{error:'لا تملك الصلاحية'});
 
-    const items=db.prepare(`
-     SELECT
-      va.*,
-      v.id AS volunteer_id,
-      v.username AS volunteer_username,
-      v.active AS volunteer_active
-     FROM volunteer_applications va
-     LEFT JOIN volunteers v
-      ON v.application_id=va.id
-     ORDER BY
-      CASE va.status
-       WHEN 'pending' THEN 1
-       WHEN 'accepted' THEN 2
-       WHEN 'rejected' THEN 3
-       ELSE 4
-      END,
-      va.id DESC
-    `).all();
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    let items;
+
+    if(user.role==='owner' || isHRAdmin){
+     items=db.prepare(`
+      SELECT
+       va.*,
+       v.id AS volunteer_id,
+       v.username AS volunteer_username,
+       v.active AS volunteer_active
+      FROM volunteer_applications va
+      LEFT JOIN volunteers v
+       ON v.application_id=va.id
+      ORDER BY
+       CASE va.status
+        WHEN 'pending' THEN 1
+        WHEN 'accepted' THEN 2
+        WHEN 'rejected' THEN 3
+        ELSE 4
+       END,
+       va.id DESC
+     `).all();
+    }else{
+     items=db.prepare(`
+      SELECT
+       va.*,
+       v.id AS volunteer_id,
+       v.username AS volunteer_username,
+       v.active AS volunteer_active
+      FROM volunteer_applications va
+      LEFT JOIN volunteers v
+       ON v.application_id=va.id
+      WHERE va.department=?
+      ORDER BY
+       CASE va.status
+        WHEN 'pending' THEN 1
+        WHEN 'accepted' THEN 2
+        WHEN 'rejected' THEN 3
+        ELSE 4
+       END,
+       va.id DESC
+     `).all(user.department||'');
+    }
 
     return send(res,200,{items});
    }
@@ -769,6 +923,9 @@ const server=http.createServer(async (req,res)=>{
 
     if(!item)
      return send(res,404,{error:'طلب المتطوع غير موجود'});
+
+    if(!canManageVolunteer(user,item))
+     return send(res,403,{error:'لا يمكنك إدارة متطوع من قسم آخر'});
 
     if(b.status==='contacted'){
      db.prepare(`
@@ -852,6 +1009,9 @@ const server=http.createServer(async (req,res)=>{
     if(!item)
      return send(res,404,{error:'طلب المتطوع غير موجود'});
 
+    if(!canManageVolunteer(user,item))
+     return send(res,403,{error:'لا يمكنك إدارة متطوع من قسم آخر'});
+
     const account=db.prepare(`
      SELECT id
      FROM volunteers
@@ -916,6 +1076,9 @@ const server=http.createServer(async (req,res)=>{
     if(!item)
      return send(res,404,{error:'طلب المتطوع غير موجود'});
 
+    if(!canManageVolunteer(user,item))
+     return send(res,403,{error:'لا يمكنك إدارة متطوع من قسم آخر'});
+
     if(item.status!=='accepted')
      return send(res,400,{error:'يجب أن يكون المتطوع مقبولًا أولًا'});
 
@@ -955,6 +1118,18 @@ const server=http.createServer(async (req,res)=>{
     const id=volunteerAccountToggleMatch[1];
     const b=await body(req);
     const active=b.active ? 1 : 0;
+
+    const item=db.prepare(`
+     SELECT *
+     FROM volunteer_applications
+     WHERE id=?
+    `).get(id);
+
+    if(!item)
+     return send(res,404,{error:'طلب المتطوع غير موجود'});
+
+    if(!canManageVolunteer(user,item))
+     return send(res,403,{error:'لا يمكنك إدارة متطوع من قسم آخر'});
 
     const account=db.prepare(`
      SELECT v.id
@@ -1051,13 +1226,46 @@ const server=http.createServer(async (req,res)=>{
    }
    if(pathname==='/api/admin/trash'&&req.method==='GET'){ if(!['owner','admin'].includes(user.role))return send(res,403,{error:'لا تملك الصلاحية'}); return send(res,200,{events:db.prepare('SELECT id,title,deleted_at FROM events WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC').all(),achievements:db.prepare('SELECT id,title,deleted_at FROM achievements WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC').all(),faqs:db.prepare('SELECT id,question title,deleted_at FROM faqs WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC').all()}); }
    const restore=pathname.match(/^\/api\/admin\/trash\/(events|achievements|faqs)\/(\d+)\/restore$/); if(restore&&req.method==='POST'){ if(!['owner','admin'].includes(user.role))return send(res,403,{error:'لا تملك الصلاحية'}); db.prepare(`UPDATE ${restore[1]} SET deleted_at=NULL WHERE id=?`).run(restore[2]);audit(user,'restore',restore[1],restore[2]);return send(res,200,{ok:true}); }
-   if(pathname==='/api/admin/users'&&req.method==='GET'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); return send(res,200,{items:db.prepare('SELECT id,name,email,role,active,created_at FROM users ORDER BY id').all()}); }
-   if(pathname==='/api/admin/users'&&req.method==='POST'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); if(!['admin','editor'].includes(b.role)||!b.name||!b.email||!b.password||b.password.length<8)return send(res,400,{error:'تحقق من البيانات وكلمة المرور'}); try{const r=db.prepare('INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)').run(b.name,b.email.toLowerCase(),hashPassword(b.password),b.role);audit(user,'create','user',r.lastInsertRowid,b.email);return send(res,201,{id:r.lastInsertRowid});}catch{return send(res,409,{error:'البريد مستخدم مسبقًا'});} }
-   const um=pathname.match(/^\/api\/admin\/users\/(\d+)$/); if(um&&req.method==='PUT'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); const target=db.prepare('SELECT * FROM users WHERE id=?').get(um[1]); if(!target)return send(res,404,{error:'غير موجود'}); if(target.role==='owner')return send(res,400,{error:'لا يمكن تعديل حساب المالك من هنا'}); if(b.role&&!['admin','editor'].includes(b.role))return send(res,400,{error:'صلاحية غير صحيحة'}); db.prepare('UPDATE users SET name=?,role=?,active=? WHERE id=?').run(b.name||target.name,b.role||target.role,b.active===false?0:1,um[1]);audit(user,'update','user',um[1]);return send(res,200,{ok:true}); }
+   if(pathname==='/api/admin/users'&&req.method==='GET'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); return send(res,200,{items:db.prepare('SELECT id,name,email,phone,role,active,department,created_at FROM users ORDER BY id').all()}); }
+   if(pathname==='/api/admin/users'&&req.method==='POST'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); if(!['admin','editor'].includes(b.role)||!b.name||!b.phone||!b.email||!b.password||b.password.length<8)return send(res,400,{error:'تحقق من البيانات وكلمة المرور'}); try{const r=db.prepare('INSERT INTO users(name,email,phone,password_hash,role,department) VALUES(?,?,?,?,?,?)').run(
+ b.name,
+ b.email.toLowerCase(),
+ String(b.phone||'').trim(),
+ hashPassword(b.password),
+ b.role,
+ String(b.department||'')
+);audit(user,'create','user',r.lastInsertRowid,b.email);return send(res,201,{id:r.lastInsertRowid});}catch{return send(res,409,{error:'البريد مستخدم مسبقًا'});} }
+   const um=pathname.match(/^\/api\/admin\/users\/(\d+)$/); if(um&&req.method==='PUT'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); const target=db.prepare('SELECT * FROM users WHERE id=?').get(um[1]); if(!target)return send(res,404,{error:'غير موجود'}); if(target.role==='owner')return send(res,400,{error:'لا يمكن تعديل حساب المالك من هنا'}); if(b.role&&!['admin','editor'].includes(b.role))return send(res,400,{error:'صلاحية غير صحيحة'}); db.prepare('UPDATE users SET name=?,email=?,phone=?,role=?,active=?,department=? WHERE id=?').run(
+ b.name||target.name,
+ String(b.email||target.email).trim().toLowerCase(),
+ String(b.phone??target.phone??'').trim(),
+ b.role||target.role,
+ b.active===false?0:1,
+ String(b.department??target.department??''),
+ um[1]
+);audit(user,'update','user',um[1]);return send(res,200,{ok:true}); }
    if(pathname==='/api/admin/audit'&&req.method==='GET'){ if(!['owner','admin'].includes(user.role))return send(res,403,{error:'لا تملك الصلاحية'}); return send(res,200,{items:db.prepare('SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 200').all()}); }
    return send(res,404,{error:'المسار غير موجود'});
   }
   if(!serveStatic(req,res)) send(res,404,'Not found','text/plain');
  } catch(e){ console.error(e); if(!res.headersSent) send(res,500,{error:'حدث خطأ داخلي'}); }
 });
+
+// Database migrations for existing installations
+try{
+ const userColumns=db.prepare('PRAGMA table_info(users)').all();
+
+ if(!userColumns.some(c=>c.name==='phone')){
+  db.exec("ALTER TABLE users ADD COLUMN phone TEXT NOT NULL DEFAULT ''");
+  console.log('Database migration: users.phone added');
+ }
+
+ if(!userColumns.some(c=>c.name==='department')){
+  db.exec("ALTER TABLE users ADD COLUMN department TEXT NOT NULL DEFAULT ''");
+  console.log('Database migration: users.department added');
+ }
+}catch(e){
+ console.error('Database migration error:',e);
+}
+
 server.listen(PORT,'0.0.0.0',()=>console.log(`Rouh website: http://localhost:${PORT}`));
