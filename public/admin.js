@@ -279,10 +279,22 @@ async function openVolunteerWhatsApp(v){
   '/volunteer-register?token='+
   encodeURIComponent(v.invite_token);
 
- const groupUrl=
-  'https://chat.whatsapp.com/HPFufR8WZ2TE4FD2KLxoEF?s=cl&p=i&mlu=4';
-
  const department = v.department || 'لم يتم تحديد القسم';
+
+ const departmentGroups={
+  'الميداني':'https://chat.whatsapp.com/DGStqSESpgjAq3DxIrljUB?s=sw&p=i&mlu=4',
+  'إدارة الموارد البشرية (HR)':'https://chat.whatsapp.com/Exl2HKLne4z1toK8sORvew?s=sw&p=i&mlu=4',
+  'الأكاديمي':'https://chat.whatsapp.com/ENASFRdtXWu7KXOja2eZNq?s=sw&p=i&mlu=4',
+  'التقني':'https://chat.whatsapp.com/CqLWTkhVzPW0vsIMr2Xgar?s=sw&p=i&mlu=4',
+  'فكرة':'https://chat.whatsapp.com/EuiNNbPQedBErniuShpYue?s=sw&p=i&mlu=4'
+ };
+
+ const groupUrl=departmentGroups[department] || '';
+
+ const groupMessage=groupUrl
+  ? '\n\n👥 وانضم لمجموعة قسمك على واتساب من هنا:\n' +
+    groupUrl
+  : '';
 
  const message =
  '\u{1F389} مبارك! تم قبولك رسميًا في مبادرة روح \u{1F49A}\n\n' +
@@ -292,9 +304,7 @@ async function openVolunteerWhatsApp(v){
  'من اليوم إنت جزء من فريق روح، وكل فكرة، مشاركة، وخطوة بتعملها معنا إلها قيمة وأثر \u{2728}\n\n' +
  '\u{1F510} أنشئ حسابك على موقع روح من خلال رابط التسجيل الخاص فيك:\n' +
  registerUrl +
- '\n\n' +
- '\u{1F465} وانضم لمجموعة المتطوعين من هنا:\n' +
- groupUrl +
+ groupMessage +
  '\n\n' +
  'أهلًا فيك مرة ثانية، ومتحمسين نبدأ المشوار سوا \u{1F49A}\u{1F331}\n' +
  'فريق مبادرة روح';
