@@ -2,7 +2,7 @@ const $=s=>document.querySelector(s); const esc=s=>String(s??'').replace(/[&<>"'
 function img(src){return src?`<img src="${esc(src)}" alt="">`:''}
 async function load(){const d=await fetch('/api/public').then(r=>r.json());const s=d.settings;
  $('#initiativeName').textContent=s.initiative_name;$('#tagline').textContent=s.tagline;$('#heroText').textContent=s.hero_text;$('#belief').textContent=s.belief;$('#aboutText').textContent=s.about;$('#mission').textContent=s.mission;$('#vision').textContent=s.vision;$('#joinIntro').textContent=s.join_intro;$('#footerText').textContent=s.footer_text;
- ['navJoin','heroJoin','joinBtn'].forEach(id=>document.getElementById(id).href=s.join_url);$('#emailLink').href='mailto:'+s.email;$('#emailLink').textContent=s.email;$('#instagram').href=s.instagram;$('#facebook').href=s.facebook;
+ ['navJoin','heroJoin'].forEach(id=>{const el=document.getElementById(id);if(el)el.href='#join';});$('#emailLink').href='mailto:'+s.email;$('#emailLink').textContent=s.email;$('#instagram').href=s.instagram;$('#facebook').href=s.facebook;
  $('#values').innerHTML=(s.values||[]).map((v,i)=>`<article class="card"><div class="featureIcon">${['🌱','🤝','🧭','📚','💡','♻️'][i%6]}</div><h3>${esc(v[0])}</h3><p>${esc(v[1])}</p></article>`).join('');
  $('#fieldsGrid').innerHTML=(s.fields||[]).map((v,i)=>`<article class="card"><div class="featureIcon">${['🤝','🎓','💡','🎪','🌱'][i%5]}</div><h3>${esc(v[0])}</h3><p>${esc(v[1])}</p></article>`).join('');
  $('#joinReasons').innerHTML=(s.join_reasons||[]).map(x=>`<div class="card">✓ ${esc(x)}</div>`).join('');
@@ -55,6 +55,54 @@ if(ideaForm){
   }finally{
    btn.disabled=false;
    btn.textContent='شارك فكرتك';
+  }
+ });
+}
+
+
+const volunteerForm=document.getElementById('volunteerForm');
+
+if(volunteerForm){
+ volunteerForm.addEventListener('submit',async e=>{
+  e.preventDefault();
+
+  const msg=document.getElementById('volunteerMessage');
+  const btn=volunteerForm.querySelector('button[type="submit"]');
+
+  const data={
+   name:document.getElementById('volunteerNameInput').value.trim(),
+   phone:document.getElementById('volunteerPhoneInput').value.trim(),
+   major:document.getElementById('volunteerMajorInput').value.trim(),
+   level:document.getElementById('volunteerLevelInput').value.trim(),
+   city:document.getElementById('volunteerCityInput').value.trim()
+  };
+
+  try{
+   btn.disabled=true;
+   btn.textContent='جارٍ إرسال الطلب...';
+   msg.textContent='';
+
+   const r=await fetch('/api/volunteer/form-submit',{
+    method:'POST',
+    headers:{
+     'Content-Type':'application/json'
+    },
+    body:JSON.stringify(data)
+   });
+
+   const result=await r.json();
+
+   if(!r.ok)
+    throw new Error(result.error||'تعذر إرسال طلب الانتساب');
+
+   msg.textContent='✅ تم إرسال طلبك بنجاح، سيتم مراجعته والتواصل معك.';
+   volunteerForm.reset();
+
+  }catch(err){
+   msg.textContent='❌ '+err.message;
+  }finally{
+   btn.disabled=false;
+   btn.textContent='إرسال طلب الانتساب';
   }
  });
 }

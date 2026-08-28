@@ -68,7 +68,41 @@
 <section class="section" id="events"><div class="container"><div class="sectionTitle"><span class="kicker">الفعاليات</span><h2>القادم في روح</h2></div><div class="grid grid3" id="eventsGrid"></div></div></section>
 <section class="section alt" id="achievements"><div class="container"><div class="sectionTitle"><span class="kicker">إنجازاتنا</span><h2>الأثر يتحدث</h2></div><div class="grid grid3" id="achievementsGrid"></div></div></section>
 <section class="section hidden" id="statsSection"><div class="container"><div class="sectionTitle"><span class="kicker">أثر روح بالأرقام</span><h2>خطوات تتحول إلى أثر</h2></div><div class="stats"><div class="stat"><b id="sVolunteers">0</b>متطوع ومتطوعة</div><div class="stat"><b id="sEvents">0</b>فعالية</div><div class="stat"><b id="sHours">0</b>ساعة تطوعية</div><div class="stat"><b id="sBeneficiaries">0</b>مستفيد</div></div></div></section>
-<section class="section alt" id="join"><div class="container"><div class="join"><span class="kicker">الانتساب إلى مبادرة روح</span><h2 style="font-size:40px">كن جزءًا من الأثر</h2><p id="joinIntro"></p><div class="grid grid3" id="joinReasons"></div><div class="actions"><a class="btn green" id="joinBtn" target="_blank">انضم إلينا الآن</a></div></div></div></section>
+<section class="section alt" id="join"><div class="container"><div class="join"><span class="kicker">الانتساب إلى مبادرة روح</span><h2 style="font-size:40px">كن جزءًا من الأثر</h2><p id="joinIntro"></p><div class="grid grid3" id="joinReasons"></div><div class="card" style="margin-top:24px">
+<form id="volunteerForm">
+
+<div class="grid grid2">
+
+<label>الاسم الكامل
+<input type="text" id="volunteerNameInput" maxlength="100" required>
+</label>
+
+<label>رقم الهاتف
+<input type="tel" id="volunteerPhoneInput" maxlength="20" placeholder="07xxxxxxxx" required>
+</label>
+
+<label>التخصص
+<input type="text" id="volunteerMajorInput" maxlength="100">
+</label>
+
+<label>المستوى الدراسي
+<input type="text" id="volunteerLevelInput" maxlength="50" placeholder="مثال: السنة الثانية">
+</label>
+
+<label>المدينة
+<input type="text" id="volunteerCityInput" maxlength="100">
+</label>
+
+</div>
+
+<div class="actions">
+<button class="btn green" type="submit">إرسال طلب الانتساب</button>
+</div>
+
+<p id="volunteerMessage"></p>
+
+</form>
+</div></div></div></section>
 <section class="section"><div class="container"><div class="sectionTitle"><span class="kicker">الأسئلة الشائعة</span><h2>قبل أن تبدأ رحلتك</h2></div><div id="faqList"></div></div></section>
 <section class="section alt" id="contact"><div class="container"><div class="split"><div><span class="kicker">تواصل معنا</span><h2>هل لديك استفسار؟</h2><p>إذا كان لديك سؤال، فكرة، مقترح، أو رغبة بالتعاون مع مبادرة روح، يسعدنا التواصل معك.</p><p><b>البريد الإلكتروني:</b> <a id="emailLink"></a></p><p><b>📞 للاستفسار:</b> <a href="tel:+962776185475">0776185475</a></p><p><b>💬 واتساب:</b> <a href="https://wa.me/962776185475" target="_blank">تواصل عبر واتساب</a></p></div><div class="card"><h3>📱 نبقى على تواصل</h3><p>تابعونا للتعرف على فعالياتنا، وفرص التطوع، وآخر أخبار المبادرة.</p><div class="actions"><a class="btn light" id="instagram" target="_blank">Instagram</a><a class="btn light" id="facebook" target="_blank">Facebook</a></div></div></div></div></section>
 <footer class="footer"><div class="container footerGrid"><div><div class="brand">روح<small>ROUH</small></div><p>نزرع الأثر… ونصنع التغيير.</p><p id="footerText"></p></div><div><b>روابط سريعة</b><p><a href="#about">عن روح</a><br><a href="#events">الفعاليات</a><br><a href="#join">انضم إلينا</a></p></div><div><b>الإدارة</b><p><a href="/admin">دخول المسؤولين</a></p></div></div></footer>

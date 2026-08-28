@@ -254,12 +254,6 @@ const server=http.createServer(async (req,res)=>{
   if(pathname==='/api/volunteer/form-submit' && req.method==='POST'){
    const b=await body(req);
 
-   const secret=String(req.headers['x-rouh-secret']||'');
-   const expected=String(process.env.VOLUNTEER_SYNC_SECRET||'');
-
-   if(!expected || secret!==expected)
-    return send(res,401,{error:'غير مصرح'});
-
    const name=String(b.name||'').trim();
    const phone=String(b.phone||'').trim();
    const major=String(b.major||'').trim();
