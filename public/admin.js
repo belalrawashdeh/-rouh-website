@@ -51,8 +51,8 @@ async function volunteers(){
     يمكنك قبوله وتحديد القسم المناسب له.
    </p>
 
-   <div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse">
+   <div class="volunteerTableWrap">
+    <table class="volunteerTable">
      <thead>
       <tr>
        <th>الاسم</th>
@@ -333,8 +333,8 @@ async function rejectedVolunteers(){
     الطلبات التي تم رفضها محفوظة هنا ولا يتم حذفها.
    </p>
 
-   <div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse">
+   <div class="volunteerTableWrap">
+    <table class="volunteerTable">
      <thead>
       <tr>
        <th>الاسم</th>
