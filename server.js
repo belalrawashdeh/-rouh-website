@@ -515,11 +515,34 @@ const server=http.createServer(async (req,res)=>{
      WHERE id=?
     `).run(app.id);
 
+    const sessionToken=crypto.randomBytes(32).toString('hex');
+    const sessionExp=new Date(Date.now()+7*86400000).toISOString();
+
+    db.prepare(`
+     CREATE TABLE IF NOT EXISTS volunteer_sessions (
+      token TEXT PRIMARY KEY,
+      volunteer_id INTEGER NOT NULL,
+      expires_at TEXT NOT NULL,
+      FOREIGN KEY(volunteer_id) REFERENCES volunteers(id)
+     )
+    `).run();
+
+    db.prepare(`
+     INSERT INTO volunteer_sessions(token,volunteer_id,expires_at)
+     VALUES(?,?,?)
+    `).run(sessionToken,Number(result.lastInsertRowid),sessionExp);
+
+    res.setHeader(
+     'Set-Cookie',
+     `rouh_volunteer_session=${sessionToken}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${process.env.NODE_ENV==='production'?'; Secure':''}`
+    );
+
     return send(res,201,{
      ok:true,
      volunteer:{
       id:Number(result.lastInsertRowid),
       name:app.name,
+      email:app.email,
       phone:app.phone,
       username
      }
