@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS volunteer_applications (
    CHECK(status IN ('pending','accepted','rejected')),
  accepted_at TEXT,
  rejected_at TEXT,
+ invite_token TEXT,
  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
