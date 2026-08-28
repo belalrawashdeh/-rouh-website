@@ -115,6 +115,11 @@ button{
 <span id="phone"></span>
 </div>
 
+<div>
+<span class="label">القسم:</span>
+<span id="department"></span>
+</div>
+
 </div>
 
 <button class="logout" id="logout">
@@ -153,6 +158,11 @@ async function loadAccount(){
   document.getElementById('username').textContent=v.username||'';
   document.getElementById('email').textContent=v.email||'';
   document.getElementById('phone').textContent=v.phone||'';
+
+  const departmentEl=document.getElementById('department');
+  if(departmentEl){
+   departmentEl.textContent=v.department||'لم يتم تحديد القسم';
+  }
 
   document.getElementById('loading').style.display='none';
   document.getElementById('account').style.display='block';
