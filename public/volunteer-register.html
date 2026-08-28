@@ -151,6 +151,20 @@
 <form id="registerForm">
 
 <div class="volunteer-field">
+<label for="username">اسم المستخدم</label>
+<input
+ type="text"
+ id="username"
+ minlength="3"
+ maxlength="30"
+ pattern="[A-Za-z0-9_]+"
+ required
+ autocomplete="username"
+ placeholder="مثال: belal_rouh">
+<small>استخدم أحرف إنجليزية أو أرقام أو _ فقط</small>
+</div>
+
+<div class="volunteer-field">
 <label for="password">كلمة المرور</label>
 <input
  type="password"
@@ -241,9 +255,15 @@ form.addEventListener('submit',async event=>{
 
  event.preventDefault();
 
+ const username=document.getElementById('username').value.trim().toLowerCase();
  const password=document.getElementById('password').value;
  const confirmPassword=
   document.getElementById('confirmPassword').value;
+
+ if(!/^[a-z0-9_]{3,30}$/.test(username)){
+  showMessage('اسم المستخدم يجب أن يكون 3-30 حرفًا، ويحتوي على أحرف إنجليزية أو أرقام أو _.');
+  return;
+ }
 
  if(password.length<8){
   showMessage('كلمة المرور يجب أن تكون 8 أحرف على الأقل.');
@@ -267,6 +287,7 @@ form.addEventListener('submit',async event=>{
    },
    body:JSON.stringify({
     token,
+    username,
     password
    })
   });

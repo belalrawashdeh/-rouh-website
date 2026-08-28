@@ -357,10 +357,14 @@ const server=http.createServer(async (req,res)=>{
    const b=await body(req);
 
    const token=String(b.token||'').trim();
+   const username=String(b.username||'').trim().toLowerCase();
    const password=String(b.password||'');
 
    if(!token)
     return send(res,400,{error:'رابط الدعوة غير صحيح'});
+
+   if(!/^[a-z0-9_]{3,30}$/.test(username))
+    return send(res,400,{error:'اسم المستخدم يجب أن يكون 3-30 حرفًا، ويحتوي على أحرف إنجليزية أو أرقام أو _ فقط'});
 
    if(password.length<8)
     return send(res,400,{error:'كلمة المرور يجب أن تكون 8 أحرف على الأقل'});
@@ -381,6 +385,13 @@ const server=http.createServer(async (req,res)=>{
    if(existing)
     return send(res,409,{error:'تم إنشاء حساب لهذا المتطوع مسبقًا'});
 
+   const usernameExists=db.prepare(
+    'SELECT id FROM volunteers WHERE username=?'
+   ).get(username);
+
+   if(usernameExists)
+    return send(res,409,{error:'اسم المستخدم مستخدم مسبقًا، اختر اسمًا آخر'});
+
    try{
     const result=db.prepare(`
      INSERT INTO volunteers(
@@ -388,17 +399,17 @@ const server=http.createServer(async (req,res)=>{
       name,
       email,
       phone,
-      password_hash
+      password_hash,
+      username
      )
-     VALUES(?,?,?,?,?)
+     VALUES(?,?,?,?,?,?)
     `).run(
      app.id,
      app.name,
-     app.email
-      ? String(app.email).toLowerCase()
-      : `phone-${String(app.phone).replace(/\D/g,'')}@volunteer.rouh.local`,
+     app.email || `phone-${String(app.phone).replace(/\D/g,'')}@volunteer.rouh.local`,
      app.phone,
-     hashPassword(password)
+     hashPassword(password),
+     username
     );
 
     db.prepare(`
@@ -413,7 +424,8 @@ const server=http.createServer(async (req,res)=>{
      volunteer:{
       id:Number(result.lastInsertRowid),
       name:app.name,
-      phone:app.phone
+      phone:app.phone,
+      username
      }
     });
 
