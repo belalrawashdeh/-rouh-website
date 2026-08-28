@@ -143,9 +143,11 @@ async function openVolunteerWhatsApp(v){
  'أهلًا فيك مرة ثانية، ومتحمسين نبدأ المشوار سوا \u{1F49A}\u{1F331}\n' +
  'فريق مبادرة روح';
 
- const url=
-  'https://wa.me/'+phone+
-  '?text='+encodeURIComponent(message);
+ const url =
+  'https://web.whatsapp.com/send?phone=' +
+  phone +
+  '&text=' +
+  encodeURIComponent(message);
 
  const whatsappWindow=window.open(url,'_blank');
 
