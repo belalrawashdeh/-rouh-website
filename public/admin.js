@@ -129,21 +129,31 @@ async function openVolunteerWhatsApp(v){
  const groupUrl=
   'https://chat.whatsapp.com/HPFufR8WZ2TE4FD2KLxoEF?s=cl&p=i&mlu=4';
 
+ const emoji={
+  party:String.fromCodePoint(0x1F389),
+  heart:String.fromCodePoint(0x1F49A),
+  leaf:String.fromCodePoint(0x1F331),
+  fire:String.fromCodePoint(0x1F525),
+  sparkle:String.fromCodePoint(0x2728),
+  lock:String.fromCodePoint(0x1F510),
+  people:String.fromCodePoint(0x1F465)
+ };
+
  const message=
-`\u{1F389} مبارك! تم قبولك رسميًا في مبادرة روح \u{1F49A}
+`${emoji.party} مبارك! تم قبولك رسميًا في مبادرة روح ${emoji.heart}
 
-أهلًا وسهلًا فيك بين عائلة روح \u{1F331}
-متحمسين نشوف أفكارك، حماسك، وإنجازاتك معنا، ويلا نبدأ نصنع أثر حلو سوا! \u{1F525}
+أهلًا وسهلًا فيك بين عائلة روح ${emoji.leaf}
+متحمسين نشوف أفكارك، حماسك، وإنجازاتك معنا، ويلا نبدأ نصنع أثر حلو سوا! ${emoji.fire}
 
-من اليوم إنت جزء من فريق روح، وكل فكرة، مشاركة، وخطوة بتعملها معنا إلها قيمة وأثر \u{2728}
+من اليوم إنت جزء من فريق روح، وكل فكرة، مشاركة، وخطوة بتعملها معنا إلها قيمة وأثر ${emoji.sparkle}
 
-\u{1F510} أنشئ حسابك على موقع روح من خلال رابط التسجيل الخاص فيك:
+${emoji.lock} أنشئ حسابك على موقع روح من خلال رابط التسجيل الخاص فيك:
 ${registerUrl}
 
-\u{1F465} وانضم لمجموعة المتطوعين من هنا:
+${emoji.people} وانضم لمجموعة المتطوعين من هنا:
 ${groupUrl}
 
-أهلًا فيك مرة ثانية، ومتحمسين نبدأ المشوار سوا \u{1F49A}\u{1F331}
+أهلًا فيك مرة ثانية، ومتحمسين نبدأ المشوار سوا ${emoji.heart}${emoji.leaf}
 فريق مبادرة روح`;
 
  const url=
