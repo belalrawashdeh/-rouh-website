@@ -254,6 +254,12 @@ const server=http.createServer(async (req,res)=>{
   if(pathname==='/api/volunteer/form-submit' && req.method==='POST'){
    const b=await body(req);
 
+   const secret=String(req.headers['x-rouh-secret']||'');
+   const expected=String(process.env.VOLUNTEER_SYNC_SECRET||'');
+
+   if(!expected || secret!==expected)
+    return send(res,401,{error:'غير مصرح'});
+
    const name=String(b.name||'').trim();
    const phone=String(b.phone||'').trim();
    const major=String(b.major||'').trim();
@@ -277,21 +283,32 @@ const server=http.createServer(async (req,res)=>{
    `).get(internalEmail);
 
    if(existing){
-    db.prepare(`
-     UPDATE volunteer_applications
-     SET name=?,
-         phone=?,
-         major=?,
-         level=?,
-         city=?,
-         updated_at=CURRENT_TIMESTAMP
-     WHERE id=?
-    `).run(name,phone,major,level,city,existing.id);
+    if(existing.status==='rejected'){
+     db.prepare(`
+      UPDATE volunteer_applications
+      SET name=?,
+          phone=?,
+          major=?,
+          level=?,
+          city=?,
+          status='pending',
+          invite_token=NULL,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(name,phone,major,level,city,existing.id);
 
-    return send(res,200,{
-     ok:true,
-     existing:true,
-     id:existing.id
+     return send(res,200,{
+      ok:true,
+      existing:true,
+      resubmitted:true,
+      id:existing.id
+     });
+    }
+
+    return send(res,409,{
+     error:existing.status==='accepted'
+      ? 'تم قبول طلبك مسبقًا، ولا يمكنك تقديم طلب جديد بنفس رقم الهاتف'
+      : 'لديك طلب قيد المراجعة بالفعل بنفس رقم الهاتف'
     });
    }
 
