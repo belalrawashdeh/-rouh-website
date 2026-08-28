@@ -144,7 +144,7 @@ async function openVolunteerWhatsApp(v){
  'فريق مبادرة روح';
 
  const url =
-  'https://web.whatsapp.com/send?phone=' +
+  'whatsapp://send?phone=' +
   phone +
   '&text=' +
   encodeURIComponent(message);

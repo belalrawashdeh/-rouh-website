@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دخول المتطوعين - مبادرة روح</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#f5f7f4;
+ color:#1f2937;
+ min-height:100vh;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:20px;
+}
+
+.card{
+ width:100%;
+ max-width:460px;
+ background:white;
+ border-radius:24px;
+ padding:35px;
+ box-shadow:0 15px 45px rgba(0,0,0,.08);
+}
+
+.brand{
+ text-align:center;
+ font-size:38px;
+ font-weight:800;
+ margin-bottom:8px;
+}
+
+.subtitle{
+ text-align:center;
+ color:#6b7280;
+ margin-bottom:30px;
+}
+
+.field{
+ margin-bottom:18px;
+}
+
+label{
+ display:block;
+ margin-bottom:8px;
+ font-weight:700;
+}
+
+input{
+ width:100%;
+ padding:14px;
+ border:1px solid #d1d5db;
+ border-radius:12px;
+ font-size:16px;
+ outline:none;
+}
+
+input:focus{
+ border-color:#4f7d5a;
+}
+
+button{
+ width:100%;
+ border:0;
+ border-radius:12px;
+ padding:14px;
+ font-size:16px;
+ font-weight:700;
+ cursor:pointer;
+ background:#4f7d5a;
+ color:white;
+}
+
+button:disabled{
+ opacity:.6;
+ cursor:not-allowed;
+}
+
+.message{
+ margin-top:18px;
+ padding:12px;
+ border-radius:10px;
+ display:none;
+ text-align:center;
+}
+
+.error{
+ display:block;
+ background:#fee2e2;
+ color:#991b1b;
+}
+
+.success{
+ display:block;
+ background:#dcfce7;
+ color:#166534;
+}
+
+.links{
+ text-align:center;
+ margin-top:22px;
+}
+
+.links a{
+ color:#4f7d5a;
+ text-decoration:none;
+ font-weight:700;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<div class="brand">روح 🌱</div>
+
+<div class="subtitle">
+دخول حساب المتطوع
+</div>
+
+<form id="loginForm">
+
+<div class="field">
+<label for="username">اسم المستخدم</label>
+<input
+ id="username"
+ type="text"
+ autocomplete="username"
+ required
+ placeholder="اسم المستخدم">
+</div>
+
+<div class="field">
+<label for="password">كلمة المرور</label>
+<input
+ id="password"
+ type="password"
+ autocomplete="current-password"
+ required
+ placeholder="كلمة المرور">
+</div>
+
+<button id="loginBtn" type="submit">
+تسجيل الدخول
+</button>
+
+</form>
+
+<div id="message" class="message"></div>
+
+<div class="links">
+<a href="/">العودة إلى موقع روح</a>
+</div>
+
+</div>
+
+<script>
+
+const form=document.getElementById('loginForm');
+const btn=document.getElementById('loginBtn');
+const message=document.getElementById('message');
+
+function showMessage(text,type='error'){
+ message.textContent=text;
+ message.className='message '+type;
+}
+
+form.addEventListener('submit',async e=>{
+
+ e.preventDefault();
+
+ const username=document
+  .getElementById('username')
+  .value
+  .trim()
+  .toLowerCase();
+
+ const password=document
+  .getElementById('password')
+  .value;
+
+ btn.disabled=true;
+ btn.textContent='جارٍ تسجيل الدخول...';
+
+ try{
+
+  const response=await fetch('/api/volunteer/login',{
+   method:'POST',
+   headers:{
+    'Content-Type':'application/json'
+   },
+   body:JSON.stringify({
+    username,
+    password
+   })
+  });
+
+  const data=await response.json();
+
+  if(!response.ok)
+   throw new Error(data.error||'تعذر تسجيل الدخول');
+
+  showMessage(
+   'تم تسجيل الدخول بنجاح 🎉',
+   'success'
+  );
+
+  setTimeout(()=>{
+   window.location.href='/volunteer-account';
+  },800);
+
+ }catch(error){
+
+  showMessage(error.message);
+
+  btn.disabled=false;
+  btn.textContent='تسجيل الدخول';
+
+ }
+
+});
+
+</script>
+
+</body>
+</html>
