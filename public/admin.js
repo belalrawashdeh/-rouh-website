@@ -226,19 +226,72 @@ async function rejectedVolunteers(){
 }
 
 async function updateVolunteer(id,status){
- const ok=confirm(status==='accepted'
-  ? 'هل تريد قبول هذا المتطوع؟'
-  : 'هل تريد رفض هذا الطلب؟');
+ if(status==='accepted'){
+  const department=prompt(
+   'اختر قسم المتطوع:\n\n' +
+   '1 - الميداني\n' +
+   '2 - إدارة الموارد البشرية (HR)\n' +
+   '3 - الأكاديمي\n' +
+   '4 - العلاقات العامة\n' +
+   '5 - التقني\n' +
+   '6 - فكرة 💡\n\n' +
+   'اكتب رقم القسم:'
+  );
+
+  const departments={
+   '1':'الميداني',
+   '2':'إدارة الموارد البشرية (HR)',
+   '3':'الأكاديمي',
+   '4':'العلاقات العامة',
+   '5':'التقني',
+   '6':'فكرة'
+  };
+
+  if(!department || !departments[department]){
+   alert('يجب اختيار قسم صحيح قبل قبول المتطوع');
+   return;
+  }
+
+  const ok=confirm(
+   'قبول المتطوع في قسم:\n\n' +
+   departments[department] +
+   '\n\nهل أنت متأكد؟'
+  );
+
+  if(!ok) return;
+
+  try{
+   await api('/api/admin/volunteers/'+id,{
+    method:'PUT',
+    body:JSON.stringify({
+     status:'accepted',
+     department:departments[department]
+    })
+   });
+
+   flash('✅ تم قبول المتطوع في قسم '+departments[department]);
+   volunteers();
+
+  }catch(e){
+   alert(e.message);
+  }
+
+  return;
+ }
+
+ const ok=confirm('هل تريد رفض هذا الطلب؟');
 
  if(!ok) return;
 
  try{
   await api('/api/admin/volunteers/'+id,{
    method:'PUT',
-   body:JSON.stringify({status})
+   body:JSON.stringify({status:'rejected'})
   });
 
+  flash('تم رفض الطلب');
   volunteers();
+
  }catch(e){
   alert(e.message);
  }

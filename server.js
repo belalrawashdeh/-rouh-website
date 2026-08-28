@@ -136,6 +136,18 @@ CREATE TABLE IF NOT EXISTS audit_log (
 );
 `);
 
+try {
+ db.exec("ALTER TABLE volunteers ADD COLUMN department TEXT DEFAULT ''");
+} catch(e) {
+ if (!String(e.message).includes("duplicate column name")) throw e;
+}
+
+try {
+ db.exec("ALTER TABLE volunteer_applications ADD COLUMN department TEXT DEFAULT ''");
+} catch(e) {
+ if (!String(e.message).includes("duplicate column name")) throw e;
+}
+
 const defaults = {
  initiative_name: 'مبادرة روح',
  tagline: 'نزرع الأثر… ونصنع التغيير.',
@@ -616,16 +628,21 @@ const server=http.createServer(async (req,res)=>{
      return send(res,403,{error:'لا تملك الصلاحية'});
 
     const items=db.prepare(`
-     SELECT *
-     FROM volunteer_applications
+     SELECT
+      va.*,
+      v.id AS volunteer_id,
+      v.username AS volunteer_username
+     FROM volunteer_applications va
+     LEFT JOIN volunteers v
+      ON v.application_id=va.id
      ORDER BY
-      CASE status
+      CASE va.status
        WHEN 'pending' THEN 1
        WHEN 'accepted' THEN 2
        WHEN 'rejected' THEN 3
        ELSE 4
       END,
-      id DESC
+      va.id DESC
     `).all();
 
     return send(res,200,{items});
@@ -643,6 +660,18 @@ const server=http.createServer(async (req,res)=>{
     if(!['accepted','rejected'].includes(b.status))
      return send(res,400,{error:'حالة الطلب غير صحيحة'});
 
+    const departments=[
+     'الميداني',
+     'إدارة الموارد البشرية (HR)',
+     'الأكاديمي',
+     'العلاقات العامة',
+     'التقني',
+     'فكرة'
+    ];
+
+    if(b.status==='accepted' && !departments.includes(String(b.department||'')))
+     return send(res,400,{error:'يجب اختيار قسم صحيح للمتطوع'});
+
     const item=db.prepare(
      'SELECT * FROM volunteer_applications WHERE id=?'
     ).get(id);
@@ -656,12 +685,13 @@ const server=http.createServer(async (req,res)=>{
      db.prepare(`
       UPDATE volunteer_applications
       SET status='accepted',
+          department=?,
           accepted_at=CURRENT_TIMESTAMP,
           rejected_at=NULL,
           invite_token=?,
           updated_at=CURRENT_TIMESTAMP
       WHERE id=?
-     `).run(inviteToken,id);
+     `).run(b.department,inviteToken,id);
     }
 
     if(b.status==='rejected'){
@@ -680,6 +710,54 @@ const server=http.createServer(async (req,res)=>{
     return send(res,200,{
      ok:true,
      status:b.status
+    });
+   }
+
+
+   const volunteerDeleteMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)$/);
+
+   if(volunteerDeleteMatch && req.method==='DELETE'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const id=volunteerDeleteMatch[1];
+
+    const item=db.prepare(`
+     SELECT *
+     FROM volunteer_applications
+     WHERE id=?
+    `).get(id);
+
+    if(!item)
+     return send(res,404,{error:'طلب المتطوع غير موجود'});
+
+    const account=db.prepare(`
+     SELECT id
+     FROM volunteers
+     WHERE application_id=?
+    `).get(id);
+
+    if(account)
+     return send(res,409,{
+      error:'لا يمكن حذف الطلب لأن المتطوع لديه حساب فعليًا'
+     });
+
+    db.prepare(`
+     DELETE FROM volunteer_applications
+     WHERE id=?
+    `).run(id);
+
+    audit(
+     user,
+     'delete',
+     'volunteer_application',
+     id,
+     'allow_reapply'
+    );
+
+    return send(res,200,{
+     ok:true,
+     message:'تم حذف الطلب والسماح بالتقديم من جديد'
     });
    }
 
