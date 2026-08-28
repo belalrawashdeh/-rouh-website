@@ -249,6 +249,77 @@ const server=http.createServer(async (req,res)=>{
   if(pathname==='/api/me' && req.method==='GET'){ const u=currentUser(req); return send(res,200,{user:u?{id:u.id,name:u.name,email:u.email,role:u.role}:null}); }
 
 
+
+  if(pathname==='/api/volunteer/form-submit' && req.method==='POST'){
+   const b=await body(req);
+
+   const secret=String(req.headers['x-rouh-secret']||'');
+   const expected=String(process.env.VOLUNTEER_SYNC_SECRET||'');
+
+   if(!expected || secret!==expected)
+    return send(res,401,{error:'غير مصرح'});
+
+   const name=String(b.name||'').trim();
+   const phone=String(b.phone||'').trim();
+   const major=String(b.major||'').trim();
+   const level=String(b.level||'').trim();
+   const city=String(b.city||'').trim();
+
+   if(!name || !phone)
+    return send(res,400,{error:'الاسم ورقم الهاتف مطلوبان'});
+
+   const phoneDigits=phone.replace(/\D/g,'');
+
+   if(phoneDigits.length<9)
+    return send(res,400,{error:'رقم الهاتف غير صحيح'});
+
+   const internalEmail=`phone-${phoneDigits}@volunteer.rouh.local`;
+
+   const existing=db.prepare(`
+    SELECT id,status
+    FROM volunteer_applications
+    WHERE email=?
+   `).get(internalEmail);
+
+   if(existing){
+    db.prepare(`
+     UPDATE volunteer_applications
+     SET name=?,
+         phone=?,
+         major=?,
+         level=?,
+         city=?,
+         updated_at=CURRENT_TIMESTAMP
+     WHERE id=?
+    `).run(name,phone,major,level,city,existing.id);
+
+    return send(res,200,{
+     ok:true,
+     existing:true,
+     id:existing.id
+    });
+   }
+
+   const result=db.prepare(`
+    INSERT INTO volunteer_applications
+     (name,email,phone,major,level,city,status)
+    VALUES
+     (?,?,?,?,?,?,'pending')
+   `).run(
+    name,
+    internalEmail,
+    phone,
+    major,
+    level,
+    city
+   );
+
+   return send(res,201,{
+    ok:true,
+    id:Number(result.lastInsertRowid)
+   });
+  }
+
   if(pathname==='/api/volunteer/invite' && req.method==='GET'){
    const url=new URL(req.url,'http://localhost');
    const token=String(url.searchParams.get('token')||'').trim();
@@ -276,7 +347,7 @@ const server=http.createServer(async (req,res)=>{
     ok:true,
     volunteer:{
      name:app.name,
-     email:app.email
+     phone:app.phone
     }
    });
   }
@@ -303,8 +374,8 @@ const server=http.createServer(async (req,res)=>{
     return send(res,404,{error:'رابط الدعوة غير صالح أو لم يعد متاحًا'});
 
    const existing=db.prepare(
-    'SELECT id FROM volunteers WHERE application_id=? OR email=?'
-   ).get(app.id,String(app.email).toLowerCase());
+    'SELECT id FROM volunteers WHERE application_id=? OR phone=?'
+   ).get(app.id,app.phone);
 
    if(existing)
     return send(res,409,{error:'تم إنشاء حساب لهذا المتطوع مسبقًا'});
@@ -322,7 +393,9 @@ const server=http.createServer(async (req,res)=>{
     `).run(
      app.id,
      app.name,
-     String(app.email).toLowerCase(),
+     app.email
+      ? String(app.email).toLowerCase()
+      : `phone-${String(app.phone).replace(/\D/g,'')}@volunteer.rouh.local`,
      app.phone,
      hashPassword(password)
     );
@@ -339,7 +412,7 @@ const server=http.createServer(async (req,res)=>{
      volunteer:{
       id:Number(result.lastInsertRowid),
       name:app.name,
-      email:app.email
+      phone:app.phone
      }
     });
 

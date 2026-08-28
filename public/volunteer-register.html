@@ -145,7 +145,7 @@
 
 <div class="volunteer-info">
 <div><strong>الاسم:</strong> <span id="volunteerName"></span></div>
-<div><strong>البريد الإلكتروني:</strong> <span id="volunteerEmail"></span></div>
+<div><strong>رقم الهاتف:</strong> <span id="volunteerPhone"></span></div>
 </div>
 
 <form id="registerForm">
@@ -223,8 +223,8 @@ async function checkInvite(){
   document.getElementById('volunteerName').textContent=
    data.volunteer.name;
 
-  document.getElementById('volunteerEmail').textContent=
-   data.volunteer.email;
+  document.getElementById('volunteerPhone').textContent=
+   data.volunteer.phone;
 
   loading.style.display='none';
   registerArea.style.display='block';
