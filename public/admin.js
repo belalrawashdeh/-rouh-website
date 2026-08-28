@@ -29,15 +29,16 @@ init().catch(e=>console.error(e));
 
 async function volunteers(){
  const d=await api('/api/admin/volunteers');
- d.items=d.items.filter(v=>v.status==='pending' || (v.status==='accepted' && !v.whatsapp_sent_at));
+ const items=d.items.filter(v=>v.status!=='rejected');
 
  const statusText={
   pending:'قيد المراجعة',
+  contacted:'تم التواصل معه',
   accepted:'مقبول',
   rejected:'مرفوض'
  };
 
- if(!d.items.length){
+ if(!items.length){
   content.innerHTML='<div class="panel"><h3>طلبات المتطوعين</h3><p class="muted">لا توجد طلبات متطوعين حتى الآن.</p></div>';
   return;
  }
@@ -45,7 +46,10 @@ async function volunteers(){
  content.innerHTML=`
   <div class="panel">
    <h3>طلبات المتطوعين</h3>
-   <p class="muted">يمكن للمالك أو المسؤول قبول أو رفض طلبات الانضمام.</p>
+   <p class="muted">
+    تواصل مع المتقدم أولًا، وبعد معرفة قدراته واهتماماته
+    يمكنك قبوله وتحديد القسم المناسب له.
+   </p>
 
    <div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse">
@@ -58,12 +62,13 @@ async function volunteers(){
        <th>المستوى</th>
        <th>المدينة</th>
        <th>الحالة</th>
+       <th>القسم</th>
        <th>الإجراء</th>
       </tr>
      </thead>
 
      <tbody>
-      ${d.items.map(v=>`
+      ${items.map(v=>`
        <tr>
         <td>${esc(v.name||'')}</td>
         <td>${esc(v.email||'')}</td>
@@ -72,21 +77,70 @@ async function volunteers(){
         <td>${esc(v.level||'-')}</td>
         <td>${esc(v.city||'-')}</td>
         <td><b>${esc(statusText[v.status]||v.status)}</b></td>
+        <td>
+         ${v.department
+          ? `<b>${esc(v.department)}</b>`
+          : '<span class="muted">لم يحدد بعد</span>'}
+        </td>
 
         <td>
-         ${v.status!=='accepted'
-          ? `<button class="btn green" onclick="updateVolunteer(${v.id},'accepted')">قبول</button>`
-          : ''}
+         <div class="rowActions">
 
-         ${v.status!=='rejected'
-          ? `<button class="btn light" onclick="updateVolunteer(${v.id},'rejected')">رفض</button>`
-          : ''}
+          ${v.status==='pending'
+           ? `<button class="btn light"
+                onclick="updateVolunteer(${v.id},'contacted')">
+                💬 تم التواصل
+              </button>`
+           : ''}
 
-         ${v.status==='accepted' && v.whatsapp_sent_at
-          ? `<span class="notice">✅ تم إرسال القبول</span>`
-          : v.status==='accepted' && v.invite_token
-          ? `<button class="btn green" onclick='openVolunteerWhatsApp(${JSON.stringify(v)})'>إرسال رسالة القبول على واتساب</button>`
-          : ''}
+          ${v.status==='pending' || v.status==='contacted'
+           ? `<button class="btn green"
+                onclick="updateVolunteer(${v.id},'accepted')">
+                ✅ قبول وتحديد القسم
+              </button>`
+           : ''}
+
+          ${v.status!=='rejected' && v.status!=='accepted'
+           ? `<button class="btn danger"
+                onclick="updateVolunteer(${v.id},'rejected')">
+                ❌ رفض
+              </button>`
+           : ''}
+
+          ${v.status==='accepted' && v.invite_token
+           ? `<button class="btn green"
+                onclick='openVolunteerWhatsApp(${JSON.stringify(v)})'>
+                📱 إرسال رسالة القبول
+              </button>`
+           : ''}
+
+          ${v.status==='accepted' && v.whatsapp_sent_at
+           ? `<span class="notice">✅ تم إرسال القبول</span>`
+           : ''}
+
+          ${!v.volunteer_id
+           ? `<button class="btn danger"
+                onclick="deleteVolunteer(${v.id})">
+                🗑️ حذف وإتاحة التقديم من جديد
+              </button>`
+           : `
+              <span class="notice">
+               👤 لديه حساب
+               ${v.volunteer_active ? '🟢 فعال' : '🔴 معطل'}
+              </span>
+
+              <button class="btn light"
+               onclick="changeVolunteerDepartment(${v.id})">
+               ✏️ تغيير القسم
+              </button>
+
+              <button class="btn ${v.volunteer_active ? 'danger' : 'green'}"
+               onclick="toggleVolunteerAccount(${v.id},${v.volunteer_active ? 'false' : 'true'})">
+               ${v.volunteer_active ? '⛔ تعطيل الحساب' : '✅ تفعيل الحساب'}
+              </button>
+             `}
+
+         </div>
         </td>
        </tr>
       `).join('')}
@@ -96,6 +150,8 @@ async function volunteers(){
   </div>
  `;
 }
+
+
 
 
 function normalizeWhatsAppPhone(phone){
@@ -176,6 +232,87 @@ async function openVolunteerWhatsApp(v){
 window.openVolunteerWhatsApp=openVolunteerWhatsApp;
 
 
+
+async function changeVolunteerDepartment(id){
+ const choice=prompt(
+  'اختر القسم:\n'+
+  '1 - الميداني\n'+
+  '2 - إدارة الموارد البشرية (HR)\n'+
+  '3 - الأكاديمي\n'+
+  '4 - العلاقات العامة\n'+
+  '5 - التقني\n'+
+  '6 - فكرة'
+ );
+
+ if(choice===null) return;
+
+ const departments={
+  '1':'الميداني',
+  '2':'إدارة الموارد البشرية (HR)',
+  '3':'الأكاديمي',
+  '4':'العلاقات العامة',
+  '5':'التقني',
+  '6':'فكرة'
+ };
+
+ const department=departments[String(choice).trim()];
+
+ if(!department){
+  alert('اختيار غير صحيح');
+  return;
+ }
+
+ if(!confirm('تغيير القسم إلى: '+department+' ؟'))
+  return;
+
+ try{
+  await api('/api/admin/volunteers/'+id+'/department',{
+   method:'PUT',
+   body:JSON.stringify({department})
+  });
+
+  flash('✅ تم تغيير قسم المتطوع');
+  await volunteers();
+
+ }catch(e){
+  alert(e.message);
+ }
+}
+
+window.changeVolunteerDepartment=changeVolunteerDepartment;
+
+async function toggleVolunteerAccount(id,active){
+ const action=active ? 'تفعيل' : 'تعطيل';
+
+ const ok=confirm(
+  'هل تريد '+action+' حساب هذا المتطوع؟'
+ );
+
+ if(!ok) return;
+
+ try{
+  await api('/api/admin/volunteers/'+id+'/account-active',{
+   method:'PUT',
+   body:JSON.stringify({active})
+  });
+
+  flash(
+   active
+    ? '✅ تم تفعيل حساب المتطوع'
+    : '⛔ تم تعطيل حساب المتطوع'
+  );
+
+  await volunteers();
+
+ }catch(e){
+  alert(e.message);
+ }
+}
+
+window.toggleVolunteerAccount=toggleVolunteerAccount;
+
+
+
 async function rejectedVolunteers(){
  const d=await api('/api/admin/volunteers');
  const items=d.items.filter(v=>v.status==='rejected');
@@ -229,17 +366,33 @@ async function rejectedVolunteers(){
 }
 
 async function updateVolunteer(id,status){
- if(status==='accepted'){
-  const department=prompt(
-   'اختر قسم المتطوع:\n\n' +
-   '1 - الميداني\n' +
-   '2 - إدارة الموارد البشرية (HR)\n' +
-   '3 - الأكاديمي\n' +
-   '4 - العلاقات العامة\n' +
-   '5 - التقني\n' +
-   '6 - فكرة 💡\n\n' +
-   'اكتب رقم القسم:'
+
+ if(status==='contacted'){
+  const ok=confirm(
+   'هل تواصلت مع هذا المتطوع وتريد تسجيل أنه تم التواصل معه؟'
   );
+
+  if(!ok) return;
+
+  try{
+   await api('/api/admin/volunteers/'+id,{
+    method:'PUT',
+    body:JSON.stringify({
+     status:'contacted'
+    })
+   });
+
+   flash('💬 تم تسجيل التواصل مع المتطوع');
+   volunteers();
+
+  }catch(e){
+   alert(e.message);
+  }
+
+  return;
+ }
+
+ if(status==='accepted'){
 
   const departments={
    '1':'الميداني',
@@ -250,15 +403,27 @@ async function updateVolunteer(id,status){
    '6':'فكرة'
   };
 
+  const department=prompt(
+   'اختر قسم المتطوع بعد التواصل معه:\\n\\n' +
+   '1 - الميداني\\n' +
+   '2 - إدارة الموارد البشرية (HR)\\n' +
+   '3 - الأكاديمي\\n' +
+   '4 - العلاقات العامة\\n' +
+   '5 - التقني\\n' +
+   '6 - فكرة 💡\\n\\n' +
+   'اكتب رقم القسم:'
+  );
+
   if(!department || !departments[department]){
    alert('يجب اختيار قسم صحيح قبل قبول المتطوع');
    return;
   }
 
   const ok=confirm(
-   'قبول المتطوع في قسم:\n\n' +
+   'قبول المتطوع في قسم:\\n\\n' +
    departments[department] +
-   '\n\nهل أنت متأكد؟'
+   '؟\\n\\n' +
+   'بعد القبول سيصبح رابط إنشاء الحساب متاحًا.'
   );
 
   if(!ok) return;
@@ -272,7 +437,11 @@ async function updateVolunteer(id,status){
     })
    });
 
-   flash('✅ تم قبول المتطوع في قسم '+departments[department]);
+   flash(
+    '✅ تم قبول المتطوع في قسم ' +
+    departments[department]
+   );
+
    volunteers();
 
   }catch(e){
@@ -282,23 +451,31 @@ async function updateVolunteer(id,status){
   return;
  }
 
- const ok=confirm('هل تريد رفض هذا الطلب؟');
+ if(status==='rejected'){
 
- if(!ok) return;
+  const ok=confirm('هل تريد رفض هذا الطلب؟');
 
- try{
-  await api('/api/admin/volunteers/'+id,{
-   method:'PUT',
-   body:JSON.stringify({status:'rejected'})
-  });
+  if(!ok) return;
 
-  flash('تم رفض الطلب');
-  volunteers();
+  try{
+   await api('/api/admin/volunteers/'+id,{
+    method:'PUT',
+    body:JSON.stringify({
+     status:'rejected'
+    })
+   });
 
- }catch(e){
-  alert(e.message);
+   flash('تم رفض الطلب');
+   volunteers();
+
+  }catch(e){
+   alert(e.message);
+  }
  }
 }
+
+
+
 
 async function ideas(){
  const d=await api('/api/admin/ideas');

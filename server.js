@@ -148,6 +148,12 @@ try {
  if (!String(e.message).includes("duplicate column name")) throw e;
 }
 
+try {
+ db.exec("ALTER TABLE volunteer_applications ADD COLUMN contacted_at TEXT DEFAULT NULL");
+} catch(e) {
+ if (!String(e.message).includes("duplicate column name")) throw e;
+}
+
 const defaults = {
  initiative_name: 'مبادرة روح',
  tagline: 'نزرع الأثر… ونصنع التغيير.',
@@ -712,7 +718,8 @@ const server=http.createServer(async (req,res)=>{
      SELECT
       va.*,
       v.id AS volunteer_id,
-      v.username AS volunteer_username
+      v.username AS volunteer_username,
+      v.active AS volunteer_active
      FROM volunteer_applications va
      LEFT JOIN volunteers v
       ON v.application_id=va.id
@@ -738,7 +745,7 @@ const server=http.createServer(async (req,res)=>{
     const id=volunteerMatch[1];
     const b=await body(req);
 
-    if(!['accepted','rejected'].includes(b.status))
+    if(!['contacted','accepted','rejected'].includes(b.status))
      return send(res,400,{error:'حالة الطلب غير صحيحة'});
 
     const departments=[
@@ -750,7 +757,10 @@ const server=http.createServer(async (req,res)=>{
      'فكرة'
     ];
 
-    if(b.status==='accepted' && !departments.includes(String(b.department||'')))
+    if(
+     b.status==='accepted' &&
+     !departments.includes(String(b.department||''))
+    )
      return send(res,400,{error:'يجب اختيار قسم صحيح للمتطوع'});
 
     const item=db.prepare(
@@ -759,6 +769,29 @@ const server=http.createServer(async (req,res)=>{
 
     if(!item)
      return send(res,404,{error:'طلب المتطوع غير موجود'});
+
+    if(b.status==='contacted'){
+     db.prepare(`
+      UPDATE volunteer_applications
+      SET status='contacted',
+          contacted_at=CURRENT_TIMESTAMP,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(id);
+
+     audit(
+      user,
+      'update',
+      'volunteer_application',
+      id,
+      'contacted'
+     );
+
+     return send(res,200,{
+      ok:true,
+      status:'contacted'
+     });
+    }
 
     if(b.status==='accepted'){
      const inviteToken=crypto.randomBytes(32).toString('hex');
@@ -781,12 +814,19 @@ const server=http.createServer(async (req,res)=>{
       SET status='rejected',
           rejected_at=CURRENT_TIMESTAMP,
           accepted_at=NULL,
+          invite_token=NULL,
           updated_at=CURRENT_TIMESTAMP
       WHERE id=?
      `).run(id);
     }
 
-    audit(user,'update','volunteer_application',id,b.status);
+    audit(
+     user,
+     'update',
+     'volunteer_application',
+     id,
+     b.status
+    );
 
     return send(res,200,{
      ok:true,
@@ -839,6 +879,116 @@ const server=http.createServer(async (req,res)=>{
     return send(res,200,{
      ok:true,
      message:'تم حذف الطلب والسماح بالتقديم من جديد'
+    });
+   }
+
+
+
+   const volunteerDepartmentMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)\/department$/);
+
+   if(volunteerDepartmentMatch && req.method==='PUT'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const id=volunteerDepartmentMatch[1];
+    const b=await body(req);
+
+    const departments=[
+     'الميداني',
+     'إدارة الموارد البشرية (HR)',
+     'الأكاديمي',
+     'العلاقات العامة',
+     'التقني',
+     'فكرة'
+    ];
+
+    const department=String(b.department||'').trim();
+
+    if(!departments.includes(department))
+     return send(res,400,{error:'القسم غير صحيح'});
+
+    const item=db.prepare(`
+     SELECT id,status
+     FROM volunteer_applications
+     WHERE id=?
+    `).get(id);
+
+    if(!item)
+     return send(res,404,{error:'طلب المتطوع غير موجود'});
+
+    if(item.status!=='accepted')
+     return send(res,400,{error:'يجب أن يكون المتطوع مقبولًا أولًا'});
+
+    db.prepare(`
+     UPDATE volunteer_applications
+     SET department=?,
+         updated_at=CURRENT_TIMESTAMP
+     WHERE id=?
+    `).run(department,id);
+
+    db.prepare(`
+     UPDATE volunteers
+     SET department=?
+     WHERE application_id=?
+    `).run(department,id);
+
+    audit(
+     user,
+     'update',
+     'volunteer_department',
+     id,
+     department
+    );
+
+    return send(res,200,{
+     ok:true,
+     department
+    });
+   }
+
+   const volunteerAccountToggleMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)\/account-active$/);
+
+   if(volunteerAccountToggleMatch && req.method==='PUT'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const id=volunteerAccountToggleMatch[1];
+    const b=await body(req);
+    const active=b.active ? 1 : 0;
+
+    const account=db.prepare(`
+     SELECT v.id
+     FROM volunteers v
+     WHERE v.application_id=?
+    `).get(id);
+
+    if(!account)
+     return send(res,404,{error:'لا يوجد حساب لهذا المتطوع'});
+
+    db.prepare(`
+     UPDATE volunteers
+     SET active=?
+     WHERE id=?
+    `).run(active,account.id);
+
+    if(!active){
+     db.prepare(`
+      DELETE FROM volunteer_sessions
+      WHERE volunteer_id=?
+     `).run(account.id);
+    }
+
+    audit(
+     user,
+     'update',
+     'volunteer_account',
+     account.id,
+     active ? 'active' : 'disabled'
+    );
+
+    return send(res,200,{
+     ok:true,
+     active
     });
    }
 

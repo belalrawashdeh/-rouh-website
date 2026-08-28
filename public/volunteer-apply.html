@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>التقديم للتطوع | مبادرة روح</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+.applyWrap{
+ max-width:850px;
+ margin:50px auto;
+ padding:20px;
+}
+.applyBox{
+ background:#fff;
+ border-radius:20px;
+ padding:30px;
+ box-shadow:0 10px 35px rgba(0,0,0,.08);
+}
+.applyBox h1{margin-bottom:10px}
+.applyBox .intro{margin-bottom:25px}
+.formGrid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:18px;
+}
+.field{display:flex;flex-direction:column;gap:7px}
+.field.full{grid-column:1/-1}
+.field input,.field select{
+ padding:13px;
+ border:1px solid #ddd;
+ border-radius:10px;
+ font:inherit;
+}
+.notice{
+ margin-top:20px;
+ padding:14px;
+ border-radius:10px;
+}
+.notice.success{background:#e9f8ef}
+.notice.error{background:#fdecec}
+@media(max-width:700px){
+ .formGrid{grid-template-columns:1fr}
+ .field.full{grid-column:auto}
+}
+</style>
+</head>
+
+<body>
+
+<div class="applyWrap">
+ <div class="applyBox">
+
+  <div class="kicker">JOIN ROUH</div>
+
+  <h1>انضم إلى مبادرة روح 🌱</h1>
+
+  <p class="intro">
+   إذا كنت ترغب بأن تكون جزءًا من فريق روح وتساهم في صناعة أثر حقيقي،
+   عبّئ طلب الانضمام وسنقوم بمراجعته والتواصل معك.
+  </p>
+
+  <form id="applyForm" class="formGrid">
+
+   <div class="field">
+    <label>الاسم الكامل *</label>
+    <input id="name" required placeholder="اكتب اسمك الكامل">
+   </div>
+
+   <div class="field">
+    <label>البريد الإلكتروني</label>
+    <input id="email" type="email" placeholder="example@gmail.com">
+   </div>
+
+   <div class="field">
+    <label>رقم الهاتف *</label>
+    <input id="phone" required placeholder="07xxxxxxxx">
+   </div>
+
+   <div class="field">
+    <label>التخصص</label>
+    <input id="major" placeholder="مثال: علوم حاسوب">
+   </div>
+
+   <div class="field">
+    <label>المستوى الدراسي</label>
+    <input id="level" placeholder="مثال: سنة ثالثة">
+   </div>
+
+   <div class="field">
+    <label>المحافظة / المدينة</label>
+    <input id="city" placeholder="مثال: إربد">
+   </div>
+
+   <div class="field full">
+    <button class="btn green" type="submit">
+     إرسال طلب الانضمام
+    </button>
+   </div>
+
+  </form>
+
+  <div id="msg"></div>
+
+  <p style="margin-top:25px">
+   لديك حساب بالفعل؟
+   <a href="/volunteer-login">دخول المتطوعين</a>
+  </p>
+
+ </div>
+</div>
+
+<script>
+const form=document.getElementById('applyForm');
+const msg=document.getElementById('msg');
+
+form.addEventListener('submit',async e=>{
+ e.preventDefault();
+
+ const btn=form.querySelector('button');
+ btn.disabled=true;
+ btn.textContent='جارٍ إرسال الطلب...';
+ msg.innerHTML='';
+
+ const data={
+  name:document.getElementById('name').value.trim(),
+  email:document.getElementById('email').value.trim(),
+  phone:document.getElementById('phone').value.trim(),
+  major:document.getElementById('major').value.trim(),
+  level:document.getElementById('level').value.trim(),
+  city:document.getElementById('city').value.trim()
+ };
+
+ try{
+  const r=await fetch('/api/volunteer/apply',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify(data)
+  });
+
+  const result=await r.json();
+
+  if(!r.ok) throw new Error(result.error||'تعذر إرسال الطلب');
+
+  msg.innerHTML=
+   '<div class="notice success">' +
+   '✅ تم إرسال طلبك بنجاح!<br><br>' +
+   'سيتم مراجعة طلبك من إدارة مبادرة روح، ' +
+   'وفي حال قبولك سيتم إرسال رابط خاص لك لإنشاء حسابك.' +
+   '</div>';
+
+  form.reset();
+
+ }catch(err){
+  msg.innerHTML=
+   '<div class="notice error">❌ '+err.message+'</div>';
+ }finally{
+  btn.disabled=false;
+  btn.textContent='إرسال طلب الانضمام';
+ }
+});
+</script>
+
+</body>
+</html>

@@ -11,7 +11,36 @@ async function load(){const d=await fetch('/api/public').then(r=>r.json());const
  $('#faqList').innerHTML=(d.faqs||[]).map(f=>`<details class="faq"><summary>${esc(f.question)}</summary><p>${esc(f.answer)}</p></details>`).join('');
  if(s.stats_visible==='1'){ $('#statsSection').classList.remove('hidden');$('#sVolunteers').textContent='+'+d.stats.volunteers;$('#sEvents').textContent='+'+d.stats.events;$('#sHours').textContent='+'+d.stats.hours;$('#sBeneficiaries').textContent='+'+d.stats.beneficiaries; }
 }
-load().catch(console.error);
+async function updateVolunteerNavigation(){
+ try{
+  const r=await fetch('/api/volunteer/me');
+  const d=await r.json();
+  const v=d.volunteer;
+
+  const links=['navJoin','heroJoin','joinBtn'];
+
+  links.forEach(id=>{
+   const el=document.getElementById(id);
+   if(!el) return;
+
+   if(v){
+    el.href='/volunteer-account';
+    el.target='_self';
+    el.textContent='حسابي';
+   }else{
+    el.href='/volunteer-apply';
+    el.target='_self';
+    el.textContent=id==='navJoin'?'انضم الآن':'انضم إلينا';
+   }
+  });
+ }catch(e){
+  console.error('Volunteer navigation error:',e);
+ }
+}
+
+load()
+ .then(updateVolunteerNavigation)
+ .catch(console.error);
 
 const ideaForm=document.getElementById('ideaForm');
 
