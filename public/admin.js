@@ -160,7 +160,7 @@ ${groupUrl}
   'https://wa.me/'+phone+
   '?text='+encodeURIComponent(message);
 
- const whatsappWindow=window.open(url,'_blank','noopener,noreferrer');
+ const whatsappWindow=window.open(url,'_blank');
 
  if(!whatsappWindow){
   alert('المتصفح منع فتح واتساب. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');
@@ -173,10 +173,11 @@ ${groupUrl}
    body:JSON.stringify({})
   });
 
+  flash('تم تسجيل إرسال رسالة القبول');
   await volunteers();
  }catch(e){
   console.error(e);
-  alert('تم فتح واتساب، لكن تعذر تسجيل حالة الإرسال: ' + e.message);
+  alert('فتح واتساب، لكن فشل تسجيل الإرسال: '+e.message);
  }
 }
 
