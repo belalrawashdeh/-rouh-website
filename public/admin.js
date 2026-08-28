@@ -166,7 +166,7 @@ ${groupUrl}
   await volunteers();
  }catch(e){
   console.error(e);
-  alert('تم فتح واتساب، لكن تعذر تسجيل حالة الإرسال.');
+  alert('تم فتح واتساب، لكن تعذر تسجيل حالة الإرسال: ' + e.message);
  }
 }
 
