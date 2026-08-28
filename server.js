@@ -173,7 +173,7 @@ const defaults = {
  ]),
  join_intro: 'روح ليست مجرد مبادرة… روح هي مساحة لك لتكون جزءًا من شيء أكبر. إذا كنت تمتلك شغفًا بالتطوع، أو مهارة ترغب في تطويرها، أو فكرة تريد تحويلها إلى واقع، فنحن نرحب بك.',
  join_reasons_json: JSON.stringify(['فرصة للمشاركة في فعاليات ومبادرات متنوعة.','تطوير مهارات التواصل والعمل الجماعي.','اكتساب خبرات عملية.','التعرف على أشخاص يشاركونك الاهتمام بالتطوع.','المشاركة في صناعة أثر حقيقي.','الحصول على فرص للتدريب والتطوير.','اكتشاف قدراتك وتوظيفها في المكان المناسب.']),
- join_url: 'https://docs.google.com/forms/d/e/1FAIpQLSd4rVoHJSSY3RWIGHKJB3Dv0mq0dQPKN8a6e7qd-e5NZPD91Q/viewform?usp=header',
+ join_url: '/volunteer-register',
  email: 'rouhjadara@gmail.com',
  instagram: 'https://www.instagram.com/rouh.jadara?igsi=Z2ZlZ2VvaXNtYzlu&utm_source=qr',
  facebook: 'https://www.facebook.com/share/1JUpNSKiX7/?mibextid=wwXIfr',
