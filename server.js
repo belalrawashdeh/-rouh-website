@@ -957,7 +957,9 @@ const server=http.createServer(async (req,res)=>{
      'الأكاديمي',
      'العلاقات العامة',
      'التقني',
-     'فكرة'
+     'فكرة',
+     'الإعلامي',
+     'التيسير'
     ];
 
     const item=db.prepare(
@@ -1261,7 +1263,9 @@ const server=http.createServer(async (req,res)=>{
      'الأكاديمي',
      'العلاقات العامة',
      'التقني',
-     'فكرة'
+     'فكرة',
+     'الإعلامي',
+     'التيسير'
     ];
 
     const department=String(b.department||'').trim();

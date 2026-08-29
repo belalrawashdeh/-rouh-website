@@ -25,7 +25,9 @@ async function renderDepartmentBar(){
   'الأكاديمي',
   'العلاقات العامة',
   'التقني',
-  'فكرة'
+  'فكرة',
+  'الإعلامي',
+  'التيسير'
  ];
 
  const isHR=
@@ -149,6 +151,8 @@ window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userFor
 <option value="العلاقات العامة" ${u.department==='العلاقات العامة'?'selected':''}>العلاقات العامة</option>
 <option value="التقني" ${u.department==='التقني'?'selected':''}>التقني</option>
 <option value="فكرة" ${u.department==='فكرة'?'selected':''}>فكرة</option>
+<option value="الإعلامي" ${u.department==='الإعلامي'?'selected':''}>الإعلامي</option>
+<option value="التيسير" ${u.department==='التيسير'?'selected':''}>التيسير</option>
 </select>
 </div>${u.id?`<div class="field"><label>الحالة</label><select name="active"><option value="1" ${u.active?'selected':''}>فعال</option><option value="0" ${!u.active?'selected':''}>موقوف</option></select></div>`:''}<button class="btn green full">حفظ</button></form></div>`;$('#userForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());if(u.id)o.active=o.active==='1';try{await api('/api/admin/users'+(u.id?'/'+u.id:''),{method:u.id?'PUT':'POST',body:JSON.stringify(o)});flash('تم الحفظ');loadTab('users')}catch(ex){flash(ex.message,true)}}}
 async function audit(){const d=await api('/api/admin/audit');content.innerHTML=`<div class="panel"><table class="table"><tr><th>المسؤول</th><th>الإجراء</th><th>العنصر</th><th>التفاصيل</th><th>الوقت</th></tr>${d.items.map(a=>`<tr><td>${esc(a.user_name||'النظام')}</td><td>${esc(a.action)}</td><td>${esc(a.entity)} ${esc(a.entity_id)}</td><td>${esc(a.details)}</td><td>${esc(a.created_at)}</td></tr>`).join('')}</table></div>`}
@@ -439,8 +443,11 @@ async function openVolunteerWhatsApp(v){
   'الميداني':'https://chat.whatsapp.com/DGStqSESpgjAq3DxIrljUB?s=sw&p=i&mlu=4',
   'إدارة الموارد البشرية (HR)':'https://chat.whatsapp.com/Exl2HKLne4z1toK8sORvew?s=sw&p=i&mlu=4',
   'الأكاديمي':'https://chat.whatsapp.com/ENASFRdtXWu7KXOja2eZNq?s=sw&p=i&mlu=4',
+  'العلاقات العامة':'https://chat.whatsapp.com/GrAuXBNMXPu40IWR4r2CJw?s=sw&p=i&mlu=4',
   'التقني':'https://chat.whatsapp.com/CqLWTkhVzPW0vsIMr2Xgar?s=sw&p=i&mlu=4',
-  'فكرة':'https://chat.whatsapp.com/EuiNNbPQedBErniuShpYue?s=sw&p=i&mlu=4'
+  'فكرة':'https://chat.whatsapp.com/EuiNNbPQedBErniuShpYue?s=sw&p=i&mlu=4',
+  'الإعلامي':'https://chat.whatsapp.com/KIb9yLhNQucHAbRtpSBibZ?s=cl&p=i&mlu=4',
+  'التيسير':'https://chat.whatsapp.com/HyCISufWvtC50xMfqDHppJ?s=sw&p=i&mlu=4'
  };
 
  const groupUrl=departmentGroups[department] || '';
@@ -476,6 +483,13 @@ async function openVolunteerWhatsApp(v){
   return;
  }
 
+ const sent=confirm('هل أرسلت رسالة القبول للمتطوع فعلًا؟');
+
+ if(!sent){
+  flash('تم فتح واتساب بدون تسجيل الإرسال');
+  return;
+ }
+
  try{
   await api('/api/admin/volunteers/'+v.id+'/whatsapp-sent',{
    method:'PUT',
@@ -486,7 +500,7 @@ async function openVolunteerWhatsApp(v){
   await volunteers();
  }catch(e){
   console.error(e);
-  alert('فتح واتساب، لكن فشل تسجيل الإرسال: '+e.message);
+  alert('تم فتح واتساب، لكن فشل تسجيل الإرسال: '+e.message);
  }
 }
 
@@ -502,7 +516,9 @@ async function changeVolunteerDepartment(id){
   '3 - الأكاديمي\n'+
   '4 - العلاقات العامة\n'+
   '5 - التقني\n'+
-  '6 - فكرة'
+  '6 - فكرة\n'+
+  '7 - الإعلامي\n'+
+  '8 - التيسير'
  );
 
  if(choice===null) return;
@@ -513,7 +529,9 @@ async function changeVolunteerDepartment(id){
   '3':'الأكاديمي',
   '4':'العلاقات العامة',
   '5':'التقني',
-  '6':'فكرة'
+  '6':'فكرة',
+  '7':'الإعلامي',
+  '8':'التيسير'
  };
 
  const department=departments[String(choice).trim()];
@@ -659,7 +677,9 @@ async function updateVolunteer(id,status){
    '3':'الأكاديمي',
    '4':'العلاقات العامة',
    '5':'التقني',
-   '6':'فكرة'
+   '6':'فكرة',
+   '7':'الإعلامي',
+   '8':'التيسير'
   };
 
   const choice=prompt(
@@ -669,7 +689,9 @@ async function updateVolunteer(id,status){
    '3 - الأكاديمي\n' +
    '4 - العلاقات العامة\n' +
    '5 - التقني\n' +
-   '6 - فكرة 💡\n\n' +
+   '6 - فكرة 💡\n' +
+   '7 - الإعلامي 🎬\n' +
+   '8 - التيسير 🤝\n\n' +
    'اكتب رقم القسم:'
   );
 
