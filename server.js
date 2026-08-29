@@ -218,7 +218,7 @@ const defaults = {
  join_reasons_json: JSON.stringify(['فرصة للمشاركة في فعاليات ومبادرات متنوعة.','تطوير مهارات التواصل والعمل الجماعي.','اكتساب خبرات عملية.','التعرف على أشخاص يشاركونك الاهتمام بالتطوع.','المشاركة في صناعة أثر حقيقي.','الحصول على فرص للتدريب والتطوير.','اكتشاف قدراتك وتوظيفها في المكان المناسب.']),
  join_url: '/volunteer-register',
  email: 'rouhjadara@gmail.com',
- instagram: 'https://www.instagram.com/rouh.jadara?igsi=Z2ZlZ2VvaXNtYzlu&utm_source=qr',
+ instagram: 'https://www.instagram.com/rouhjadara?igsi=aTBnaWhmdTBhcXA4',
  facebook: 'https://www.facebook.com/share/1JUpNSKiX7/?mibextid=wwXIfr',
  stats_visible: '0',
  footer_text: '© مبادرة روح — جميع الحقوق محفوظة.'
