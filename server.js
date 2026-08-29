@@ -1936,19 +1936,65 @@ const server=http.createServer(async (req,res)=>{
    }
 
    if(pathname==='/api/admin/dashboard' && req.method==='GET'){
-    const dashboardAudit=user.role==='owner'
-     ? db.prepare('SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 15').all()
-     : [];
+    // Owner: global dashboard
+    if(user.role==='owner'){
+     const dashboardAudit=db.prepare(
+      'SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 15'
+     ).all();
 
-    return send(res,200,{
-     counts:{
-      events:db.prepare('SELECT COUNT(*) c FROM events WHERE deleted_at IS NULL').get().c,
-      achievements:db.prepare('SELECT COUNT(*) c FROM achievements WHERE deleted_at IS NULL').get().c,
-      users:db.prepare('SELECT COUNT(*) c FROM users WHERE active=1').get().c,
-      published:db.prepare("SELECT (SELECT COUNT(*) FROM events WHERE status='published' AND deleted_at IS NULL)+(SELECT COUNT(*) FROM achievements WHERE status='published' AND deleted_at IS NULL) c").get().c
-     },
-     audit:dashboardAudit
-    });
+     return send(res,200,{
+      dashboardType:'owner',
+      counts:{
+       events:db.prepare('SELECT COUNT(*) c FROM events WHERE deleted_at IS NULL').get().c,
+       achievements:db.prepare('SELECT COUNT(*) c FROM achievements WHERE deleted_at IS NULL').get().c,
+       users:db.prepare('SELECT COUNT(*) c FROM users WHERE active=1').get().c,
+       published:db.prepare("SELECT (SELECT COUNT(*) FROM events WHERE status='published' AND deleted_at IS NULL)+(SELECT COUNT(*) FROM achievements WHERE status='published' AND deleted_at IS NULL) c").get().c
+      },
+      audit:dashboardAudit
+     });
+    }
+
+    const isHR=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    // HR: volunteer and complaint overview
+    if(isHR){
+     return send(res,200,{
+      dashboardType:'hr',
+      counts:{
+       applications:db.prepare(
+        "SELECT COUNT(*) c FROM volunteer_applications WHERE status!='rejected'"
+       ).get().c,
+       activeVolunteers:db.prepare(
+        "SELECT COUNT(*) c FROM volunteers WHERE active=1 AND deleted_at IS NULL"
+       ).get().c,
+       newComplaints:db.prepare(
+        "SELECT COUNT(*) c FROM complaints WHERE status='new'"
+       ).get().c
+      },
+      audit:[]
+     });
+    }
+
+    // Department Admin: own department only
+    if(user.role==='admin'){
+     return send(res,200,{
+      dashboardType:'department',
+      department:user.department||'',
+      counts:{
+       volunteers:db.prepare(
+        "SELECT COUNT(*) c FROM volunteers WHERE department=? AND active=1 AND deleted_at IS NULL"
+       ).get(user.department||'').c,
+       departmentContent:db.prepare(
+        "SELECT COUNT(*) c FROM department_content WHERE department=?"
+       ).get(user.department||'').c
+      },
+      audit:[]
+     });
+    }
+
+    return send(res,403,{error:'لا تملك الصلاحية'});
    }
    if(pathname==='/api/admin/content' && req.method==='GET'){
     if(user.role!=='owner') return send(res,403,{error:'محتوى الموقع متاح للمالك فقط'}); return send(res,200,{settings:settingsObj(),stats:statsObj(),faqs:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()});

@@ -146,7 +146,82 @@ function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').cla
 $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=null;showAuth()};
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
 async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',approvals:'طلبات الموافقة',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='approvals')return deletionRequests();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
-async function dashboard(){const d=await api('/api/admin/dashboard');const auditPanel=me.role==='owner'?`<div class="panel"><h3>آخر التعديلات</h3>${d.audit.map(a=>`<p><b>${esc(a.user_name||'النظام')}</b> — ${esc(a.action)} ${esc(a.entity)} <span class="muted">${esc(a.created_at)}</span></p>`).join('')||'<p class="muted">لا يوجد سجل بعد.</p>'}</div>`:'';content.innerHTML=`<div class="grid grid4"><div class="panel"><b>الفعاليات</b><h2>${d.counts.events}</h2></div><div class="panel"><b>الإنجازات</b><h2>${d.counts.achievements}</h2></div><div class="panel"><b>المسؤولون</b><h2>${d.counts.users}</h2></div><div class="panel"><b>المحتوى المنشور</b><h2>${d.counts.published}</h2></div></div>${auditPanel}`}
+async function dashboard(){
+ const d=await api('/api/admin/dashboard');
+
+ if(d.dashboardType==='owner'){
+  const auditPanel=`
+   <div class="panel">
+    <h3>آخر التعديلات</h3>
+    ${d.audit.map(a=>`
+     <p>
+      <b>${esc(a.user_name||'النظام')}</b>
+      — ${esc(a.action)} ${esc(a.entity)}
+      <span class="muted">${esc(a.created_at)}</span>
+     </p>
+    `).join('')||'<p class="muted">لا يوجد سجل بعد.</p>'}
+   </div>`;
+
+  content.innerHTML=`
+   <div class="grid grid4">
+    <div class="panel"><b>الفعاليات</b><h2>${d.counts.events}</h2></div>
+    <div class="panel"><b>الإنجازات</b><h2>${d.counts.achievements}</h2></div>
+    <div class="panel"><b>المسؤولون</b><h2>${d.counts.users}</h2></div>
+    <div class="panel"><b>المحتوى المنشور</b><h2>${d.counts.published}</h2></div>
+   </div>
+   ${auditPanel}`;
+  return;
+ }
+
+ if(d.dashboardType==='hr'){
+  content.innerHTML=`
+   <div class="panel">
+    <h3>إدارة الموارد البشرية (HR)</h3>
+    <p class="muted">نظرة سريعة على إدارة المتطوعين والشكاوى.</p>
+   </div>
+
+   <div class="grid grid4">
+    <div class="panel">
+     <b>طلبات المتطوعين</b>
+     <h2>${d.counts.applications}</h2>
+    </div>
+
+    <div class="panel">
+     <b>حسابات المتطوعين الفعالة</b>
+     <h2>${d.counts.activeVolunteers}</h2>
+    </div>
+
+    <div class="panel">
+     <b>الشكاوى الجديدة</b>
+     <h2>${d.counts.newComplaints}</h2>
+    </div>
+   </div>`;
+  return;
+ }
+
+ if(d.dashboardType==='department'){
+  content.innerHTML=`
+   <div class="panel">
+    <h3>${esc(d.department||'القسم')}</h3>
+    <p class="muted">لوحة التحكم الخاصة بقسمك.</p>
+   </div>
+
+   <div class="grid grid4">
+    <div class="panel">
+     <b>متطوعو القسم</b>
+     <h2>${d.counts.volunteers}</h2>
+    </div>
+
+    <div class="panel">
+     <b>محتوى القسم</b>
+     <h2>${d.counts.departmentContent}</h2>
+    </div>
+   </div>`;
+  return;
+ }
+
+ content.innerHTML='<div class="notice error">تعذر تحميل لوحة التحكم.</div>';
+}
 const cfg={events:{title:'فعالية',date:'event_date',fields:[['title','اسم الفعالية'],['summary','وصف مختصر'],['description','الوصف الكامل'],['event_date','التاريخ','date'],['event_time','الوقت','time'],['location','المكان'],['registration_url','رابط التسجيل'],['event_state','الحالة الظاهرة']],image:'cover_image'},achievements:{title:'إنجاز',date:'achievement_date',fields:[['title','عنوان الإنجاز'],['summary','وصف مختصر'],['description','الوصف الكامل'],['achievement_date','التاريخ','date'],['volunteers','عدد المتطوعين','number'],['beneficiaries','عدد المستفيدين','number'],['volunteer_hours','الساعات التطوعية','number']],image:'cover_image'}};
 async function listEntities(type){const d=await api('/api/admin/'+type);content.innerHTML=`<div class="panel"><button class="btn green" onclick="entityForm('${type}')">+ إضافة ${cfg[type].title}</button></div><div class="panel"><table class="table"><thead><tr><th>الصورة</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody>${d.items.map(x=>`<tr><td>${x.cover_image?`<img class="thumb" src="${esc(x.cover_image)}">`:''}</td><td>${esc(x.title)}</td><td>${esc(x.status)}</td><td>${esc(x[cfg[type].date])}</td><td><div class="rowActions"><button class="btn light small" onclick='entityForm("${type}",${JSON.stringify(x).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="removeEntity('${type}',${x.id})">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="5">لا يوجد محتوى بعد.</td></tr>'}</tbody></table></div>`}
 window.entityForm=(type,item={})=>{const c=cfg[type];content.innerHTML=`<div class="panel"><h3>${item.id?'تعديل':'إضافة'} ${c.title}</h3><form id="entityForm" class="formGrid">${c.fields.map(f=>`<div class="field ${['summary','description'].includes(f[0])?'full':''}"><label>${f[1]}</label>${['summary','description'].includes(f[0])?`<textarea name="${f[0]}">${esc(item[f[0]]||'')}</textarea>`:`<input name="${f[0]}" type="${f[2]||'text'}" value="${esc(item[f[0]]||'')}">`}</div>`).join('')}<div class="field"><label>الصورة</label><input id="imgFile" type="file" accept="image/jpeg,image/png,image/webp"><input type="hidden" name="cover_image" value="${esc(item.cover_image||'')}">${item.cover_image?`<img class="imagePreview" src="${esc(item.cover_image)}">`:''}</div><div class="field"><label>حالة النشر</label><select name="status"><option value="draft" ${item.status!=='published'?'selected':''}>مسودة</option><option value="published" ${item.status==='published'?'selected':''}>منشور</option></select></div><div class="full rowActions"><button class="btn green" type="submit">حفظ</button><button class="btn light" type="button" onclick="loadTab('${type}')">إلغاء</button></div></form></div>`;$('#entityForm').onsubmit=async e=>{e.preventDefault();try{const fd=new FormData(e.target),obj=Object.fromEntries(fd.entries());const file=$('#imgFile').files[0];if(file)obj.cover_image=await upload(file);await api('/api/admin/'+type+(item.id?'/'+item.id:''),{method:item.id?'PUT':'POST',body:JSON.stringify(obj)});flash('تم الحفظ');loadTab(type)}catch(ex){flash(ex.message,true)}}};
