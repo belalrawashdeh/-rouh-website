@@ -2171,7 +2171,7 @@ const server=http.createServer(async (req,res)=>{
    }
 
    if(pathname==='/api/admin/users'&&req.method==='GET'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); return send(res,200,{items:db.prepare('SELECT id,name,email,phone,role,active,department,created_at FROM users ORDER BY id').all()}); }
-   if(pathname==='/api/admin/users'&&req.method==='POST'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); if(!['admin','editor'].includes(b.role)||!b.name||!b.phone||!b.email||!b.password||b.password.length<8)return send(res,400,{error:'تحقق من البيانات وكلمة المرور'}); try{const r=db.prepare('INSERT INTO users(name,email,phone,password_hash,role,department) VALUES(?,?,?,?,?,?)').run(
+   if(pathname==='/api/admin/users'&&req.method==='POST'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); if(b.role!=='admin'||!b.name||!b.phone||!b.email||!b.password||b.password.length<8)return send(res,400,{error:'تحقق من البيانات وكلمة المرور'}); try{const r=db.prepare('INSERT INTO users(name,email,phone,password_hash,role,department) VALUES(?,?,?,?,?,?)').run(
  b.name,
  b.email.toLowerCase(),
  String(b.phone||'').trim(),
@@ -2179,7 +2179,7 @@ const server=http.createServer(async (req,res)=>{
  b.role,
  String(b.department||'')
 );audit(user,'create','user',r.lastInsertRowid,b.email);return send(res,201,{id:r.lastInsertRowid});}catch{return send(res,409,{error:'البريد مستخدم مسبقًا'});} }
-   const um=pathname.match(/^\/api\/admin\/users\/(\d+)$/); if(um&&req.method==='PUT'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); const target=db.prepare('SELECT * FROM users WHERE id=?').get(um[1]); if(!target)return send(res,404,{error:'غير موجود'}); if(target.role==='owner')return send(res,400,{error:'لا يمكن تعديل حساب المالك من هنا'}); if(b.role&&!['admin','editor'].includes(b.role))return send(res,400,{error:'صلاحية غير صحيحة'}); db.prepare('UPDATE users SET name=?,email=?,phone=?,role=?,active=?,department=? WHERE id=?').run(
+   const um=pathname.match(/^\/api\/admin\/users\/(\d+)$/); if(um&&req.method==='PUT'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); const target=db.prepare('SELECT * FROM users WHERE id=?').get(um[1]); if(!target)return send(res,404,{error:'غير موجود'}); if(target.role==='owner')return send(res,400,{error:'لا يمكن تعديل حساب المالك من هنا'}); if(b.role&&b.role!=='admin')return send(res,400,{error:'صلاحية غير صحيحة'}); db.prepare('UPDATE users SET name=?,email=?,phone=?,role=?,active=?,department=? WHERE id=?').run(
  b.name||target.name,
  String(b.email||target.email).trim().toLowerCase(),
  String(b.phone??target.phone??'').trim(),
