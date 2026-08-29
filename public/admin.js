@@ -156,8 +156,75 @@ async function editContent(){const d=await api('/api/admin/content'),s=d.setting
 async function faqs(){const d=await api('/api/admin/faqs');content.innerHTML=`<div class="panel"><button class="btn green" onclick="faqForm()">+ إضافة سؤال</button></div><div class="panel">${d.items.map(f=>`<div class="faq"><b>${esc(f.question)}</b><p>${esc(f.answer)}</p><div class="rowActions"><button class="btn light small" onclick='faqForm(${JSON.stringify(f).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="deleteFaq(${f.id})">حذف</button></div></div>`).join('')}</div>`}
 window.faqForm=(f={})=>{content.innerHTML=`<div class="panel"><form id="faqForm" class="formGrid"><div class="field full"><label>السؤال</label><input name="question" value="${esc(f.question||'')}" required></div><div class="field full"><label>الإجابة</label><textarea name="answer" required>${esc(f.answer||'')}</textarea></div><div class="field"><label>الترتيب</label><input name="sort_order" type="number" value="${f.sort_order||0}"></div><div class="field"><label>الحالة</label><select name="active"><option value="1">ظاهر</option><option value="0" ${f.active===0?'selected':''}>مخفي</option></select></div><button class="btn green full">حفظ</button></form></div>`;$('#faqForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());o.active=o.active==='1';try{await api('/api/admin/faqs'+(f.id?'/'+f.id:''),{method:f.id?'PUT':'POST',body:JSON.stringify(o)});loadTab('faqs')}catch(ex){flash(ex.message,true)}}}
 window.deleteFaq=async id=>{if(confirm(me.role==='owner'?'حذف السؤال؟':'إرسال طلب حذف السؤال إلى المالك؟')){try{const r=await api('/api/admin/faqs/'+id,{method:'DELETE'});flash(r.pendingApproval?'تم إرسال طلب الحذف للمالك':'تم نقل السؤال إلى سلة المحذوفات');loadTab('faqs')}catch(e){flash(e.message,true)}}};
-async function trash(){const d=await api('/api/admin/trash');const group=(title,type,items)=>`<div class="panel"><h3>${title}</h3>${items.map(x=>`<p>${esc(x.title)} <button class="btn light small" onclick="restore('${type}',${x.id})">استرجاع</button></p>`).join('')||'<p class="muted">فارغة</p>'}</div>`;content.innerHTML=group('الفعاليات','events',d.events)+group('الإنجازات','achievements',d.achievements)+group('الأسئلة','faqs',d.faqs)}
+async function trash(){
+ const d=await api('/api/admin/trash');
+
+ const group=(title,type,items)=>`
+  <div class="panel">
+   <h3>${title}</h3>
+   ${items.map(x=>`
+    <p>
+     ${esc(x.title)}
+     <button class="btn light small" onclick="restore('${type}',${x.id})">
+      استرجاع
+     </button>
+    </p>
+   `).join('')||'<p class="muted">فارغة</p>'}
+  </div>`;
+
+ let volunteerTrash='';
+
+ const isHR=
+  me.role==='admin' &&
+  me.department==='إدارة الموارد البشرية (HR)';
+
+ if(me.role==='owner' || isHR){
+  try{
+   const vd=await api('/api/admin/volunteer-accounts/trash');
+
+   volunteerTrash=`
+    <div class="panel">
+     <h3>حسابات المتطوعين المحذوفة</h3>
+
+     ${vd.items.map(v=>`
+      <p>
+       <b>${esc(v.name)}</b>
+       — ${esc(v.username||'-')}
+       — ${esc(v.department||'-')}
+
+       <button class="btn light small"
+        onclick="restoreVolunteerAccount(${v.id})">
+        ♻️ استرجاع الحساب
+       </button>
+      </p>
+     `).join('')||'<p class="muted">فارغة</p>'}
+    </div>`;
+  }catch(e){}
+ }
+
+ content.innerHTML=
+  group('الفعاليات','events',d.events)+
+  group('الإنجازات','achievements',d.achievements)+
+  group('الأسئلة','faqs',d.faqs)+
+  volunteerTrash;
+}
 window.restore=async(type,id)=>{await api(`/api/admin/trash/${type}/${id}/restore`,{method:'POST'});flash('تم الاسترجاع');loadTab('trash')};
+
+window.restoreVolunteerAccount=async id=>{
+ if(!confirm('استرجاع حساب المتطوع وتفعيله؟')) return;
+
+ try{
+  const r=await api('/api/admin/volunteer-accounts/'+id+'/restore',{
+   method:'POST'
+  });
+
+  flash(r.message || 'تم استرجاع الحساب');
+  loadTab('trash');
+ }catch(e){
+  flash(e.message,true);
+ }
+};
+
 async function users(){const d=await api('/api/admin/users');content.innerHTML=`<div class="panel"><button class="btn green" onclick="userForm()">+ إضافة مسؤول</button></div><div class="panel"><table class="table"><tr><th>الاسم</th><th>الهاتف</th><th>البريد</th><th>الصلاحية</th><th>القسم</th><th>الحالة</th><th></th></tr>${d.items.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.phone||'-')}</td><td>${esc(u.email)}</td><td>${esc(u.role)}</td><td>${esc(u.department||'-')}</td><td>${u.active?'فعال':'موقوف'}</td><td>${u.role!=='owner'?`<button class="btn light small" onclick='userForm(${JSON.stringify(u).replaceAll("'","&#39;")})'>تعديل</button>`:''}</td></tr>`).join('')}</table></div>`}
 window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userForm" class="formGrid"><div class="field"><label>الاسم</label><input name="name" value="${esc(u.name||'')}" required></div><div class="field"><label>رقم الهاتف</label><input name="phone" type="tel" value="${esc(u.phone||'')}" maxlength="30" required></div><div class="field"><label>البريد</label><input name="email" type="email" value="${esc(u.email||'')}" required></div>${u.id?'':`<div class="field"><label>كلمة المرور</label><input name="password" type="password" minlength="8" required></div>`}<div class="field"><label>الصلاحية</label><select name="role"><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option><option value="editor" ${u.role==='editor'?'selected':''}>Editor</option></select></div>
 <div class="field">
@@ -448,8 +515,8 @@ async function volunteers(){
         `;
        }
 
-       if(!v.volunteer_id){
-        if(v.status==='accepted'){
+       if(!v.volunteer_id || v.volunteer_deleted_at){
+        if(v.status==='accepted' && !v.volunteer_id){
          actions+=`
           <button class="btn danger"
            onclick="deleteVolunteer(${v.id})">
@@ -478,6 +545,15 @@ async function volunteers(){
            ? `<button class="btn ${v.volunteer_active ? 'danger' : 'green'}"
                 onclick="toggleVolunteerAccount(${v.id},${v.volunteer_active ? 'false' : 'true'})">
                 ${v.volunteer_active ? '⛔ تعطيل الحساب' : '✅ تفعيل الحساب'}
+              </button>`
+           : ''
+         }
+
+         ${
+          isOwnerOrHR
+           ? `<button class="btn danger"
+                onclick="deleteVolunteerAccount(${v.id})">
+                🗑️ حذف الحساب
               </button>`
            : ''
          }
@@ -709,6 +785,30 @@ async function toggleVolunteerAccount(id,active){
 }
 
 window.toggleVolunteerAccount=toggleVolunteerAccount;
+
+async function deleteVolunteerAccount(id){
+ const ok=confirm(
+  'هل تريد نقل حساب هذا المتطوع إلى سلة المحذوفات؟\n\n' +
+  'لن يتم حذف طلب الانتساب أو بيانات المتطوع.'
+ );
+
+ if(!ok) return;
+
+ try{
+  const r=await api('/api/admin/volunteers/'+id+'/account',{
+   method:'DELETE'
+  });
+
+  flash(r.message || 'تم نقل الحساب إلى سلة المحذوفات');
+  await volunteers();
+ }catch(e){
+  alert(e.message);
+ }
+}
+
+window.deleteVolunteerAccount=deleteVolunteerAccount;
+
+
 
 
 

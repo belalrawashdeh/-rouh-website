@@ -156,6 +156,12 @@ try {
 }
 
 try {
+ db.exec("ALTER TABLE volunteers ADD COLUMN deleted_at TEXT DEFAULT NULL");
+} catch(e) {
+ if (!String(e.message).includes("duplicate column name")) throw e;
+}
+
+try {
  db.exec("ALTER TABLE volunteer_applications ADD COLUMN department TEXT DEFAULT ''");
 } catch(e) {
  if (!String(e.message).includes("duplicate column name")) throw e;
@@ -356,7 +362,7 @@ const server=http.createServer(async (req,res)=>{
    const v=db.prepare(`
     SELECT *
     FROM volunteers
-    WHERE username=? AND active=1
+    WHERE username=? AND active=1 AND deleted_at IS NULL
    `).get(username);
 
    if(!v || !verifyPassword(password,v.password_hash))
@@ -407,7 +413,10 @@ const server=http.createServer(async (req,res)=>{
     SELECT v.id,v.name,v.email,v.phone,v.username,v.department
     FROM volunteer_sessions s
     JOIN volunteers v ON v.id=s.volunteer_id
-    WHERE s.token=? AND s.expires_at>CURRENT_TIMESTAMP AND v.active=1
+    WHERE s.token=? AND s.expires_at>CURRENT_TIMESTAMP
+      AND v.active=1
+      AND v.deleted_at IS NULL
+      AND v.deleted_at IS NULL
    `).get(token);
 
    if(!row)
@@ -1206,7 +1215,8 @@ const server=http.createServer(async (req,res)=>{
        va.*,
        v.id AS volunteer_id,
        v.username AS volunteer_username,
-       v.active AS volunteer_active
+       v.active AS volunteer_active,
+       v.deleted_at AS volunteer_deleted_at
       FROM volunteer_applications va
       LEFT JOIN volunteers v
        ON v.application_id=va.id
@@ -1225,7 +1235,8 @@ const server=http.createServer(async (req,res)=>{
        va.*,
        v.id AS volunteer_id,
        v.username AS volunteer_username,
-       v.active AS volunteer_active
+       v.active AS volunteer_active,
+       v.deleted_at AS volunteer_deleted_at
       FROM volunteer_applications va
       LEFT JOIN volunteers v
        ON v.application_id=va.id
@@ -1647,6 +1658,34 @@ const server=http.createServer(async (req,res)=>{
     });
    }
 
+
+   if(pathname==='/api/admin/volunteer-accounts/trash' && req.method==='GET'){
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    if(user.role!=='owner' && !isHRAdmin)
+     return send(res,403,{error:'سلة حسابات المتطوعين متاحة للمالك والموارد البشرية فقط'});
+
+    const items=db.prepare(`
+     SELECT
+      v.id,
+      v.application_id,
+      v.name,
+      v.email,
+      v.phone,
+      v.username,
+      v.department,
+      v.created_at,
+      v.deleted_at
+     FROM volunteers v
+     WHERE v.deleted_at IS NOT NULL
+     ORDER BY v.deleted_at DESC
+    `).all();
+
+    return send(res,200,{items});
+   }
+
    const volunteerAccountToggleMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)\/account-active$/);
 
    if(volunteerAccountToggleMatch && req.method==='PUT'){
@@ -1709,6 +1748,100 @@ const server=http.createServer(async (req,res)=>{
     return send(res,200,{
      ok:true,
      active
+    });
+   }
+
+
+   const volunteerAccountDeleteMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)\/account$/);
+
+   if(volunteerAccountDeleteMatch && req.method==='DELETE'){
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    if(user.role!=='owner' && !isHRAdmin)
+     return send(res,403,{error:'حذف حساب المتطوع متاح للمالك والموارد البشرية فقط'});
+
+    const applicationId=volunteerAccountDeleteMatch[1];
+
+    const account=db.prepare(`
+     SELECT id,name,username,deleted_at
+     FROM volunteers
+     WHERE application_id=?
+    `).get(applicationId);
+
+    if(!account)
+     return send(res,404,{error:'لا يوجد حساب لهذا المتطوع'});
+
+    if(account.deleted_at)
+     return send(res,409,{error:'الحساب موجود أصلًا في سلة المحذوفات'});
+
+    db.prepare(`
+     UPDATE volunteers
+     SET active=0,
+         deleted_at=CURRENT_TIMESTAMP
+     WHERE id=?
+    `).run(account.id);
+
+    db.prepare(`
+     DELETE FROM volunteer_sessions
+     WHERE volunteer_id=?
+    `).run(account.id);
+
+    audit(
+     user,
+     'delete',
+     'volunteer_account',
+     account.id,
+     'soft_delete'
+    );
+
+    return send(res,200,{
+     ok:true,
+     message:'تم نقل حساب المتطوع إلى سلة المحذوفات'
+    });
+   }
+
+
+   const volunteerAccountRestoreMatch=pathname.match(/^\/api\/admin\/volunteer-accounts\/(\d+)\/restore$/);
+
+   if(volunteerAccountRestoreMatch && req.method==='POST'){
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    if(user.role!=='owner' && !isHRAdmin)
+     return send(res,403,{error:'استرجاع الحساب متاح للمالك والموارد البشرية فقط'});
+
+    const volunteerId=volunteerAccountRestoreMatch[1];
+
+    const account=db.prepare(`
+     SELECT id
+     FROM volunteers
+     WHERE id=? AND deleted_at IS NOT NULL
+    `).get(volunteerId);
+
+    if(!account)
+     return send(res,404,{error:'الحساب غير موجود في سلة المحذوفات'});
+
+    db.prepare(`
+     UPDATE volunteers
+     SET deleted_at=NULL,
+         active=1
+     WHERE id=?
+    `).run(volunteerId);
+
+    audit(
+     user,
+     'restore',
+     'volunteer_account',
+     volunteerId,
+     'restore_from_trash'
+    );
+
+    return send(res,200,{
+     ok:true,
+     message:'تم استرجاع حساب المتطوع'
     });
    }
 
