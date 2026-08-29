@@ -1564,6 +1564,56 @@ const server=http.createServer(async (req,res)=>{
       error:'لا يمكن حذف الطلب لأن المتطوع لديه حساب فعليًا'
      });
 
+    /* أي مسؤول غير المالك يرسل طلب موافقة */
+    if(user.role!=='owner'){
+     const existing=db.prepare(`
+      SELECT id
+      FROM deletion_requests
+      WHERE entity_type='volunteer_application'
+        AND entity_id=?
+        AND status='pending'
+     `).get(id);
+
+     if(existing)
+      return send(res,409,{
+       error:'يوجد طلب حذف بانتظار موافقة المالك بالفعل'
+      });
+
+     const r=db.prepare(`
+      INSERT INTO deletion_requests
+       (
+        requester_id,
+        requester_department,
+        entity_type,
+        entity_id,
+        item_title
+       )
+      VALUES(?,?,?,?,?)
+     `).run(
+      user.id,
+      user.department||item.department||'',
+      'volunteer_application',
+      id,
+      item.name||''
+     );
+
+     audit(
+      user,
+      'request_delete',
+      'volunteer_application',
+      id,
+      item.name||''
+     );
+
+     return send(res,200,{
+      ok:true,
+      pendingApproval:true,
+      requestId:Number(r.lastInsertRowid),
+      message:'تم إرسال طلب حذف المتطوع للمالك'
+     });
+    }
+
+    /* المالك يحذف مباشرة */
     db.prepare(`
      DELETE FROM volunteer_applications
      WHERE id=?
@@ -1579,10 +1629,10 @@ const server=http.createServer(async (req,res)=>{
 
     return send(res,200,{
      ok:true,
+     pendingApproval:false,
      message:'تم حذف الطلب والسماح بالتقديم من جديد'
     });
    }
-
 
 
    const volunteerDepartmentMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)\/department$/);
@@ -2144,6 +2194,34 @@ const server=http.createServer(async (req,res)=>{
     if(request.entity_type==='department_content'){
      db.prepare(`
       DELETE FROM department_content
+      WHERE id=?
+     `).run(request.entity_id);
+    }
+    else if(request.entity_type==='volunteer_application'){
+     const account=db.prepare(`
+      SELECT id
+      FROM volunteers
+      WHERE application_id=?
+     `).get(request.entity_id);
+
+     if(account)
+      return send(res,409,{
+       error:'لا يمكن اعتماد الحذف لأن المتطوع أصبح لديه حساب'
+      });
+
+     const application=db.prepare(`
+      SELECT id
+      FROM volunteer_applications
+      WHERE id=?
+     `).get(request.entity_id);
+
+     if(!application)
+      return send(res,404,{
+       error:'طلب المتطوع لم يعد موجودًا'
+      });
+
+     db.prepare(`
+      DELETE FROM volunteer_applications
       WHERE id=?
      `).run(request.entity_id);
     }

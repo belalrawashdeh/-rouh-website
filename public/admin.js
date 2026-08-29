@@ -263,7 +263,8 @@ async function deletionRequests(){
   department_content:'محتوى القسم',
   events:'فعالية',
   achievements:'إنجاز',
-  faq:'سؤال شائع'
+  faq:'سؤال شائع',
+  volunteer_application:'طلب متطوع'
  };
 
  const statusNames={
