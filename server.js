@@ -1085,13 +1085,14 @@ const server=http.createServer(async (req,res)=>{
 
      db.prepare(`
       UPDATE volunteer_applications
-      SET status='rejected',
+      SET status='pending',
           department_approval='rejected',
           department_decided_at=CURRENT_TIMESTAMP,
           department_decided_by=?,
-          rejected_at=CURRENT_TIMESTAMP,
+          rejected_at=NULL,
           accepted_at=NULL,
           invite_token=NULL,
+          whatsapp_sent_at=NULL,
           updated_at=CURRENT_TIMESTAMP
       WHERE id=?
      `).run(user.id,id);
@@ -1106,7 +1107,7 @@ const server=http.createServer(async (req,res)=>{
 
      return send(res,200,{
       ok:true,
-      status:'rejected',
+      status:'pending',
       department_approval:'rejected'
      });
     }
