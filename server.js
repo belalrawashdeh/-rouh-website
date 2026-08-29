@@ -885,6 +885,7 @@ const server=http.createServer(async (req,res)=>{
     FROM department_content dc
     LEFT JOIN users u ON u.id=dc.created_by
     WHERE dc.department=?
+      AND dc.deleted_at IS NULL
     ORDER BY dc.id DESC
    `).all(department);
 
@@ -916,6 +917,7 @@ const server=http.createServer(async (req,res)=>{
              u.name created_by_name
       FROM department_content dc
       LEFT JOIN users u ON u.id=dc.created_by
+      WHERE dc.deleted_at IS NULL
       ORDER BY dc.id DESC
      `).all();
     }else{
@@ -925,6 +927,7 @@ const server=http.createServer(async (req,res)=>{
       FROM department_content dc
       LEFT JOIN users u ON u.id=dc.created_by
       WHERE dc.department=?
+        AND dc.deleted_at IS NULL
       ORDER BY dc.id DESC
      `).all(department);
     }
@@ -988,6 +991,7 @@ const server=http.createServer(async (req,res)=>{
      SELECT *
      FROM department_content
      WHERE id=?
+       AND deleted_at IS NULL
     `).get(id);
 
     if(!item)
@@ -1077,13 +1081,15 @@ const server=http.createServer(async (req,res)=>{
      }
 
      db.prepare(`
-      DELETE FROM department_content
-      WHERE id=?
+      UPDATE department_content
+      SET deleted_at=CURRENT_TIMESTAMP,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=? AND deleted_at IS NULL
      `).run(id);
 
      audit(
       user,
-      'delete',
+      'trash',
       'department_content',
       id,
       item.department+' - '+item.title
@@ -1297,8 +1303,6 @@ const server=http.createServer(async (req,res)=>{
      'العلاقات العامة',
      'التقني',
      'فكرة',
-     'الإعلامي',
-     'التيسير',
      'الإعلامي',
      'التيسير'
     ];
@@ -1657,8 +1661,6 @@ const server=http.createServer(async (req,res)=>{
      'العلاقات العامة',
      'التقني',
      'فكرة',
-     'الإعلامي',
-     'التيسير',
      'الإعلامي',
      'التيسير'
     ];
@@ -2116,12 +2118,15 @@ const server=http.createServer(async (req,res)=>{
      ).all(),
      faqs:db.prepare(
       'SELECT id,question title,deleted_at FROM faqs WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC'
+     ).all(),
+     department_content:db.prepare(
+      'SELECT id,title,department,deleted_at FROM department_content WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC'
      ).all()
     });
    }
 
    const restore=pathname.match(
-    /^\/api\/admin\/trash\/(events|achievements|faqs)\/(\d+)\/restore$/
+    /^\/api\/admin\/trash\/(events|achievements|faqs|department_content)\/(\d+)\/restore$/
    );
 
    if(restore&&req.method==='POST'){
@@ -2250,10 +2255,17 @@ const server=http.createServer(async (req,res)=>{
     }
 
     if(request.entity_type==='department_content'){
-     db.prepare(`
-      DELETE FROM department_content
-      WHERE id=?
+     const result=db.prepare(`
+      UPDATE department_content
+      SET deleted_at=CURRENT_TIMESTAMP,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=? AND deleted_at IS NULL
      `).run(request.entity_id);
+
+     if(Number(result.changes)===0)
+      return send(res,404,{
+       error:'محتوى القسم لم يعد موجودًا أو تم حذفه مسبقًا'
+      });
     }
     else if(request.entity_type==='volunteer_application'){
      const account=db.prepare(`
@@ -2342,6 +2354,7 @@ db.exec(`
   title TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   link_url TEXT NOT NULL DEFAULT '',
+  deleted_at TEXT DEFAULT NULL,
   created_by INTEGER,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2369,6 +2382,21 @@ CREATE TABLE IF NOT EXISTS deletion_requests (
 `);
 
 // Database migrations for existing installations
+try{
+ const departmentContentColumns=db.prepare(
+  'PRAGMA table_info(department_content)'
+ ).all();
+
+ if(!departmentContentColumns.some(c=>c.name==='deleted_at')){
+  db.exec(
+   "ALTER TABLE department_content ADD COLUMN deleted_at TEXT DEFAULT NULL"
+  );
+  console.log('Database migration: department_content.deleted_at added');
+ }
+}catch(e){
+ console.error('Department content migration error:',e);
+}
+
 try{
  const userColumns=db.prepare('PRAGMA table_info(users)').all();
 

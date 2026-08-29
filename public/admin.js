@@ -239,7 +239,8 @@ async function trash(){
  let d={
   events:[],
   achievements:[],
-  faqs:[]
+  faqs:[],
+  department_content:[]
  };
 
  if(me.role==='owner'){
@@ -289,7 +290,8 @@ async function trash(){
   me.role==='owner'
    ? group('الفعاليات','events',d.events)+
      group('الإنجازات','achievements',d.achievements)+
-     group('الأسئلة','faqs',d.faqs)
+     group('الأسئلة','faqs',d.faqs)+
+     group('محتوى الأقسام','department_content',d.department_content)
    : '';
 
  content.innerHTML=
