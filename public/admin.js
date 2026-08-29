@@ -157,7 +157,19 @@ async function faqs(){const d=await api('/api/admin/faqs');content.innerHTML=`<d
 window.faqForm=(f={})=>{content.innerHTML=`<div class="panel"><form id="faqForm" class="formGrid"><div class="field full"><label>السؤال</label><input name="question" value="${esc(f.question||'')}" required></div><div class="field full"><label>الإجابة</label><textarea name="answer" required>${esc(f.answer||'')}</textarea></div><div class="field"><label>الترتيب</label><input name="sort_order" type="number" value="${f.sort_order||0}"></div><div class="field"><label>الحالة</label><select name="active"><option value="1">ظاهر</option><option value="0" ${f.active===0?'selected':''}>مخفي</option></select></div><button class="btn green full">حفظ</button></form></div>`;$('#faqForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());o.active=o.active==='1';try{await api('/api/admin/faqs'+(f.id?'/'+f.id:''),{method:f.id?'PUT':'POST',body:JSON.stringify(o)});loadTab('faqs')}catch(ex){flash(ex.message,true)}}}
 window.deleteFaq=async id=>{if(confirm(me.role==='owner'?'حذف السؤال؟':'إرسال طلب حذف السؤال إلى المالك؟')){try{const r=await api('/api/admin/faqs/'+id,{method:'DELETE'});flash(r.pendingApproval?'تم إرسال طلب الحذف للمالك':'تم نقل السؤال إلى سلة المحذوفات');loadTab('faqs')}catch(e){flash(e.message,true)}}};
 async function trash(){
- const d=await api('/api/admin/trash');
+ const isHR=
+  me.role==='admin' &&
+  me.department==='إدارة الموارد البشرية (HR)';
+
+ let d={
+  events:[],
+  achievements:[],
+  faqs:[]
+ };
+
+ if(me.role==='owner'){
+  d=await api('/api/admin/trash');
+ }
 
  const group=(title,type,items)=>`
   <div class="panel">
@@ -173,10 +185,6 @@ async function trash(){
   </div>`;
 
  let volunteerTrash='';
-
- const isHR=
-  me.role==='admin' &&
-  me.department==='إدارة الموارد البشرية (HR)';
 
  if(me.role==='owner' || isHR){
   try{
@@ -202,11 +210,17 @@ async function trash(){
   }catch(e){}
  }
 
+ const generalTrash=
+  me.role==='owner'
+   ? group('الفعاليات','events',d.events)+
+     group('الإنجازات','achievements',d.achievements)+
+     group('الأسئلة','faqs',d.faqs)
+   : '';
+
  content.innerHTML=
-  group('الفعاليات','events',d.events)+
-  group('الإنجازات','achievements',d.achievements)+
-  group('الأسئلة','faqs',d.faqs)+
+  generalTrash+
   volunteerTrash;
+
 }
 window.restore=async(type,id)=>{await api(`/api/admin/trash/${type}/${id}/restore`,{method:'POST'});flash('تم الاسترجاع');loadTab('trash')};
 

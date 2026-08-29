@@ -1995,8 +1995,45 @@ const server=http.createServer(async (req,res)=>{
       return send(res,200,{ok:true,pendingApproval:false});
      }
    }
-   if(pathname==='/api/admin/trash'&&req.method==='GET'){ if(!['owner','admin'].includes(user.role))return send(res,403,{error:'لا تملك الصلاحية'}); return send(res,200,{events:db.prepare('SELECT id,title,deleted_at FROM events WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC').all(),achievements:db.prepare('SELECT id,title,deleted_at FROM achievements WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC').all(),faqs:db.prepare('SELECT id,question title,deleted_at FROM faqs WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC').all()}); }
-   const restore=pathname.match(/^\/api\/admin\/trash\/(events|achievements|faqs)\/(\d+)\/restore$/); if(restore&&req.method==='POST'){ if(!['owner','admin'].includes(user.role))return send(res,403,{error:'لا تملك الصلاحية'}); db.prepare(`UPDATE ${restore[1]} SET deleted_at=NULL WHERE id=?`).run(restore[2]);audit(user,'restore',restore[1],restore[2]);return send(res,200,{ok:true}); }
+   if(pathname==='/api/admin/trash'&&req.method==='GET'){
+    if(user.role!=='owner')
+     return send(res,403,{error:'سلة المحذوفات العامة متاحة للمالك فقط'});
+
+    return send(res,200,{
+     events:db.prepare(
+      'SELECT id,title,deleted_at FROM events WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC'
+     ).all(),
+     achievements:db.prepare(
+      'SELECT id,title,deleted_at FROM achievements WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC'
+     ).all(),
+     faqs:db.prepare(
+      'SELECT id,question title,deleted_at FROM faqs WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC'
+     ).all()
+    });
+   }
+
+   const restore=pathname.match(
+    /^\/api\/admin\/trash\/(events|achievements|faqs)\/(\d+)\/restore$/
+   );
+
+   if(restore&&req.method==='POST'){
+    if(user.role!=='owner')
+     return send(res,403,{error:'استرجاع المحتوى من صلاحية المالك فقط'});
+
+    db.prepare(
+     `UPDATE ${restore[1]} SET deleted_at=NULL WHERE id=?`
+    ).run(restore[2]);
+
+    audit(
+     user,
+     'restore',
+     restore[1],
+     restore[2],
+     'restore_from_trash'
+    );
+
+    return send(res,200,{ok:true});
+   }
    if(pathname==='/api/admin/department-admins'&&req.method==='GET'){
     if(!['owner','admin'].includes(user.role))
      return send(res,403,{error:'لا تملك الصلاحية'});
