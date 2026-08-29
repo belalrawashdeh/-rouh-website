@@ -937,6 +937,7 @@ const server=http.createServer(async (req,res)=>{
      'route_to_department',
      'department_accepted',
      'department_rejected',
+     'cancel_department_acceptance',
      'rejected'
     ];
 
@@ -1098,6 +1099,61 @@ const server=http.createServer(async (req,res)=>{
       ok:true,
       status:'rejected',
       department_approval:'rejected'
+     });
+    }
+
+    if(b.status==='cancel_department_acceptance'){
+     const canCancelAcceptance =
+      user.role==='owner' ||
+      isHRAdmin ||
+      (
+       user.role==='admin' &&
+       item.department===user.department
+      );
+
+     if(!canCancelAcceptance)
+      return send(res,403,{error:'لا تملك صلاحية إلغاء هذا القبول'});
+
+     if(
+      item.status!=='accepted' ||
+      item.department_approval!=='accepted'
+     )
+      return send(res,400,{error:'المتطوع ليس مقبولًا من القسم'});
+
+     const volunteerAccount=db.prepare(
+      'SELECT id FROM volunteers WHERE application_id=?'
+     ).get(id);
+
+     if(volunteerAccount)
+      return send(res,400,{
+       error:'المتطوع أنشأ حسابه بالفعل، عطّل الحساب أولًا'
+      });
+
+     db.prepare(`
+      UPDATE volunteer_applications
+      SET status='pending',
+          department_approval='pending',
+          department_decided_at=NULL,
+          department_decided_by=NULL,
+          accepted_at=NULL,
+          invite_token=NULL,
+          whatsapp_sent_at=NULL,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(id);
+
+     audit(
+      user,
+      'update',
+      'volunteer_application',
+      id,
+      'cancel_department_acceptance'
+     );
+
+     return send(res,200,{
+      ok:true,
+      status:'pending',
+      department_approval:'pending'
      });
     }
 

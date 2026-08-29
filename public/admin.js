@@ -197,7 +197,7 @@ async function volunteers(){
 
    <p class="muted">
     HR يراجع الطلب ويوجهه للقسم المناسب، وبعدها مسؤول القسم
-    يقرر قبول المتطوع ضمن فريقه أو رفضه.
+    يقرر قبوله أو رفضه. بعد موافقة القسم، يقوم HR بإرسال رسالة القبول.
    </p>
 
    <div class="volunteerTableWrap">
@@ -294,7 +294,32 @@ async function volunteers(){
         `;
        }
 
-       if(v.status==='accepted' && v.invite_token){
+       const canCancelDepartmentAcceptance =
+        v.status==='accepted' &&
+        v.department_approval==='accepted' &&
+        (
+         isOwnerOrHR ||
+         (
+          me.role==='admin' &&
+          me.department===v.department
+         )
+        );
+
+       if(canCancelDepartmentAcceptance && !v.volunteer_id){
+        actions+=`
+         <button class="btn light"
+          onclick="updateVolunteer(${v.id},'cancel_department_acceptance')">
+          ↩️ إلغاء القبول
+         </button>
+        `;
+       }
+
+       if(
+        isOwnerOrHR &&
+        v.status==='accepted' &&
+        v.department_approval==='accepted' &&
+        v.invite_token
+       ){
         actions+=`
          <button class="btn green"
           onclick='openVolunteerWhatsApp(${JSON.stringify(v)})'>
@@ -316,7 +341,7 @@ async function volunteers(){
          actions+=`
           <button class="btn danger"
            onclick="deleteVolunteer(${v.id})">
-           🗑️ حذف وإتاحة التقديم من جديد
+           🗑️ حذف المتطوع
           </button>
          `;
         }
