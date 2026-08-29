@@ -1524,12 +1524,16 @@ window.deleteDepartmentContent=async id=>{
   return;
 
  try{
-  await api(
+  const r=await api(
    '/api/admin/department-content/'+id,
    {method:'DELETE'}
   );
 
-  flash('تم حذف المحتوى');
+  flash(
+   r.pendingApproval
+    ? 'تم إرسال طلب الحذف للمالك'
+    : 'تم حذف المحتوى'
+  );
   await departmentWork();
 
  }catch(ex){
