@@ -46,6 +46,8 @@ async function renderDepartmentBar(){
   'التقني',
   'فكرة',
   'الإعلامي',
+  'التيسير',
+  'الإعلامي',
   'التيسير'
  ];
 
@@ -145,7 +147,7 @@ async function renderDepartmentBar(){
 function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${esc(me.role)}</span></p>`;renderDepartmentBar();document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;let allowed=true;if(need==='owner')allowed=me.role==='owner';else if(need==='hr')allowed=me.role==='owner'||(me.role==='admin'&&me.department==='إدارة الموارد البشرية (HR)');else allowed=['owner','admin'].includes(me.role);x.classList.toggle('hidden',!allowed)});loadTab('dashboard')}
 $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=null;showAuth()};
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
-async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
+async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
 async function dashboard(){const d=await api('/api/admin/dashboard');content.innerHTML=`<div class="grid grid4"><div class="panel"><b>الفعاليات</b><h2>${d.counts.events}</h2></div><div class="panel"><b>الإنجازات</b><h2>${d.counts.achievements}</h2></div><div class="panel"><b>المسؤولون</b><h2>${d.counts.users}</h2></div><div class="panel"><b>المحتوى المنشور</b><h2>${d.counts.published}</h2></div></div><div class="panel"><h3>آخر التعديلات</h3>${d.audit.map(a=>`<p><b>${esc(a.user_name||'النظام')}</b> — ${esc(a.action)} ${esc(a.entity)} <span class="muted">${esc(a.created_at)}</span></p>`).join('')||'<p class="muted">لا يوجد سجل بعد.</p>'}</div>`}
 const cfg={events:{title:'فعالية',date:'event_date',fields:[['title','اسم الفعالية'],['summary','وصف مختصر'],['description','الوصف الكامل'],['event_date','التاريخ','date'],['event_time','الوقت','time'],['location','المكان'],['registration_url','رابط التسجيل'],['event_state','الحالة الظاهرة']],image:'cover_image'},achievements:{title:'إنجاز',date:'achievement_date',fields:[['title','عنوان الإنجاز'],['summary','وصف مختصر'],['description','الوصف الكامل'],['achievement_date','التاريخ','date'],['volunteers','عدد المتطوعين','number'],['beneficiaries','عدد المستفيدين','number'],['volunteer_hours','الساعات التطوعية','number']],image:'cover_image'}};
 async function listEntities(type){const d=await api('/api/admin/'+type);content.innerHTML=`<div class="panel"><button class="btn green" onclick="entityForm('${type}')">+ إضافة ${cfg[type].title}</button></div><div class="panel"><table class="table"><thead><tr><th>الصورة</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody>${d.items.map(x=>`<tr><td>${x.cover_image?`<img class="thumb" src="${esc(x.cover_image)}">`:''}</td><td>${esc(x.title)}</td><td>${esc(x.status)}</td><td>${esc(x[cfg[type].date])}</td><td><div class="rowActions"><button class="btn light small" onclick='entityForm("${type}",${JSON.stringify(x).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="removeEntity('${type}',${x.id})">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="5">لا يوجد محتوى بعد.</td></tr>'}</tbody></table></div>`}
@@ -170,6 +172,8 @@ window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userFor
 <option value="العلاقات العامة" ${u.department==='العلاقات العامة'?'selected':''}>العلاقات العامة</option>
 <option value="التقني" ${u.department==='التقني'?'selected':''}>التقني</option>
 <option value="فكرة" ${u.department==='فكرة'?'selected':''}>فكرة</option>
+<option value="الإعلامي" ${u.department==='الإعلامي'?'selected':''}>الإعلامي</option>
+<option value="التيسير" ${u.department==='التيسير'?'selected':''}>التيسير</option>
 <option value="الإعلامي" ${u.department==='الإعلامي'?'selected':''}>الإعلامي</option>
 <option value="التيسير" ${u.department==='التيسير'?'selected':''}>التيسير</option>
 </select>
@@ -568,6 +572,8 @@ async function changeVolunteerDepartment(id){
   '5':'التقني',
   '6':'فكرة',
   '7':'الإعلامي',
+  '8':'التيسير',
+  '7':'الإعلامي',
   '8':'التيسير'
  };
 
@@ -738,6 +744,8 @@ async function updateVolunteer(id,status){
    '4':'العلاقات العامة',
    '5':'التقني',
    '6':'فكرة',
+   '7':'الإعلامي',
+   '8':'التيسير',
    '7':'الإعلامي',
    '8':'التيسير'
   };
@@ -1069,3 +1077,270 @@ async function saveIdea(id){
   flash(e.message,true);
  }
 }
+
+
+async function departmentWork(){
+ const isOwner=me.role==='owner';
+
+ const departments=[
+  'الميداني',
+  'إدارة الموارد البشرية (HR)',
+  'الأكاديمي',
+  'العلاقات العامة',
+  'التقني',
+  'فكرة',
+  'الإعلامي',
+  'التيسير'
+ ];
+
+ let department=isOwner
+  ? (selectedDepartment==='all' ? '' : selectedDepartment)
+  : me.department;
+
+ const query=department
+  ? '?department='+encodeURIComponent(department)
+  : '';
+
+ const d=await api('/api/admin/department-content'+query);
+
+ const departmentSelect=isOwner
+  ? `
+   <div class="field">
+    <label>القسم</label>
+    <select id="departmentContentFilter">
+     <option value="">كل الأقسام</option>
+     ${departments.map(x=>`
+      <option value="${esc(x)}"
+       ${department===x?'selected':''}>
+       ${esc(x)}
+      </option>
+     `).join('')}
+    </select>
+   </div>
+  `
+  : `
+   <div class="notice">
+    القسم: <strong>${esc(me.department||'غير محدد')}</strong>
+   </div>
+  `;
+
+ content.innerHTML=`
+  <div class="panel">
+   <h3>📂 محتوى القسم</h3>
+
+   ${departmentSelect}
+
+   <div class="rowActions">
+    <button class="btn green"
+     onclick="departmentContentForm('${esc(department||'')}')">
+     + إضافة محتوى
+    </button>
+   </div>
+  </div>
+
+  <div class="panel">
+   ${
+    d.items.length
+     ? d.items.map(x=>`
+      <div class="faq">
+       <b>${esc(x.title)}</b>
+
+       <p class="muted">
+        🏢 ${esc(x.department)}
+       </p>
+
+       ${
+        x.description
+         ? `<p>${esc(x.description)}</p>`
+         : ''
+       }
+
+       ${
+        x.link_url
+         ? `<p>
+             🔗 <a href="${esc(x.link_url)}"
+              target="_blank" rel="noopener">
+              فتح المرفق / الرابط
+             </a>
+            </p>`
+         : ''
+       }
+
+       <p class="muted">
+        رفع بواسطة:
+        ${esc(x.created_by_name||'غير محدد')}
+       </p>
+
+       <div class="rowActions">
+        <button class="btn light small"
+         onclick='departmentContentForm(
+          ${JSON.stringify(x).replaceAll("'","&#39;")}
+         )'>
+         تعديل
+        </button>
+
+        <button class="btn danger small"
+         onclick="deleteDepartmentContent(${x.id})">
+         حذف
+        </button>
+       </div>
+      </div>
+     `).join('')
+     : '<p class="muted">لا يوجد محتوى للقسم بعد.</p>'
+   }
+  </div>
+ `;
+
+ const filter=$('#departmentContentFilter');
+
+ if(filter){
+  filter.onchange=async e=>{
+   selectedDepartment=e.target.value || 'all';
+   await departmentWork();
+  };
+ }
+}
+
+window.departmentContentForm=item=>{
+ const editing=
+  typeof item==='object' && item && item.id;
+
+ const departments=[
+  'الميداني',
+  'إدارة الموارد البشرية (HR)',
+  'الأكاديمي',
+  'العلاقات العامة',
+  'التقني',
+  'فكرة',
+  'الإعلامي',
+  'التيسير'
+ ];
+
+ const department=editing
+  ? item.department
+  : (
+     typeof item==='string' && item
+      ? item
+      : (
+         me.role==='owner'
+          ? (
+             selectedDepartment==='all'
+              ? ''
+              : selectedDepartment
+            )
+          : me.department
+        )
+    );
+
+ content.innerHTML=`
+  <div class="panel">
+   <h3>
+    ${editing?'تعديل':'إضافة'} محتوى للقسم
+   </h3>
+
+   <form id="departmentContentForm"
+    class="formGrid">
+
+    ${
+     me.role==='owner'
+      ? `
+       <div class="field">
+        <label>القسم</label>
+        <select name="department" required>
+         <option value="">اختر القسم</option>
+         ${departments.map(x=>`
+          <option value="${esc(x)}"
+           ${department===x?'selected':''}>
+           ${esc(x)}
+          </option>
+         `).join('')}
+        </select>
+       </div>
+      `
+      : `
+       <input type="hidden"
+        name="department"
+        value="${esc(me.department||'')}">
+      `
+    }
+
+    <div class="field full">
+     <label>العنوان</label>
+     <input name="title"
+      value="${esc(editing?item.title:'')}"
+      required>
+    </div>
+
+    <div class="field full">
+     <label>الوصف</label>
+     <textarea name="description">${
+      esc(editing?item.description:'')
+     }</textarea>
+    </div>
+
+    <div class="field full">
+     <label>رابط ملف أو عمل</label>
+     <input name="link_url"
+      placeholder="https://..."
+      value="${esc(editing?item.link_url:'')}">
+    </div>
+
+    <div class="full rowActions">
+     <button class="btn green">
+      حفظ
+     </button>
+
+     <button class="btn light"
+      type="button"
+      onclick="departmentWork()">
+      إلغاء
+     </button>
+    </div>
+
+   </form>
+  </div>
+ `;
+
+ $('#departmentContentForm').onsubmit=async e=>{
+  e.preventDefault();
+
+  const o=Object.fromEntries(
+   new FormData(e.target).entries()
+  );
+
+  try{
+   await api(
+    '/api/admin/department-content'+
+    (editing?'/'+item.id:''),
+    {
+     method:editing?'PUT':'POST',
+     body:JSON.stringify(o)
+    }
+   );
+
+   flash('تم حفظ محتوى القسم');
+   await departmentWork();
+
+  }catch(ex){
+   flash(ex.message,true);
+  }
+ };
+};
+
+window.deleteDepartmentContent=async id=>{
+ if(!confirm('حذف هذا المحتوى من القسم؟'))
+  return;
+
+ try{
+  await api(
+   '/api/admin/department-content/'+id,
+   {method:'DELETE'}
+  );
+
+  flash('تم حذف المحتوى');
+  await departmentWork();
+
+ }catch(ex){
+  flash(ex.message,true);
+ }
+};

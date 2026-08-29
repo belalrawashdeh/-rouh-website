@@ -18,7 +18,7 @@ body{
 }
 
 .card{
- width:min(520px,90%);
+ width:min(850px,92%);
  background:white;
  border-radius:24px;
  padding:40px;
@@ -74,6 +74,38 @@ button{
  background:#5c8567;
  color:white;
 }
+
+.section{
+ margin-top:24px;
+ text-align:right;
+ background:#f5f5ef;
+ padding:20px;
+ border-radius:16px;
+}
+
+.section h2{
+ margin-top:0;
+}
+
+.adminItem,
+.workItem{
+ background:white;
+ border-radius:14px;
+ padding:15px;
+ margin:10px 0;
+}
+
+.workItem a{
+ color:#3d7150;
+ font-weight:bold;
+ text-decoration:none;
+}
+
+.muted{
+ color:#6f7b83;
+ font-size:14px;
+}
+
 </style>
 </head>
 
@@ -122,6 +154,20 @@ button{
 
 </div>
 
+<div class="section">
+<h2>👤 مسؤولو قسمي</h2>
+<div id="departmentAdmins">
+جارٍ التحميل...
+</div>
+</div>
+
+<div class="section">
+<h2>📂 محتوى قسمي</h2>
+<div id="departmentWork">
+جارٍ التحميل...
+</div>
+</div>
+
 <button class="logout" id="logout">
 تسجيل الخروج
 </button>
@@ -139,6 +185,16 @@ button{
 </div>
 
 <script>
+
+function escapeHtml(value){
+ return String(value??'')
+  .replaceAll('&','&amp;')
+  .replaceAll('<','&lt;')
+  .replaceAll('>','&gt;')
+  .replaceAll('"','&quot;')
+  .replaceAll("'","&#39;");
+}
+
 
 async function loadAccount(){
 
@@ -162,6 +218,68 @@ async function loadAccount(){
   const departmentEl=document.getElementById('department');
   if(departmentEl){
    departmentEl.textContent=v.department||'لم يتم تحديد القسم';
+  }
+
+  try{
+   const depResponse=
+    await fetch('/api/volunteer/department');
+
+   const depData=
+    await depResponse.json();
+
+   const adminsEl=
+    document.getElementById('departmentAdmins');
+
+   const workEl=
+    document.getElementById('departmentWork');
+
+   if(depResponse.ok){
+    adminsEl.innerHTML=
+     depData.admins.length
+      ? depData.admins.map(a=>
+         `<div class="adminItem">👤 ${escapeHtml(a.name)}</div>`
+        ).join('')
+      : '<div class="muted">لم يتم تحديد مسؤول للقسم.</div>';
+
+    workEl.innerHTML=
+     depData.items.length
+      ? depData.items.map(x=>`
+       <div class="workItem">
+        <strong>${escapeHtml(x.title)}</strong>
+
+        ${
+         x.description
+          ? `<p>${escapeHtml(x.description)}</p>`
+          : ''
+        }
+
+        ${
+         x.link_url
+          ? `<p>
+              <a href="${escapeHtml(x.link_url)}"
+               target="_blank"
+               rel="noopener">
+               🔗 فتح المرفق / الرابط
+              </a>
+             </p>`
+          : ''
+        }
+
+        <div class="muted">
+         بواسطة:
+         ${escapeHtml(x.created_by_name||'مسؤول القسم')}
+        </div>
+       </div>
+      `).join('')
+      : '<div class="muted">لا يوجد محتوى للقسم بعد.</div>';
+   }
+
+  }catch(e){
+   document.getElementById('departmentAdmins').textContent=
+    'تعذر تحميل مسؤولي القسم.';
+
+   document.getElementById('departmentWork').textContent=
+    'تعذر تحميل محتوى القسم.';
   }
 
   document.getElementById('loading').style.display='none';

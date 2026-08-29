@@ -829,8 +829,228 @@ const server=http.createServer(async (req,res)=>{
    });
   }
 
+
+  if(pathname==='/api/volunteer/department' && req.method==='GET'){
+   const token=parseCookies(req).rouh_volunteer_session;
+
+   if(!token)
+    return send(res,401,{error:'يجب تسجيل الدخول'});
+
+   const volunteer=db.prepare(`
+    SELECT v.id,v.name,v.department
+    FROM volunteer_sessions s
+    JOIN volunteers v ON v.id=s.volunteer_id
+    WHERE s.token=?
+      AND s.expires_at>CURRENT_TIMESTAMP
+      AND v.active=1
+   `).get(token);
+
+   if(!volunteer)
+    return send(res,401,{error:'انتهت الجلسة'});
+
+   const department=String(volunteer.department||'').trim();
+
+   if(!department)
+    return send(res,200,{
+     department:'',
+     admins:[],
+     items:[]
+    });
+
+   const admins=db.prepare(`
+    SELECT id,name
+    FROM users
+    WHERE role='admin'
+      AND active=1
+      AND department=?
+    ORDER BY name
+   `).all(department);
+
+   const items=db.prepare(`
+    SELECT dc.id,
+           dc.title,
+           dc.description,
+           dc.link_url,
+           dc.created_at,
+           u.name created_by_name
+    FROM department_content dc
+    LEFT JOIN users u ON u.id=dc.created_by
+    WHERE dc.department=?
+    ORDER BY dc.id DESC
+   `).all(department);
+
+   return send(res,200,{
+    department,
+    admins,
+    items
+   });
+  }
+
   if(pathname.startsWith('/api/admin/')){
    const user=requireUser(req,res); if(!user) return;
+
+   if(pathname==='/api/admin/department-content' && req.method==='GET'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const urlObj=new URL(req.url,'http://localhost');
+    let department=String(urlObj.searchParams.get('department')||'').trim();
+
+    if(user.role!=='owner')
+     department=user.department || '';
+
+    let items;
+
+    if(user.role==='owner' && !department){
+     items=db.prepare(`
+      SELECT dc.*,
+             u.name created_by_name
+      FROM department_content dc
+      LEFT JOIN users u ON u.id=dc.created_by
+      ORDER BY dc.id DESC
+     `).all();
+    }else{
+     items=db.prepare(`
+      SELECT dc.*,
+             u.name created_by_name
+      FROM department_content dc
+      LEFT JOIN users u ON u.id=dc.created_by
+      WHERE dc.department=?
+      ORDER BY dc.id DESC
+     `).all(department);
+    }
+
+    return send(res,200,{items});
+   }
+
+   if(pathname==='/api/admin/department-content' && req.method==='POST'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const b=await body(req);
+
+    const title=String(b.title||'').trim();
+    const description=String(b.description||'').trim();
+    const linkUrl=String(b.link_url||'').trim();
+
+    let department=user.role==='owner'
+     ? String(b.department||'').trim()
+     : String(user.department||'').trim();
+
+    if(!department)
+     return send(res,400,{error:'يجب تحديد القسم'});
+
+    if(!title)
+     return send(res,400,{error:'عنوان المحتوى مطلوب'});
+
+    const r=db.prepare(`
+     INSERT INTO department_content
+      (department,title,description,link_url,created_by)
+     VALUES(?,?,?,?,?)
+    `).run(
+     department,
+     title,
+     description,
+     linkUrl,
+     user.id
+    );
+
+    audit(
+     user,
+     'create',
+     'department_content',
+     r.lastInsertRowid,
+     department+' - '+title
+    );
+
+    return send(res,201,{
+     ok:true,
+     id:Number(r.lastInsertRowid)
+    });
+   }
+
+   const departmentContentMatch=
+    pathname.match(/^\/api\/admin\/department-content\/(\d+)$/);
+
+   if(departmentContentMatch){
+    const id=departmentContentMatch[1];
+
+    const item=db.prepare(`
+     SELECT *
+     FROM department_content
+     WHERE id=?
+    `).get(id);
+
+    if(!item)
+     return send(res,404,{error:'المحتوى غير موجود'});
+
+    const canManage=
+     user.role==='owner' ||
+     (
+      user.role==='admin' &&
+      item.department===user.department
+     );
+
+    if(!canManage)
+     return send(res,403,{error:'لا يمكنك إدارة محتوى قسم آخر'});
+
+    if(req.method==='PUT'){
+     const b=await body(req);
+
+     const title=String(b.title??item.title).trim();
+     const description=String(
+      b.description??item.description
+     ).trim();
+     const linkUrl=String(
+      b.link_url??item.link_url
+     ).trim();
+
+     if(!title)
+      return send(res,400,{error:'عنوان المحتوى مطلوب'});
+
+     db.prepare(`
+      UPDATE department_content
+      SET title=?,
+          description=?,
+          link_url=?,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(
+      title,
+      description,
+      linkUrl,
+      id
+     );
+
+     audit(
+      user,
+      'update',
+      'department_content',
+      id,
+      item.department+' - '+title
+     );
+
+     return send(res,200,{ok:true});
+    }
+
+    if(req.method==='DELETE'){
+     db.prepare(`
+      DELETE FROM department_content
+      WHERE id=?
+     `).run(id);
+
+     audit(
+      user,
+      'delete',
+      'department_content',
+      id,
+      item.department+' - '+item.title
+     );
+
+     return send(res,200,{ok:true});
+    }
+   }
+
 
    if(pathname==='/api/admin/complaints' && req.method==='GET'){
     const canAccessComplaints=
@@ -1019,6 +1239,8 @@ const server=http.createServer(async (req,res)=>{
      'العلاقات العامة',
      'التقني',
      'فكرة',
+     'الإعلامي',
+     'التيسير',
      'الإعلامي',
      'التيسير'
     ];
@@ -1328,6 +1550,8 @@ const server=http.createServer(async (req,res)=>{
      'التقني',
      'فكرة',
      'الإعلامي',
+     'التيسير',
+     'الإعلامي',
      'التيسير'
     ];
 
@@ -1550,6 +1774,21 @@ const server=http.createServer(async (req,res)=>{
   if(!serveStatic(req,res)) send(res,404,'Not found','text/plain');
  } catch(e){ console.error(e); if(!res.headersSent) send(res,500,{error:'حدث خطأ داخلي'}); }
 });
+
+// Department content
+db.exec(`
+ CREATE TABLE IF NOT EXISTS department_content (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  department TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  link_url TEXT NOT NULL DEFAULT '',
+  created_by INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(created_by) REFERENCES users(id)
+ )
+`);
 
 // Database migrations for existing installations
 try{
