@@ -737,6 +737,10 @@ async function openVolunteerWhatsApp(v){
     groupUrl
   : '';
 
+ const allDepartmentsGroup =
+  '\n\n💚 وانضم لمجموعة مبادرة روح – جميع الأقسام من هنا:\n' +
+  'https://chat.whatsapp.com/HPFufR8WZ2TE4FD2KLxoEF?s=sw&p=i&mlu=4';
+
  const message =
  '\u{1F389} مبارك! تم قبولك رسميًا في مبادرة روح \u{1F49A}\n\n' +
  '\u{1F3E2} تم قبولك في قسم: ' + department + '\n\n' +
@@ -746,6 +750,7 @@ async function openVolunteerWhatsApp(v){
  '\u{1F510} أنشئ حسابك على موقع روح من خلال رابط التسجيل الخاص فيك:\n' +
  registerUrl +
  groupMessage +
+ allDepartmentsGroup +
  '\n\n' +
  'أهلًا فيك مرة ثانية، ومتحمسين نبدأ المشوار سوا \u{1F49A}\u{1F331}\n' +
  'فريق مبادرة روح';
