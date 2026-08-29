@@ -1372,8 +1372,12 @@ const server=http.createServer(async (req,res)=>{
    const whatsappSentMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)\/whatsapp-sent$/);
 
    if(whatsappSentMatch && req.method==='PUT'){
-    if(!['owner','admin'].includes(user.role))
-     return send(res,403,{error:'لا تملك الصلاحية'});
+    const isHRAdmin =
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    if(user.role!=='owner' && !isHRAdmin)
+     return send(res,403,{error:'إرسال رسالة القبول من صلاحية المالك أو HR فقط'});
 
     const id=whatsappSentMatch[1];
 

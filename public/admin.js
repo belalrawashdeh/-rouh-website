@@ -330,9 +330,18 @@ async function volunteers(){
         actions+=`
          <button class="btn green"
           onclick='openVolunteerWhatsApp(${JSON.stringify(v)})'>
-          📱 إرسال رسالة القبول
+          📱 فتح رسالة القبول
          </button>
         `;
+
+        if(!v.whatsapp_sent_at){
+         actions+=`
+          <button class="btn light"
+           onclick="confirmVolunteerWhatsAppSent(${v.id})">
+           ✅ تأكيد تم الإرسال
+          </button>
+         `;
+        }
        }
 
        if(v.status==='accepted' && v.whatsapp_sent_at){
@@ -486,28 +495,34 @@ async function openVolunteerWhatsApp(v){
   return;
  }
 
- const sent=confirm('هل أرسلت رسالة القبول للمتطوع فعلًا؟');
+ flash('📱 تم فتح رسالة القبول في واتساب');
+}
 
- if(!sent){
-  flash('تم فتح واتساب بدون تسجيل الإرسال');
-  return;
- }
+window.openVolunteerWhatsApp=openVolunteerWhatsApp;
+
+async function confirmVolunteerWhatsAppSent(id){
+ const ok=confirm(
+  'هل تم إرسال رسالة القبول للمتطوع فعلًا؟\n\n' +
+  'اضغط OK فقط بعد إرسال الرسالة في واتساب.'
+ );
+
+ if(!ok) return;
 
  try{
-  await api('/api/admin/volunteers/'+v.id+'/whatsapp-sent',{
+  await api('/api/admin/volunteers/'+id+'/whatsapp-sent',{
    method:'PUT',
    body:JSON.stringify({})
   });
 
-  flash('تم تسجيل إرسال رسالة القبول');
+  flash('✅ تم تسجيل إرسال رسالة القبول');
   await volunteers();
+
  }catch(e){
-  console.error(e);
-  alert('تم فتح واتساب، لكن فشل تسجيل الإرسال: '+e.message);
+  alert(e.message);
  }
 }
 
-window.openVolunteerWhatsApp=openVolunteerWhatsApp;
+window.confirmVolunteerWhatsAppSent=confirmVolunteerWhatsAppSent;
 
 
 
@@ -662,8 +677,31 @@ async function updateVolunteer(id,status){
     body:JSON.stringify({status:'contacted'})
    });
 
-   flash('💬 تم تسجيل التواصل مع المتطوع');
-   volunteers();
+   const data=await api('/api/admin/volunteers');
+   const volunteer=data.items.find(v=>Number(v.id)===Number(id));
+
+   if(volunteer && volunteer.phone){
+    const phone=normalizeWhatsAppPhone(volunteer.phone);
+
+    const message=
+     'مرحبًا ' + (volunteer.name || '') + ' 👋\n\n' +
+     'معك فريق إدارة الموارد البشرية في مبادرة روح 💚\n\n' +
+     'نتواصل معك بخصوص طلب انضمامك إلى مبادرة روح، ' +
+     'ونود التعرف عليك بشكل أفضل وتحديد القسم الأنسب لك ضمن فريق المبادرة.\n\n' +
+     'يسعدنا التواصل معك والإجابة عن أي استفسار لديك 🌱\n\n' +
+     'فريق مبادرة روح';
+
+    const url=
+     'whatsapp://send?phone='+
+     phone+
+     '&text='+
+     encodeURIComponent(message);
+
+    window.open(url,'_blank');
+   }
+
+   flash('💬 تم تسجيل التواصل وفتح واتساب');
+   await volunteers();
 
   }catch(e){
    alert(e.message);
