@@ -46,8 +46,6 @@ async function renderDepartmentBar(){
   'التقني',
   'فكرة',
   'الإعلامي',
-  'التيسير',
-  'الإعلامي',
   'التيسير'
  ];
 
@@ -172,8 +170,6 @@ window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userFor
 <option value="العلاقات العامة" ${u.department==='العلاقات العامة'?'selected':''}>العلاقات العامة</option>
 <option value="التقني" ${u.department==='التقني'?'selected':''}>التقني</option>
 <option value="فكرة" ${u.department==='فكرة'?'selected':''}>فكرة</option>
-<option value="الإعلامي" ${u.department==='الإعلامي'?'selected':''}>الإعلامي</option>
-<option value="التيسير" ${u.department==='التيسير'?'selected':''}>التيسير</option>
 <option value="الإعلامي" ${u.department==='الإعلامي'?'selected':''}>الإعلامي</option>
 <option value="التيسير" ${u.department==='التيسير'?'selected':''}>التيسير</option>
 </select>
@@ -477,10 +473,14 @@ async function volunteers(){
            : ''
          }
 
-         <button class="btn ${v.volunteer_active ? 'danger' : 'green'}"
-          onclick="toggleVolunteerAccount(${v.id},${v.volunteer_active ? 'false' : 'true'})">
-          ${v.volunteer_active ? '⛔ تعطيل الحساب' : '✅ تفعيل الحساب'}
-         </button>
+         ${
+          isOwnerOrHR
+           ? `<button class="btn ${v.volunteer_active ? 'danger' : 'green'}"
+                onclick="toggleVolunteerAccount(${v.id},${v.volunteer_active ? 'false' : 'true'})">
+                ${v.volunteer_active ? '⛔ تعطيل الحساب' : '✅ تفعيل الحساب'}
+              </button>`
+           : ''
+         }
         `;
        }
 

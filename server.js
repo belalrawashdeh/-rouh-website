@@ -1241,6 +1241,14 @@ const server=http.createServer(async (req,res)=>{
      `).all(user.department||'');
     }
 
+    if(user.role!=='owner' && !isHRAdmin){
+     items=items.map(item=>({
+      ...item,
+      invite_token:null,
+      whatsapp_sent_at:null
+     }));
+    }
+
     return send(res,200,{items});
    }
 
@@ -1642,8 +1650,15 @@ const server=http.createServer(async (req,res)=>{
    const volunteerAccountToggleMatch=pathname.match(/^\/api\/admin\/volunteers\/(\d+)\/account-active$/);
 
    if(volunteerAccountToggleMatch && req.method==='PUT'){
-    if(!['owner','admin'].includes(user.role))
-     return send(res,403,{error:'لا تملك الصلاحية'});
+    const canManageVolunteerAccount=
+     user.role==='owner' ||
+     (
+      user.role==='admin' &&
+      user.department==='إدارة الموارد البشرية (HR)'
+     );
+
+    if(!canManageVolunteerAccount)
+     return send(res,403,{error:'إدارة حساب المتطوع متاحة للمالك والموارد البشرية فقط'});
 
     const id=volunteerAccountToggleMatch[1];
     const b=await body(req);
