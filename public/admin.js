@@ -238,6 +238,9 @@ async function volunteers(){
        if(v.department_approval==='accepted')
         stateText='مقبول من القسم';
 
+       if(v.department_approval==='rejected')
+        stateText=`❌ لم يوافق عليه قسم ${v.department || 'غير محدد'}`;
+
        let actions='';
 
        if(
