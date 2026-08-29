@@ -1132,15 +1132,16 @@ const server=http.createServer(async (req,res)=>{
      db.prepare(`
       UPDATE volunteer_applications
       SET status='pending',
-          department_approval='pending',
-          department_decided_at=NULL,
-          department_decided_by=NULL,
+          department_approval='rejected',
+          department_decided_at=CURRENT_TIMESTAMP,
+          department_decided_by=?,
           accepted_at=NULL,
+          rejected_at=NULL,
           invite_token=NULL,
           whatsapp_sent_at=NULL,
           updated_at=CURRENT_TIMESTAMP
       WHERE id=?
-     `).run(id);
+     `).run(user.id,id);
 
      audit(
       user,
@@ -1153,7 +1154,7 @@ const server=http.createServer(async (req,res)=>{
      return send(res,200,{
       ok:true,
       status:'pending',
-      department_approval:'pending'
+      department_approval:'rejected'
      });
     }
 
