@@ -2,7 +2,26 @@ const $=s=>document.querySelector(s), content=$('#content'); let me=null, needsS
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 async function api(url,opt={}){opt.headers={...(opt.headers||{}),'Content-Type':'application/json'};const r=await fetch(url,opt);const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'حدث خطأ');return d}
 function flash(t,err=false){$('#msg').innerHTML=`<div class="notice ${err?'error':''}">${esc(t)}</div>`;setTimeout(()=>$('#msg').innerHTML='',3500)}
-async function init(){needsSetup=(await api('/api/setup/status')).needsSetup;me=(await api('/api/me')).user;if(me)showAdmin();else showAuth()}
+async function init(){
+ needsSetup=(await api('/api/setup/status')).needsSetup;
+
+ const session=await api('/api/me');
+
+ if(session.suspended){
+  me=null;
+  showAuth();
+  $('#authMsg').innerHTML=
+   '<div class="notice error">⛔ حسابك موقوف من قِبل المالك.<br>يرجى التواصل مع إدارة مبادرة روح.</div>';
+  return;
+ }
+
+ me=session.user;
+
+ if(me)
+  showAdmin();
+ else
+  showAuth();
+}
 function showAuth(){ $('#authView').classList.remove('hidden');$('#adminView').classList.add('hidden');$('#authTitle').textContent=needsSetup?'إعداد الموقع لأول مرة':'دخول المسؤولين';$('#nameField').classList.toggle('hidden',!needsSetup)}
 $('#authForm').onsubmit=async e=>{e.preventDefault();try{if(needsSetup){await api('/api/setup',{method:'POST',body:JSON.stringify({name:$('#authName').value,email:$('#authEmail').value,password:$('#authPassword').value})});needsSetup=false;$('#authMsg').innerHTML='<div class="notice">تم إنشاء حساب المالك. سجّل الدخول الآن.</div>';showAuth()}else{await api('/api/login',{method:'POST',body:JSON.stringify({email:$('#authEmail').value,password:$('#authPassword').value})});me=(await api('/api/me')).user;showAdmin()}}catch(ex){$('#authMsg').innerHTML=`<div class="notice error">${esc(ex.message)}</div>`}}
 let selectedDepartment='all';

@@ -248,11 +248,52 @@ function verifyPassword(password, stored){
  const [salt,hash]=stored.split(':'); const test=crypto.scryptSync(password,salt,64); const expected=Buffer.from(hash,'hex'); return expected.length===test.length && crypto.timingSafeEqual(expected,test);
 }
 function currentUser(req){
- const token=parseCookies(req).rouh_session; if(!token) return null;
- const row=db.prepare(`SELECT u.id,u.name,u.email,u.phone,u.role,u.department,u.active,s.expires_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=?`).get(token);
- if(!row || !row.active || new Date(row.expires_at)<new Date()){ if(token) db.prepare('DELETE FROM sessions WHERE token=?').run(token); return null; } return row;
+ const token=parseCookies(req).rouh_session;
+ if(!token) return null;
+
+ const row=db.prepare(`
+  SELECT u.id,u.name,u.email,u.phone,u.role,u.department,u.active,s.expires_at
+  FROM sessions s
+  JOIN users u ON u.id=s.user_id
+  WHERE s.token=?
+ `).get(token);
+
+ if(!row) return null;
+
+ if(new Date(row.expires_at)<new Date()){
+  db.prepare('DELETE FROM sessions WHERE token=?').run(token);
+  return null;
+ }
+
+ if(!row.active)
+  return {...row,suspended:true};
+
+ return row;
 }
-function requireUser(req,res,roles=null){ const u=currentUser(req); if(!u){send(res,401,{error:'يجب تسجيل الدخول'}); return null;} if(roles && !roles.includes(u.role)){send(res,403,{error:'لا تملك الصلاحية'}); return null;} return u; }
+
+function requireUser(req,res,roles=null){
+ const u=currentUser(req);
+
+ if(!u){
+  send(res,401,{error:'يجب تسجيل الدخول'});
+  return null;
+ }
+
+ if(u.suspended){
+  send(res,403,{
+   error:'حسابك موقوف من قِبل المالك',
+   code:'ACCOUNT_SUSPENDED'
+  });
+  return null;
+ }
+
+ if(roles && !roles.includes(u.role)){
+  send(res,403,{error:'لا تملك الصلاحية'});
+  return null;
+ }
+
+ return u;
+}
 function audit(user,action,entity,entityId='',details=''){ db.prepare('INSERT INTO audit_log(user_id,action,entity,entity_id,details) VALUES(?,?,?,?,?)').run(user?.id||null,action,entity,String(entityId||''),details); }
 function settingsObj(){ const o={}; for(const r of db.prepare('SELECT key,value FROM settings').all()) o[r.key]=r.value; return o; }
 function statsObj(){ const o={}; for(const r of db.prepare('SELECT key,value FROM stats').all()) o[r.key]=r.value; return o; }
@@ -288,8 +329,18 @@ const server=http.createServer(async (req,res)=>{
    audit({id:r.lastInsertRowid},'setup','user',r.lastInsertRowid,'إنشاء حساب المالك الأول'); return send(res,201,{ok:true});
   }
   if(pathname==='/api/login' && req.method==='POST'){
-   const b=await body(req); const u=db.prepare('SELECT * FROM users WHERE email=?').get(String(b.email||'').toLowerCase());
-   if(!u||!u.active||!verifyPassword(String(b.password||''),u.password_hash)) return send(res,401,{error:'بيانات الدخول غير صحيحة'});
+   const b=await body(req);
+   const u=db.prepare('SELECT * FROM users WHERE email=?')
+    .get(String(b.email||'').toLowerCase());
+
+   if(!u || !verifyPassword(String(b.password||''),u.password_hash))
+    return send(res,401,{error:'بيانات الدخول غير صحيحة'});
+
+   if(!u.active)
+    return send(res,403,{
+     error:'⛔ حسابك موقوف من قِبل المالك. يرجى التواصل مع إدارة مبادرة روح.',
+     code:'ACCOUNT_SUSPENDED'
+    });
    const token=crypto.randomBytes(32).toString('hex'); const exp=new Date(Date.now()+7*86400000).toISOString(); db.prepare('INSERT INTO sessions(token,user_id,expires_at) VALUES(?,?,?)').run(token,u.id,exp);
    res.setHeader('Set-Cookie',`rouh_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${process.env.NODE_ENV==='production'?'; Secure':''}`); audit(u,'login','session',''); return send(res,200,{ok:true,user:{id:u.id,name:u.name,email:u.email,phone:u.phone,role:u.role,department:u.department}});
   }
@@ -382,7 +433,27 @@ const server=http.createServer(async (req,res)=>{
   if(pathname==='/api/logout' && req.method==='POST'){
    const token=parseCookies(req).rouh_session; const u=currentUser(req); if(token) db.prepare('DELETE FROM sessions WHERE token=?').run(token); res.setHeader('Set-Cookie','rouh_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'); if(u)audit(u,'logout','session',''); return send(res,200,{ok:true});
   }
-  if(pathname==='/api/me' && req.method==='GET'){ const u=currentUser(req); return send(res,200,{user:u?{id:u.id,name:u.name,email:u.email,phone:u.phone,role:u.role,department:u.department}:null}); }
+  if(pathname==='/api/me' && req.method==='GET'){
+   const u=currentUser(req);
+
+   if(u && u.suspended)
+    return send(res,200,{
+     user:null,
+     suspended:true,
+     message:'⛔ حسابك موقوف من قِبل المالك. يرجى التواصل مع إدارة مبادرة روح.'
+    });
+
+   return send(res,200,{
+    user:u?{
+     id:u.id,
+     name:u.name,
+     email:u.email,
+     phone:u.phone,
+     role:u.role,
+     department:u.department
+    }:null
+   });
+  }
 
 
 
