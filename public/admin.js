@@ -786,6 +786,33 @@ async function updateVolunteer(id,status){
   return;
  }
 
+ if(status==='cancel_department_acceptance'){
+
+  const ok=confirm(
+   'هل تريد إلغاء قبول هذا المتطوع من القسم؟\n\n' +
+   'سيختفي من صفحة القسم ويرجع إلى HR بحالة عدم موافقة القسم.'
+  );
+
+  if(!ok) return;
+
+  try{
+   await api('/api/admin/volunteers/'+id,{
+    method:'PUT',
+    body:JSON.stringify({
+     status:'cancel_department_acceptance'
+    })
+   });
+
+   flash('↩️ تم إلغاء القبول وإرجاع المتطوع إلى HR');
+   await volunteers();
+
+  }catch(e){
+   alert(e.message);
+  }
+
+  return;
+ }
+
  if(status==='rejected'){
 
   const ok=confirm('هل تريد رفض هذا الطلب؟');
