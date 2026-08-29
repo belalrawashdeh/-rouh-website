@@ -1699,7 +1699,19 @@ const server=http.createServer(async (req,res)=>{
    }
 
    if(pathname==='/api/admin/dashboard' && req.method==='GET'){
-    return send(res,200,{counts:{events:db.prepare('SELECT COUNT(*) c FROM events WHERE deleted_at IS NULL').get().c,achievements:db.prepare('SELECT COUNT(*) c FROM achievements WHERE deleted_at IS NULL').get().c,users:db.prepare('SELECT COUNT(*) c FROM users WHERE active=1').get().c,published:db.prepare("SELECT (SELECT COUNT(*) FROM events WHERE status='published' AND deleted_at IS NULL)+(SELECT COUNT(*) FROM achievements WHERE status='published' AND deleted_at IS NULL) c").get().c},audit:db.prepare('SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 15').all()});
+    const dashboardAudit=user.role==='owner'
+     ? db.prepare('SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 15').all()
+     : [];
+
+    return send(res,200,{
+     counts:{
+      events:db.prepare('SELECT COUNT(*) c FROM events WHERE deleted_at IS NULL').get().c,
+      achievements:db.prepare('SELECT COUNT(*) c FROM achievements WHERE deleted_at IS NULL').get().c,
+      users:db.prepare('SELECT COUNT(*) c FROM users WHERE active=1').get().c,
+      published:db.prepare("SELECT (SELECT COUNT(*) FROM events WHERE status='published' AND deleted_at IS NULL)+(SELECT COUNT(*) FROM achievements WHERE status='published' AND deleted_at IS NULL) c").get().c
+     },
+     audit:dashboardAudit
+    });
    }
    if(pathname==='/api/admin/content' && req.method==='GET'){
     if(!['owner','admin'].includes(user.role)) return send(res,403,{error:'لا تملك الصلاحية'}); return send(res,200,{settings:settingsObj(),stats:statsObj(),faqs:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()});
@@ -1768,7 +1780,7 @@ const server=http.createServer(async (req,res)=>{
  String(b.department??target.department??''),
  um[1]
 );audit(user,'update','user',um[1]);return send(res,200,{ok:true}); }
-   if(pathname==='/api/admin/audit'&&req.method==='GET'){ if(!['owner','admin'].includes(user.role))return send(res,403,{error:'لا تملك الصلاحية'}); return send(res,200,{items:db.prepare('SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 200').all()}); }
+   if(pathname==='/api/admin/audit'&&req.method==='GET'){ if(user.role!=='owner')return send(res,403,{error:'سجل التعديلات متاح للمالك فقط'}); return send(res,200,{items:db.prepare('SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 200').all()}); }
    return send(res,404,{error:'المسار غير موجود'});
   }
   if(!serveStatic(req,res)) send(res,404,'Not found','text/plain');
