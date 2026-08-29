@@ -169,7 +169,7 @@ async function volunteers(){
           v.department===selectedDepartment;
   }
 
-  return v.department===me.department;
+  return v.department===me.department && v.department_approval!=='rejected';
  });
 
  const isHR=
