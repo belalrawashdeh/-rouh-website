@@ -1034,6 +1034,39 @@ const server=http.createServer(async (req,res)=>{
     }
 
     if(req.method==='DELETE'){
+     if(user.role!=='owner'){
+      const existing=db.prepare(`
+       SELECT id FROM deletion_requests
+       WHERE entity_type='department_content'
+         AND entity_id=?
+         AND status='pending'
+      `).get(id);
+
+      if(existing)
+       return send(res,409,{error:'يوجد طلب حذف بانتظار موافقة المالك بالفعل'});
+
+      const r=db.prepare(`
+       INSERT INTO deletion_requests
+        (requester_id,requester_department,entity_type,entity_id,item_title)
+       VALUES(?,?,?,?,?)
+      `).run(
+       user.id,
+       user.department||item.department||'',
+       'department_content',
+       id,
+       item.title||''
+      );
+
+      audit(user,'request_delete','department_content',id,item.title||'');
+
+      return send(res,200,{
+       ok:true,
+       pendingApproval:true,
+       requestId:Number(r.lastInsertRowid),
+       message:'تم إرسال طلب الحذف للمالك'
+      });
+     }
+
      db.prepare(`
       DELETE FROM department_content
       WHERE id=?
@@ -1047,7 +1080,7 @@ const server=http.createServer(async (req,res)=>{
       item.department+' - '+item.title
      );
 
-     return send(res,200,{ok:true});
+     return send(res,200,{ok:true,pendingApproval:false});
     }
    }
 
@@ -1732,10 +1765,87 @@ const server=http.createServer(async (req,res)=>{
     if(req.method==='GET'&&!id){ const rows=db.prepare(`SELECT * FROM ${cfg.table} WHERE deleted_at IS NULL ORDER BY id DESC`).all().map(r=>({...r,gallery:safeJson(r.gallery)})); return send(res,200,{items:rows}); }
     if(req.method==='POST'&&!id){ const b=await body(req); const fields=cfg.fields.filter(f=>f in b); if(!b.title) return send(res,400,{error:'العنوان مطلوب'}); const vals=fields.map(f=>f==='gallery'?JSON.stringify(b[f]||[]):b[f]); const qs=fields.map(()=>'?').join(','); const r=db.prepare(`INSERT INTO ${cfg.table}(${fields.join(',')},created_by) VALUES(${qs},?)`).run(...vals,user.id); audit(user,'create',entity,r.lastInsertRowid,b.title); return send(res,201,{id:r.lastInsertRowid}); }
     if(req.method==='PUT'&&id){ const b=await body(req); const fields=cfg.fields.filter(f=>f in b); if(!fields.length) return send(res,400,{error:'لا توجد تعديلات'}); const vals=fields.map(f=>f==='gallery'?JSON.stringify(b[f]||[]):b[f]); db.prepare(`UPDATE ${cfg.table} SET ${fields.map(f=>`${f}=?`).join(',')},updated_at=CURRENT_TIMESTAMP WHERE id=? AND deleted_at IS NULL`).run(...vals,id); audit(user,'update',entity,id,b.title||''); return send(res,200,{ok:true}); }
-    if(req.method==='DELETE'&&id){ db.prepare(`UPDATE ${cfg.table} SET deleted_at=CURRENT_TIMESTAMP WHERE id=?`).run(id); audit(user,'trash',entity,id); return send(res,200,{ok:true}); }
+    if(req.method==='DELETE'&&id){
+     const item=db.prepare(`SELECT * FROM ${cfg.table} WHERE id=? AND deleted_at IS NULL`).get(id);
+     if(!item) return send(res,404,{error:'العنصر غير موجود'});
+
+     if(user.role!=='owner'){
+      const existing=db.prepare(`
+       SELECT id FROM deletion_requests
+       WHERE entity_type=? AND entity_id=? AND status='pending'
+      `).get(entity,id);
+
+      if(existing)
+       return send(res,409,{error:'يوجد طلب حذف بانتظار موافقة المالك بالفعل'});
+
+      const r=db.prepare(`
+       INSERT INTO deletion_requests
+        (requester_id,requester_department,entity_type,entity_id,item_title)
+       VALUES(?,?,?,?,?)
+      `).run(
+       user.id,
+       user.department||'',
+       entity,
+       id,
+       item.title||''
+      );
+
+      audit(user,'request_delete',entity,id,item.title||'');
+
+      return send(res,200,{
+       ok:true,
+       pendingApproval:true,
+       requestId:Number(r.lastInsertRowid),
+       message:'تم إرسال طلب الحذف للمالك'
+      });
+     }
+
+     db.prepare(`UPDATE ${cfg.table} SET deleted_at=CURRENT_TIMESTAMP WHERE id=?`).run(id);
+     audit(user,'trash',entity,id);
+
+     return send(res,200,{ok:true,pendingApproval:false});
+    }
    }
    const faqMatch=pathname.match(/^\/api\/admin\/faqs(?:\/(\d+))?$/);
-   if(faqMatch){ if(!['owner','admin'].includes(user.role)) return send(res,403,{error:'لا تملك الصلاحية'}); const id=faqMatch[1]; if(req.method==='GET'&&!id)return send(res,200,{items:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()}); const b=await body(req); if(req.method==='POST'&&!id){const r=db.prepare('INSERT INTO faqs(question,answer,sort_order,active) VALUES(?,?,?,?)').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1);audit(user,'create','faq',r.lastInsertRowid);return send(res,201,{id:r.lastInsertRowid});} if(req.method==='PUT'&&id){db.prepare('UPDATE faqs SET question=?,answer=?,sort_order=?,active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1,id);audit(user,'update','faq',id);return send(res,200,{ok:true});} if(req.method==='DELETE'&&id){db.prepare('UPDATE faqs SET deleted_at=CURRENT_TIMESTAMP WHERE id=?').run(id);audit(user,'trash','faq',id);return send(res,200,{ok:true});}
+   if(faqMatch){ if(!['owner','admin'].includes(user.role)) return send(res,403,{error:'لا تملك الصلاحية'}); const id=faqMatch[1]; if(req.method==='GET'&&!id)return send(res,200,{items:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()}); const b=await body(req); if(req.method==='POST'&&!id){const r=db.prepare('INSERT INTO faqs(question,answer,sort_order,active) VALUES(?,?,?,?)').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1);audit(user,'create','faq',r.lastInsertRowid);return send(res,201,{id:r.lastInsertRowid});} if(req.method==='PUT'&&id){db.prepare('UPDATE faqs SET question=?,answer=?,sort_order=?,active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1,id);audit(user,'update','faq',id);return send(res,200,{ok:true});} if(req.method==='DELETE'&&id){
+      const item=db.prepare('SELECT * FROM faqs WHERE id=? AND deleted_at IS NULL').get(id);
+      if(!item)return send(res,404,{error:'السؤال غير موجود'});
+
+      if(user.role!=='owner'){
+       const existing=db.prepare(`
+        SELECT id FROM deletion_requests
+        WHERE entity_type='faq' AND entity_id=? AND status='pending'
+       `).get(id);
+
+       if(existing)
+        return send(res,409,{error:'يوجد طلب حذف بانتظار موافقة المالك بالفعل'});
+
+       const r=db.prepare(`
+        INSERT INTO deletion_requests
+         (requester_id,requester_department,entity_type,entity_id,item_title)
+        VALUES(?,?,?,?,?)
+       `).run(
+        user.id,
+        user.department||'',
+        'faq',
+        id,
+        b.question||item.question||''
+       );
+
+       audit(user,'request_delete','faq',id,item.question||'');
+
+       return send(res,200,{
+        ok:true,
+        pendingApproval:true,
+        requestId:Number(r.lastInsertRowid),
+        message:'تم إرسال طلب الحذف للمالك'
+       });
+      }
+
+      db.prepare('UPDATE faqs SET deleted_at=CURRENT_TIMESTAMP WHERE id=?').run(id);
+      audit(user,'trash','faq',id);
+      return send(res,200,{ok:true,pendingApproval:false});
+     }
    }
    if(pathname==='/api/admin/trash'&&req.method==='GET'){ if(!['owner','admin'].includes(user.role))return send(res,403,{error:'لا تملك الصلاحية'}); return send(res,200,{events:db.prepare('SELECT id,title,deleted_at FROM events WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC').all(),achievements:db.prepare('SELECT id,title,deleted_at FROM achievements WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC').all(),faqs:db.prepare('SELECT id,question title,deleted_at FROM faqs WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC').all()}); }
    const restore=pathname.match(/^\/api\/admin\/trash\/(events|achievements|faqs)\/(\d+)\/restore$/); if(restore&&req.method==='POST'){ if(!['owner','admin'].includes(user.role))return send(res,403,{error:'لا تملك الصلاحية'}); db.prepare(`UPDATE ${restore[1]} SET deleted_at=NULL WHERE id=?`).run(restore[2]);audit(user,'restore',restore[1],restore[2]);return send(res,200,{ok:true}); }
@@ -1780,6 +1890,122 @@ const server=http.createServer(async (req,res)=>{
  String(b.department??target.department??''),
  um[1]
 );audit(user,'update','user',um[1]);return send(res,200,{ok:true}); }
+
+   if(pathname==='/api/admin/deletion-requests' && req.method==='GET'){
+    if(user.role!=='owner')
+     return send(res,403,{error:'طلبات الموافقة متاحة للمالك فقط'});
+
+    const items=db.prepare(`
+     SELECT
+      r.*,
+      u.name requester_name,
+      d.name decided_by_name
+     FROM deletion_requests r
+     LEFT JOIN users u ON u.id=r.requester_id
+     LEFT JOIN users d ON d.id=r.decided_by
+     ORDER BY
+      CASE r.status WHEN 'pending' THEN 0 ELSE 1 END,
+      r.id DESC
+    `).all();
+
+    return send(res,200,{items});
+   }
+
+   const deletionDecisionMatch=
+    pathname.match(/^\/api\/admin\/deletion-requests\/(\d+)$/);
+
+   if(deletionDecisionMatch && req.method==='PUT'){
+    if(user.role!=='owner')
+     return send(res,403,{error:'اعتماد طلبات الحذف من صلاحية المالك فقط'});
+
+    const requestId=deletionDecisionMatch[1];
+    const b=await body(req);
+
+    if(!['approve','reject'].includes(b.action))
+     return send(res,400,{error:'القرار غير صحيح'});
+
+    const request=db.prepare(`
+     SELECT *
+     FROM deletion_requests
+     WHERE id=?
+    `).get(requestId);
+
+    if(!request)
+     return send(res,404,{error:'طلب الحذف غير موجود'});
+
+    if(request.status!=='pending')
+     return send(res,409,{error:'تم اتخاذ قرار على هذا الطلب مسبقًا'});
+
+    if(b.action==='reject'){
+     db.prepare(`
+      UPDATE deletion_requests
+      SET status='rejected',
+          decided_by=?,
+          decided_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(user.id,requestId);
+
+     audit(
+      user,
+      'reject_delete_request',
+      request.entity_type,
+      request.entity_id,
+      request.item_title
+     );
+
+     return send(res,200,{ok:true,status:'rejected'});
+    }
+
+    if(request.entity_type==='department_content'){
+     db.prepare(`
+      DELETE FROM department_content
+      WHERE id=?
+     `).run(request.entity_id);
+    }
+    else if(request.entity_type==='events'){
+     db.prepare(`
+      UPDATE events
+      SET deleted_at=CURRENT_TIMESTAMP
+      WHERE id=? AND deleted_at IS NULL
+     `).run(request.entity_id);
+    }
+    else if(request.entity_type==='achievements'){
+     db.prepare(`
+      UPDATE achievements
+      SET deleted_at=CURRENT_TIMESTAMP
+      WHERE id=? AND deleted_at IS NULL
+     `).run(request.entity_id);
+    }
+    else if(request.entity_type==='faq'){
+     db.prepare(`
+      UPDATE faqs
+      SET deleted_at=CURRENT_TIMESTAMP
+      WHERE id=? AND deleted_at IS NULL
+     `).run(request.entity_id);
+    }
+    else{
+     return send(res,400,{error:'نوع العنصر غير مدعوم'});
+    }
+
+    db.prepare(`
+     UPDATE deletion_requests
+     SET status='approved',
+         decided_by=?,
+         decided_at=CURRENT_TIMESTAMP
+     WHERE id=?
+    `).run(user.id,requestId);
+
+    audit(
+     user,
+     'approve_delete_request',
+     request.entity_type,
+     request.entity_id,
+     request.item_title
+    );
+
+    return send(res,200,{ok:true,status:'approved'});
+   }
+
    if(pathname==='/api/admin/audit'&&req.method==='GET'){ if(user.role!=='owner')return send(res,403,{error:'سجل التعديلات متاح للمالك فقط'}); return send(res,200,{items:db.prepare('SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 200').all()}); }
    return send(res,404,{error:'المسار غير موجود'});
   }
@@ -1800,6 +2026,25 @@ db.exec(`
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(created_by) REFERENCES users(id)
  )
+`);
+
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS deletion_requests (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ requester_id INTEGER NOT NULL,
+ requester_department TEXT DEFAULT '',
+ entity_type TEXT NOT NULL,
+ entity_id INTEGER NOT NULL,
+ item_title TEXT NOT NULL DEFAULT '',
+ status TEXT NOT NULL DEFAULT 'pending'
+   CHECK(status IN ('pending','approved','rejected')),
+ decided_by INTEGER,
+ decided_at TEXT,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(requester_id) REFERENCES users(id),
+ FOREIGN KEY(decided_by) REFERENCES users(id)
+);
 `);
 
 // Database migrations for existing installations

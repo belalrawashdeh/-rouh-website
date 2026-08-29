@@ -147,17 +147,17 @@ async function renderDepartmentBar(){
 function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${esc(me.role)}</span></p>`;renderDepartmentBar();document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;let allowed=true;if(need==='owner')allowed=me.role==='owner';else if(need==='hr')allowed=me.role==='owner'||(me.role==='admin'&&me.department==='إدارة الموارد البشرية (HR)');else allowed=['owner','admin'].includes(me.role);x.classList.toggle('hidden',!allowed)});loadTab('dashboard')}
 $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=null;showAuth()};
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
-async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
+async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',approvals:'طلبات الموافقة',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='approvals')return deletionRequests();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
 async function dashboard(){const d=await api('/api/admin/dashboard');const auditPanel=me.role==='owner'?`<div class="panel"><h3>آخر التعديلات</h3>${d.audit.map(a=>`<p><b>${esc(a.user_name||'النظام')}</b> — ${esc(a.action)} ${esc(a.entity)} <span class="muted">${esc(a.created_at)}</span></p>`).join('')||'<p class="muted">لا يوجد سجل بعد.</p>'}</div>`:'';content.innerHTML=`<div class="grid grid4"><div class="panel"><b>الفعاليات</b><h2>${d.counts.events}</h2></div><div class="panel"><b>الإنجازات</b><h2>${d.counts.achievements}</h2></div><div class="panel"><b>المسؤولون</b><h2>${d.counts.users}</h2></div><div class="panel"><b>المحتوى المنشور</b><h2>${d.counts.published}</h2></div></div>${auditPanel}`}
 const cfg={events:{title:'فعالية',date:'event_date',fields:[['title','اسم الفعالية'],['summary','وصف مختصر'],['description','الوصف الكامل'],['event_date','التاريخ','date'],['event_time','الوقت','time'],['location','المكان'],['registration_url','رابط التسجيل'],['event_state','الحالة الظاهرة']],image:'cover_image'},achievements:{title:'إنجاز',date:'achievement_date',fields:[['title','عنوان الإنجاز'],['summary','وصف مختصر'],['description','الوصف الكامل'],['achievement_date','التاريخ','date'],['volunteers','عدد المتطوعين','number'],['beneficiaries','عدد المستفيدين','number'],['volunteer_hours','الساعات التطوعية','number']],image:'cover_image'}};
 async function listEntities(type){const d=await api('/api/admin/'+type);content.innerHTML=`<div class="panel"><button class="btn green" onclick="entityForm('${type}')">+ إضافة ${cfg[type].title}</button></div><div class="panel"><table class="table"><thead><tr><th>الصورة</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody>${d.items.map(x=>`<tr><td>${x.cover_image?`<img class="thumb" src="${esc(x.cover_image)}">`:''}</td><td>${esc(x.title)}</td><td>${esc(x.status)}</td><td>${esc(x[cfg[type].date])}</td><td><div class="rowActions"><button class="btn light small" onclick='entityForm("${type}",${JSON.stringify(x).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="removeEntity('${type}',${x.id})">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="5">لا يوجد محتوى بعد.</td></tr>'}</tbody></table></div>`}
 window.entityForm=(type,item={})=>{const c=cfg[type];content.innerHTML=`<div class="panel"><h3>${item.id?'تعديل':'إضافة'} ${c.title}</h3><form id="entityForm" class="formGrid">${c.fields.map(f=>`<div class="field ${['summary','description'].includes(f[0])?'full':''}"><label>${f[1]}</label>${['summary','description'].includes(f[0])?`<textarea name="${f[0]}">${esc(item[f[0]]||'')}</textarea>`:`<input name="${f[0]}" type="${f[2]||'text'}" value="${esc(item[f[0]]||'')}">`}</div>`).join('')}<div class="field"><label>الصورة</label><input id="imgFile" type="file" accept="image/jpeg,image/png,image/webp"><input type="hidden" name="cover_image" value="${esc(item.cover_image||'')}">${item.cover_image?`<img class="imagePreview" src="${esc(item.cover_image)}">`:''}</div><div class="field"><label>حالة النشر</label><select name="status"><option value="draft" ${item.status!=='published'?'selected':''}>مسودة</option><option value="published" ${item.status==='published'?'selected':''}>منشور</option></select></div><div class="full rowActions"><button class="btn green" type="submit">حفظ</button><button class="btn light" type="button" onclick="loadTab('${type}')">إلغاء</button></div></form></div>`;$('#entityForm').onsubmit=async e=>{e.preventDefault();try{const fd=new FormData(e.target),obj=Object.fromEntries(fd.entries());const file=$('#imgFile').files[0];if(file)obj.cover_image=await upload(file);await api('/api/admin/'+type+(item.id?'/'+item.id:''),{method:item.id?'PUT':'POST',body:JSON.stringify(obj)});flash('تم الحفظ');loadTab(type)}catch(ex){flash(ex.message,true)}}};
 async function upload(file){const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});return (await api('/api/admin/upload',{method:'POST',body:JSON.stringify({filename:file.name,dataUrl})})).url}
-window.removeEntity=async(type,id)=>{if(!confirm('نقل العنصر إلى سلة المحذوفات؟'))return;try{await api('/api/admin/'+type+'/'+id,{method:'DELETE'});flash('تم النقل إلى سلة المحذوفات');loadTab(type)}catch(e){flash(e.message,true)}};
+window.removeEntity=async(type,id)=>{if(!confirm(me.role==='owner'?'نقل العنصر إلى سلة المحذوفات؟':'إرسال طلب حذف إلى المالك؟'))return;try{const r=await api('/api/admin/'+type+'/'+id,{method:'DELETE'});flash(r.pendingApproval?'تم إرسال طلب الحذف للمالك':'تم النقل إلى سلة المحذوفات');loadTab(type)}catch(e){flash(e.message,true)}};
 async function editContent(){const d=await api('/api/admin/content'),s=d.settings,st=d.stats;content.innerHTML=`<form id="contentForm"><div class="panel formGrid"><div class="field"><label>اسم المبادرة</label><input name="initiative_name" value="${esc(s.initiative_name)}"></div><div class="field"><label>الشعار النصي</label><input name="tagline" value="${esc(s.tagline)}"></div>${[['hero_text','نص الواجهة'],['belief','عبارة الإيمان'],['about','من نحن'],['mission','الرسالة'],['vision','الرؤية'],['join_intro','نص الانضمام']].map(x=>`<div class="field full"><label>${x[1]}</label><textarea name="${x[0]}">${esc(s[x[0]])}</textarea></div>`).join('')}<div class="field"><label>البريد</label><input name="email" value="${esc(s.email)}"></div><div class="field"><label>رابط نموذج الانتساب</label><input name="join_url" value="${esc(s.join_url)}"></div><div class="field"><label>Instagram</label><input name="instagram" value="${esc(s.instagram)}"></div><div class="field"><label>Facebook</label><input name="facebook" value="${esc(s.facebook)}"></div><div class="field full"><label>القيم (JSON)</label><textarea name="values_json">${esc(s.values_json)}</textarea></div><div class="field full"><label>المجالات (JSON)</label><textarea name="fields_json">${esc(s.fields_json)}</textarea></div><div class="field full"><label>أسباب الانضمام (JSON)</label><textarea name="join_reasons_json">${esc(s.join_reasons_json)}</textarea></div><div class="field"><label>إظهار أرقام الأثر</label><select name="stats_visible"><option value="0" ${s.stats_visible!=='1'?'selected':''}>مخفي</option><option value="1" ${s.stats_visible==='1'?'selected':''}>ظاهر</option></select></div></div><div class="panel formGrid"><h3 class="full">أرقام الأثر</h3>${[['volunteers','المتطوعون'],['events','الفعاليات'],['hours','ساعات التطوع'],['beneficiaries','المستفيدون']].map(x=>`<div class="field"><label>${x[1]}</label><input type="number" name="stat_${x[0]}" value="${st[x[0]]}"></div>`).join('')}<button class="btn green full">حفظ التعديلات</button></div></form>`;$('#contentForm').onsubmit=async e=>{e.preventDefault();try{const o=Object.fromEntries(new FormData(e.target).entries()),stats={};for(const k of ['volunteers','events','hours','beneficiaries']){stats[k]=o['stat_'+k];delete o['stat_'+k]}await api('/api/admin/settings',{method:'PUT',body:JSON.stringify(o)});await api('/api/admin/stats',{method:'PUT',body:JSON.stringify(stats)});flash('تم تحديث محتوى الموقع')}catch(ex){flash(ex.message,true)}}}
 async function faqs(){const d=await api('/api/admin/faqs');content.innerHTML=`<div class="panel"><button class="btn green" onclick="faqForm()">+ إضافة سؤال</button></div><div class="panel">${d.items.map(f=>`<div class="faq"><b>${esc(f.question)}</b><p>${esc(f.answer)}</p><div class="rowActions"><button class="btn light small" onclick='faqForm(${JSON.stringify(f).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="deleteFaq(${f.id})">حذف</button></div></div>`).join('')}</div>`}
 window.faqForm=(f={})=>{content.innerHTML=`<div class="panel"><form id="faqForm" class="formGrid"><div class="field full"><label>السؤال</label><input name="question" value="${esc(f.question||'')}" required></div><div class="field full"><label>الإجابة</label><textarea name="answer" required>${esc(f.answer||'')}</textarea></div><div class="field"><label>الترتيب</label><input name="sort_order" type="number" value="${f.sort_order||0}"></div><div class="field"><label>الحالة</label><select name="active"><option value="1">ظاهر</option><option value="0" ${f.active===0?'selected':''}>مخفي</option></select></div><button class="btn green full">حفظ</button></form></div>`;$('#faqForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());o.active=o.active==='1';try{await api('/api/admin/faqs'+(f.id?'/'+f.id:''),{method:f.id?'PUT':'POST',body:JSON.stringify(o)});loadTab('faqs')}catch(ex){flash(ex.message,true)}}}
-window.deleteFaq=async id=>{if(confirm('حذف السؤال؟')){await api('/api/admin/faqs/'+id,{method:'DELETE'});loadTab('faqs')}};
+window.deleteFaq=async id=>{if(confirm(me.role==='owner'?'حذف السؤال؟':'إرسال طلب حذف السؤال إلى المالك؟')){try{const r=await api('/api/admin/faqs/'+id,{method:'DELETE'});flash(r.pendingApproval?'تم إرسال طلب الحذف للمالك':'تم نقل السؤال إلى سلة المحذوفات');loadTab('faqs')}catch(e){flash(e.message,true)}}};
 async function trash(){const d=await api('/api/admin/trash');const group=(title,type,items)=>`<div class="panel"><h3>${title}</h3>${items.map(x=>`<p>${esc(x.title)} <button class="btn light small" onclick="restore('${type}',${x.id})">استرجاع</button></p>`).join('')||'<p class="muted">فارغة</p>'}</div>`;content.innerHTML=group('الفعاليات','events',d.events)+group('الإنجازات','achievements',d.achievements)+group('الأسئلة','faqs',d.faqs)}
 window.restore=async(type,id)=>{await api(`/api/admin/trash/${type}/${id}/restore`,{method:'POST'});flash('تم الاسترجاع');loadTab('trash')};
 async function users(){const d=await api('/api/admin/users');content.innerHTML=`<div class="panel"><button class="btn green" onclick="userForm()">+ إضافة مسؤول</button></div><div class="panel"><table class="table"><tr><th>الاسم</th><th>الهاتف</th><th>البريد</th><th>الصلاحية</th><th>القسم</th><th>الحالة</th><th></th></tr>${d.items.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.phone||'-')}</td><td>${esc(u.email)}</td><td>${esc(u.role)}</td><td>${esc(u.department||'-')}</td><td>${u.active?'فعال':'موقوف'}</td><td>${u.role!=='owner'?`<button class="btn light small" onclick='userForm(${JSON.stringify(u).replaceAll("'","&#39;")})'>تعديل</button>`:''}</td></tr>`).join('')}</table></div>`}
@@ -178,6 +178,83 @@ window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userFor
 <option value="التيسير" ${u.department==='التيسير'?'selected':''}>التيسير</option>
 </select>
 </div>${u.id?`<div class="field"><label>الحالة</label><select name="active"><option value="1" ${u.active?'selected':''}>فعال</option><option value="0" ${!u.active?'selected':''}>موقوف</option></select></div>`:''}<button class="btn green full">حفظ</button></form></div>`;$('#userForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());if(u.id)o.active=o.active==='1';try{await api('/api/admin/users'+(u.id?'/'+u.id:''),{method:u.id?'PUT':'POST',body:JSON.stringify(o)});flash('تم الحفظ');loadTab('users')}catch(ex){flash(ex.message,true)}}}
+
+async function deletionRequests(){
+ const d=await api('/api/admin/deletion-requests');
+
+ const names={
+  department_content:'محتوى القسم',
+  events:'فعالية',
+  achievements:'إنجاز',
+  faq:'سؤال شائع'
+ };
+
+ const statusNames={
+  pending:'بانتظار الموافقة',
+  approved:'تمت الموافقة',
+  rejected:'مرفوض'
+ };
+
+ content.innerHTML=`
+  <div class="panel">
+   <h3>طلبات حذف بانتظار موافقة المالك</h3>
+   <table class="table">
+    <thead>
+     <tr>
+      <th>المسؤول</th>
+      <th>القسم</th>
+      <th>نوع العنصر</th>
+      <th>العنصر</th>
+      <th>الحالة</th>
+      <th>الوقت</th>
+      <th>الإجراء</th>
+     </tr>
+    </thead>
+    <tbody>
+     ${d.items.map(r=>`
+      <tr>
+       <td>${esc(r.requester_name||'-')}</td>
+       <td>${esc(r.requester_department||'-')}</td>
+       <td>${esc(names[r.entity_type]||r.entity_type)}</td>
+       <td>${esc(r.item_title||('#'+r.entity_id))}</td>
+       <td>${esc(statusNames[r.status]||r.status)}</td>
+       <td>${esc(r.created_at)}</td>
+       <td>
+        ${r.status==='pending'?`
+         <div class="rowActions">
+          <button class="btn green small" onclick="decideDeletionRequest(${r.id},'approve')">موافقة على الحذف</button>
+          <button class="btn danger small" onclick="decideDeletionRequest(${r.id},'reject')">رفض الحذف</button>
+         </div>
+        `:`<span class="muted">${esc(r.decided_by_name||'تم اتخاذ القرار')}</span>`}
+       </td>
+      </tr>
+     `).join('')||'<tr><td colspan="7">لا توجد طلبات حذف.</td></tr>'}
+    </tbody>
+   </table>
+  </div>
+ `;
+}
+
+window.decideDeletionRequest=async(id,action)=>{
+ const message=action==='approve'
+  ? 'هل تريد الموافقة على حذف هذا العنصر؟'
+  : 'هل تريد رفض طلب الحذف؟';
+
+ if(!confirm(message)) return;
+
+ try{
+  await api('/api/admin/deletion-requests/'+id,{
+   method:'PUT',
+   body:JSON.stringify({action})
+  });
+
+  flash(action==='approve'?'تمت الموافقة على الحذف':'تم رفض طلب الحذف');
+  deletionRequests();
+ }catch(e){
+  flash(e.message,true);
+ }
+};
+
 async function audit(){const d=await api('/api/admin/audit');content.innerHTML=`<div class="panel"><table class="table"><tr><th>المسؤول</th><th>الإجراء</th><th>العنصر</th><th>التفاصيل</th><th>الوقت</th></tr>${d.items.map(a=>`<tr><td>${esc(a.user_name||'النظام')}</td><td>${esc(a.action)}</td><td>${esc(a.entity)} ${esc(a.entity_id)}</td><td>${esc(a.details)}</td><td>${esc(a.created_at)}</td></tr>`).join('')}</table></div>`}
 init().catch(e=>console.error(e));
 
