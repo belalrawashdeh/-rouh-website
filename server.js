@@ -870,8 +870,15 @@ const server=http.createServer(async (req,res)=>{
 
    // Volunteer applications - Owner/Admin only
    if(pathname==='/api/admin/volunteers' && req.method==='GET'){
-    if(!['owner','admin'].includes(user.role))
-     return send(res,403,{error:'لا تملك الصلاحية'});
+    const canMarkWhatsAppSent =
+     user.role==='owner' ||
+     (
+      user.role==='admin' &&
+      user.department==='إدارة الموارد البشرية (HR)'
+     );
+
+    if(!canMarkWhatsAppSent)
+     return send(res,403,{error:'إرسال رسالة القبول من صلاحية المالك أو HR فقط'});
 
     const isHRAdmin=
      user.role==='admin' &&
