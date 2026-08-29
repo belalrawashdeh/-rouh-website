@@ -5,7 +5,123 @@ function flash(t,err=false){$('#msg').innerHTML=`<div class="notice ${err?'error
 async function init(){needsSetup=(await api('/api/setup/status')).needsSetup;me=(await api('/api/me')).user;if(me)showAdmin();else showAuth()}
 function showAuth(){ $('#authView').classList.remove('hidden');$('#adminView').classList.add('hidden');$('#authTitle').textContent=needsSetup?'إعداد الموقع لأول مرة':'دخول المسؤولين';$('#nameField').classList.toggle('hidden',!needsSetup)}
 $('#authForm').onsubmit=async e=>{e.preventDefault();try{if(needsSetup){await api('/api/setup',{method:'POST',body:JSON.stringify({name:$('#authName').value,email:$('#authEmail').value,password:$('#authPassword').value})});needsSetup=false;$('#authMsg').innerHTML='<div class="notice">تم إنشاء حساب المالك. سجّل الدخول الآن.</div>';showAuth()}else{await api('/api/login',{method:'POST',body:JSON.stringify({email:$('#authEmail').value,password:$('#authPassword').value})});me=(await api('/api/me')).user;showAdmin()}}catch(ex){$('#authMsg').innerHTML=`<div class="notice error">${esc(ex.message)}</div>`}}
-function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${esc(me.role)}</span></p>`;document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;let allowed=true;if(need==='owner')allowed=me.role==='owner';else if(need==='hr')allowed=me.role==='owner'||(me.role==='admin'&&me.department==='إدارة الموارد البشرية (HR)');else allowed=['owner','admin'].includes(me.role);x.classList.toggle('hidden',!allowed)});loadTab('dashboard')}
+let selectedDepartment='all';
+
+async function renderDepartmentBar(){
+ const bar=$('#departmentBar');
+ if(!bar || !me) return;
+
+ let departmentAdmins=[];
+ try{
+  const d=await api('/api/admin/department-admins');
+  departmentAdmins=d.items||[];
+ }catch{
+  departmentAdmins=[];
+ }
+
+ const departments=[
+  'الميداني',
+  'إدارة الموارد البشرية (HR)',
+  'الأكاديمي',
+  'العلاقات العامة',
+  'التقني',
+  'فكرة'
+ ];
+
+ const isHR=
+  me.role==='admin' &&
+  me.department==='إدارة الموارد البشرية (HR)';
+
+ const canViewAll=
+  me.role==='owner' || isHR;
+
+ if(!canViewAll){
+  selectedDepartment=me.department || '';
+
+  const admins=departmentAdmins
+   .filter(a=>a.department===me.department)
+   .map(a=>a.name);
+
+  bar.innerHTML=`
+   <div class="departmentBar departmentBarColumn">
+    <div>
+     <span>🏢 القسم الحالي</span>
+     <strong>${esc(me.department||'غير محدد')}</strong>
+    </div>
+
+    <div class="departmentAdmins">
+     👤 مسؤول القسم:
+     <strong>${admins.length ? admins.map(esc).join('، ') : 'غير محدد'}</strong>
+    </div>
+   </div>
+  `;
+  return;
+ }
+
+ const selectedAdmins=
+  selectedDepartment==='all'
+   ? []
+   : departmentAdmins
+      .filter(a=>a.department===selectedDepartment)
+      .map(a=>a.name);
+
+ bar.innerHTML=`
+  <div class="departmentBar departmentBarColumn">
+   <div>
+    <span>🏢 عرض القسم</span>
+    <select id="departmentFilter">
+     <option value="all">كل الأقسام</option>
+     ${departments.map(d=>`
+      <option value="${esc(d)}"
+       ${selectedDepartment===d?'selected':''}>
+       ${esc(d)}
+      </option>
+     `).join('')}
+    </select>
+   </div>
+
+   <div id="departmentAdminsInfo" class="departmentAdmins">
+    ${
+     selectedDepartment==='all'
+      ? `👤 مسؤولو الأقسام: <strong>${departmentAdmins.length}</strong>`
+      : `👤 مسؤول القسم: <strong>${selectedAdmins.length ? selectedAdmins.map(esc).join('، ') : 'غير محدد'}</strong>`
+    }
+   </div>
+  </div>
+ `;
+
+ $('#departmentFilter').onchange=e=>{
+  selectedDepartment=e.target.value;
+
+  const info=$('#departmentAdminsInfo');
+
+  if(info){
+   if(selectedDepartment==='all'){
+    info.innerHTML=`👤 مسؤولو الأقسام: <strong>${departmentAdmins.length}</strong>`;
+   }else{
+    const admins=departmentAdmins
+     .filter(a=>a.department===selectedDepartment)
+     .map(a=>a.name);
+
+    info.innerHTML=`👤 مسؤول القسم: <strong>${admins.length ? admins.map(esc).join('، ') : 'غير محدد'}</strong>`;
+   }
+  }
+
+  flash(
+   selectedDepartment==='all'
+    ? 'يتم عرض كل الأقسام'
+    : 'تم اختيار قسم '+selectedDepartment
+  );
+
+  const activeTab=document.querySelector('#menu button.active')?.dataset.tab;
+
+  if(activeTab==='volunteers'){
+   volunteers();
+  }
+ };
+}
+
+function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${esc(me.role)}</span></p>`;renderDepartmentBar();document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;let allowed=true;if(need==='owner')allowed=me.role==='owner';else if(need==='hr')allowed=me.role==='owner'||(me.role==='admin'&&me.department==='إدارة الموارد البشرية (HR)');else allowed=['owner','admin'].includes(me.role);x.classList.toggle('hidden',!allowed)});loadTab('dashboard')}
 $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=null;showAuth()};
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
 async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
@@ -41,7 +157,20 @@ init().catch(e=>console.error(e));
 
 async function volunteers(){
  const d=await api('/api/admin/volunteers');
- const items=d.items.filter(v=>v.status!=='rejected');
+
+ const allItems=d.items.filter(v=>v.status!=='rejected');
+
+ const items=allItems.filter(v=>{
+  if(me.role==='owner' || (
+   me.role==='admin' &&
+   me.department==='إدارة الموارد البشرية (HR)'
+  )){
+   return selectedDepartment==='all' ||
+          v.department===selectedDepartment;
+  }
+
+  return v.department===me.department;
+ });
 
  const isHR=
   me.role==='admin' &&

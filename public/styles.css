@@ -168,3 +168,69 @@
     min-width:170px;
   }
 }
+
+
+/* Department context bar */
+.departmentBar{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ background:#fff;
+ border:1px solid var(--line);
+ border-radius:16px;
+ padding:12px 16px;
+ margin:-10px 0 22px;
+ box-shadow:0 3px 12px rgba(0,0,0,.03);
+}
+
+.departmentBar span{
+ font-size:13px;
+ color:#6d746f;
+ font-weight:700;
+}
+
+.departmentBar strong{
+ font-size:15px;
+ color:#223340;
+}
+
+.departmentBar select{
+ min-width:230px;
+ padding:9px 12px;
+ border:1px solid #d9d5ce;
+ border-radius:10px;
+ background:white;
+ font-family:inherit;
+}
+
+@media(max-width:900px){
+ .departmentBar{
+  flex-direction:column;
+  align-items:stretch;
+ }
+ .departmentBar select{
+  width:100%;
+  min-width:0;
+ }
+}
+
+.departmentBarColumn{
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ gap:10px;
+}
+
+.departmentBarColumn > div{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ flex-wrap:wrap;
+}
+
+.departmentAdmins{
+ font-size:13px;
+ color:#58635d;
+ border-top:1px solid var(--line);
+ padding-top:10px;
+}
