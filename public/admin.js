@@ -661,7 +661,7 @@ async function volunteers(){
            v.department_approval==='accepted' &&
            !v.volunteer_id &&
            !v.is_admin_user
-            ? '<br><span class="muted">⚠️ لم ينشئ حسابًا</span>'
+            ? '<br><span class="accountWarning">⚠️ لم ينشئ حسابًا</span>'
             : ''
           }
          </td>

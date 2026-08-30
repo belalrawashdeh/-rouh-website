@@ -298,3 +298,15 @@
  text-align:center;
  color:#7b7b7b;
 }
+
+.accountWarning{
+ display:inline-block;
+ margin-top:6px;
+ padding:5px 9px;
+ border-radius:999px;
+ background:#fff4d8;
+ color:#7a5a00;
+ font-size:12px;
+ font-weight:700;
+ white-space:nowrap;
+}
