@@ -234,3 +234,67 @@
  border-top:1px solid var(--line);
  padding-top:10px;
 }
+
+.adminTopActions{
+ position:relative;
+ display:flex;
+ align-items:center;
+ gap:10px;
+}
+
+.notificationBtn{
+ position:relative;
+ width:44px;
+ height:44px;
+ border:1px solid #ddd5c8;
+ border-radius:14px;
+ background:#fff;
+ cursor:pointer;
+ font-size:20px;
+}
+
+.notificationCount{
+ position:absolute;
+ top:-6px;
+ right:-6px;
+ min-width:20px;
+ height:20px;
+ padding:0 5px;
+ border-radius:999px;
+ background:#b23b34;
+ color:white;
+ font-size:12px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-weight:700;
+}
+
+.notificationPanel{
+ position:absolute;
+ top:54px;
+ left:0;
+ width:min(360px,85vw);
+ background:white;
+ border:1px solid #e4ddd2;
+ border-radius:16px;
+ padding:10px;
+ box-shadow:0 14px 35px rgba(0,0,0,.12);
+ z-index:1000;
+}
+
+.notificationItem{
+ padding:12px;
+ border-radius:12px;
+ cursor:pointer;
+}
+
+.notificationItem:hover{
+ background:#f4f1eb;
+}
+
+.notificationEmpty{
+ padding:18px;
+ text-align:center;
+ color:#7b7b7b;
+}

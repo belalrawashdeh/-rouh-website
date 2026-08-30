@@ -142,7 +142,7 @@ async function renderDepartmentBar(){
  };
 }
 
-function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${esc(me.role)}</span></p>`;renderDepartmentBar();document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;let allowed=true;if(need==='owner')allowed=me.role==='owner';else if(need==='hr')allowed=me.role==='owner'||(me.role==='admin'&&me.department==='إدارة الموارد البشرية (HR)');else allowed=['owner','admin'].includes(me.role);x.classList.toggle('hidden',!allowed)});loadTab('dashboard')}
+function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${esc(me.role)}</span></p>`;renderDepartmentBar();loadNotifications();document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;let allowed=true;if(need==='owner')allowed=me.role==='owner';else if(need==='hr')allowed=me.role==='owner'||(me.role==='admin'&&me.department==='إدارة الموارد البشرية (HR)');else allowed=['owner','admin'].includes(me.role);x.classList.toggle('hidden',!allowed)});loadTab('dashboard')}
 $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=null;showAuth()};
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
 async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',approvals:'طلبات الموافقة',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='approvals')return deletionRequests();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
@@ -654,7 +654,17 @@ async function volunteers(){
 
        return `
         <tr>
-         <td>${esc(v.name||'')}</td>
+         <td>
+          ${esc(v.name||'')}
+          ${
+           v.status==='accepted' &&
+           v.department_approval==='accepted' &&
+           !v.volunteer_id &&
+           !v.is_admin_user
+            ? '<br><span class="muted">⚠️ لم ينشئ حسابًا</span>'
+            : ''
+          }
+         </td>
          <td>${esc(v.email||'')}</td>
          <td>${esc(v.phone||'')}</td>
          <td>${esc(v.major||'-')}</td>
@@ -1622,3 +1632,67 @@ window.deleteDepartmentContent=async id=>{
   flash(ex.message,true);
  }
 };
+
+async function loadNotifications(){
+ try{
+  const d=await api('/api/admin/notifications');
+  const count=$('#notificationCount');
+  const panel=$('#notificationPanel');
+
+  if(!count || !panel) return;
+
+  const signature=JSON.stringify(d.notifications);
+  const seenKey=`rouh_notifications_seen_${me?.id||'user'}`;
+  const seenSignature=localStorage.getItem(seenKey);
+
+  const hasUnread=
+   d.notifications.length>0 &&
+   signature!==seenSignature;
+
+  if(hasUnread){
+   count.textContent=d.count;
+   count.classList.remove('hidden');
+  }else{
+   count.classList.add('hidden');
+  }
+
+  panel.innerHTML=d.notifications.length
+   ? d.notifications.map(n=>`
+      <div class="notificationItem" data-tab="${esc(n.type)}">
+       ${esc(n.text)}
+      </div>
+     `).join('')
+   : '<div class="notificationEmpty">لا توجد إشعارات جديدة 🎉</div>';
+
+  panel.querySelectorAll('.notificationItem').forEach(item=>{
+   item.onclick=()=>{
+    localStorage.setItem(seenKey,signature);
+    count.classList.add('hidden');
+    panel.classList.add('hidden');
+    loadTab(item.dataset.tab);
+   };
+  });
+
+ }catch(e){
+  console.error('Notifications:',e);
+ }
+}
+
+document.addEventListener('click',e=>{
+ const btn=$('#notificationBtn');
+ const panel=$('#notificationPanel');
+
+ if(!btn || !panel) return;
+
+ if(btn.contains(e.target)){
+  panel.classList.toggle('hidden');
+  return;
+ }
+
+ if(!panel.contains(e.target))
+  panel.classList.add('hidden');
+});
+
+setInterval(()=>{
+ if(me) loadNotifications();
+},60000);

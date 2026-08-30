@@ -1228,7 +1228,19 @@ const server=http.createServer(async (req,res)=>{
        v.id AS volunteer_id,
        v.username AS volunteer_username,
        v.active AS volunteer_active,
-       v.deleted_at AS volunteer_deleted_at
+       v.deleted_at AS volunteer_deleted_at,
+       CASE
+        WHEN EXISTS (
+         SELECT 1
+         FROM users u
+         WHERE u.phone != ''
+          AND REPLACE(REPLACE(REPLACE(u.phone,' ',''),'-',''),'+','')
+              = REPLACE(REPLACE(REPLACE(va.phone,' ',''),'-',''),'+','')
+          AND u.active=1
+          AND u.role IN ('owner','admin')
+        ) THEN 1
+        ELSE 0
+       END AS is_admin_user
       FROM volunteer_applications va
       LEFT JOIN volunteers v
        ON v.application_id=va.id
@@ -1248,7 +1260,19 @@ const server=http.createServer(async (req,res)=>{
        v.id AS volunteer_id,
        v.username AS volunteer_username,
        v.active AS volunteer_active,
-       v.deleted_at AS volunteer_deleted_at
+       v.deleted_at AS volunteer_deleted_at,
+       CASE
+        WHEN EXISTS (
+         SELECT 1
+         FROM users u
+         WHERE u.phone != ''
+          AND REPLACE(REPLACE(REPLACE(u.phone,' ',''),'-',''),'+','')
+              = REPLACE(REPLACE(REPLACE(va.phone,' ',''),'-',''),'+','')
+          AND u.active=1
+          AND u.role IN ('owner','admin')
+        ) THEN 1
+        ELSE 0
+       END AS is_admin_user
       FROM volunteer_applications va
       LEFT JOIN volunteers v
        ON v.application_id=va.id
@@ -1935,6 +1959,76 @@ const server=http.createServer(async (req,res)=>{
     audit(user,'update','volunteer_application',id,'whatsapp_sent');
 
     return send(res,200,{ok:true});
+   }
+
+
+   if(pathname==='/api/admin/notifications' && req.method==='GET'){
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    const notifications=[];
+
+    if(user.role==='owner' || isHRAdmin){
+     const pendingApplications=db.prepare(`
+      SELECT COUNT(*) c
+      FROM volunteer_applications
+      WHERE status='pending'
+     `).get().c;
+
+     const acceptedWithoutAccount=db.prepare(`
+      SELECT COUNT(*) c
+      FROM volunteer_applications va
+      LEFT JOIN volunteers v ON v.application_id=va.id
+      WHERE va.status='accepted'
+       AND va.department_approval='accepted'
+       AND v.id IS NULL
+     `).get().c;
+
+     const newComplaints=db.prepare(`
+      SELECT COUNT(*) c
+      FROM complaints
+      WHERE status='new'
+     `).get().c;
+
+     if(pendingApplications)
+      notifications.push({
+       type:'volunteers',
+       text:`${pendingApplications} طلب تطوع بانتظار المراجعة`
+      });
+
+     if(acceptedWithoutAccount)
+      notifications.push({
+       type:'volunteers',
+       text:`${acceptedWithoutAccount} متطوع مقبول لم ينشئ حسابًا`
+      });
+
+     if(newComplaints)
+      notifications.push({
+       type:'complaints',
+       text:`${newComplaints} شكوى جديدة`
+      });
+    }
+
+    if(user.role==='admin' && !isHRAdmin){
+     const departmentPending=db.prepare(`
+      SELECT COUNT(*) c
+      FROM volunteer_applications
+      WHERE department=?
+       AND department_approval='pending'
+     `).get(user.department||'').c;
+
+     if(departmentPending)
+      notifications.push({
+       type:'volunteers',
+       text:`${departmentPending} طلب بانتظار قرار القسم`
+      });
+    }
+
+    return send(res,200,{
+     count:notifications.length,
+     notifications
+    });
    }
 
    if(pathname==='/api/admin/dashboard' && req.method==='GET'){
