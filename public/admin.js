@@ -1365,6 +1365,10 @@ async function saveIdea(id){
 
 async function departmentWork(){
  const isOwner=me.role==='owner';
+ const isHR=
+  me.role==='admin' &&
+  me.department==='إدارة الموارد البشرية (HR)';
+ const canViewAll=isOwner || isHR;
 
  const departments=[
   'الميداني',
@@ -1377,7 +1381,7 @@ async function departmentWork(){
   'التيسير'
  ];
 
- let department=isOwner
+ let department=canViewAll
   ? (selectedDepartment==='all' ? '' : selectedDepartment)
   : me.department;
 
@@ -1387,7 +1391,12 @@ async function departmentWork(){
 
  const d=await api('/api/admin/department-content'+query);
 
- const departmentSelect=isOwner
+ const canEditDepartment=
+  isOwner ||
+  (!isHR && department===me.department) ||
+  (isHR && department===me.department);
+
+ const departmentSelect=canViewAll
   ? `
    <div class="field">
     <label>القسم</label>
@@ -1414,12 +1423,16 @@ async function departmentWork(){
 
    ${departmentSelect}
 
-   <div class="rowActions">
-    <button class="btn green"
-     onclick="departmentContentForm('${esc(department||'')}')">
-     + إضافة محتوى
-    </button>
-   </div>
+   ${
+    canEditDepartment
+     ? `<div class="rowActions">
+         <button class="btn green"
+          onclick="departmentContentForm('${esc(department||'')}')">
+          + إضافة محتوى
+         </button>
+        </div>`
+     : '<div class="notice">👁️ عرض محتوى القسم فقط</div>'
+   }
   </div>
 
   <div class="panel">
@@ -1455,19 +1468,24 @@ async function departmentWork(){
         ${esc(x.created_by_name||'غير محدد')}
        </p>
 
-       <div class="rowActions">
-        <button class="btn light small"
-         onclick='departmentContentForm(
-          ${JSON.stringify(x).replaceAll("'","&#39;")}
-         )'>
-         تعديل
-        </button>
+       ${
+        isOwner || (!isHR && x.department===me.department) ||
+        (isHR && x.department===me.department)
+         ? `<div class="rowActions">
+             <button class="btn light small"
+              onclick='departmentContentForm(
+               ${JSON.stringify(x).replaceAll("'","&#39;")}
+              )'>
+              تعديل
+             </button>
 
-        <button class="btn danger small"
-         onclick="deleteDepartmentContent(${x.id})">
-         حذف
-        </button>
-       </div>
+             <button class="btn danger small"
+              onclick="deleteDepartmentContent(${x.id})">
+              حذف
+             </button>
+            </div>`
+         : ''
+       }
       </div>
      `).join('')
      : '<p class="muted">لا يوجد محتوى للقسم بعد.</p>'

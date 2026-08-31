@@ -906,12 +906,16 @@ const server=http.createServer(async (req,res)=>{
     const urlObj=new URL(req.url,'http://localhost');
     let department=String(urlObj.searchParams.get('department')||'').trim();
 
-    if(user.role!=='owner')
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    if(user.role!=='owner' && !isHRAdmin)
      department=user.department || '';
 
     let items;
 
-    if(user.role==='owner' && !department){
+    if((user.role==='owner' || isHRAdmin) && !department){
      items=db.prepare(`
       SELECT dc.*,
              u.name created_by_name
