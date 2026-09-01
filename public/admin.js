@@ -771,7 +771,7 @@ async function openVolunteerWhatsApp(v){
  const url =
   'https://web.whatsapp.com/send?phone=' +
   phone +
-  '&text=' +
+  '&type=phone_number&app_absent=0&text=' +
   encodeURIComponent(message);
 
  const whatsappWindow=window.open(url,'_blank');
@@ -899,7 +899,7 @@ async function changeVolunteerDepartment(v){
   const url=
    'https://web.whatsapp.com/send?phone='+
    phone+
-   '&text='+
+   '&type=phone_number&app_absent=0&text='+
    encodeURIComponent(message);
 
   window.location.href=url;
@@ -1053,7 +1053,7 @@ async function updateVolunteer(id,status){
     const url=
      'https://web.whatsapp.com/send?phone='+
      phone+
-     '&text='+
+     '&type=phone_number&app_absent=0&text='+
      encodeURIComponent(message);
 
     window.open(url,'_blank');
