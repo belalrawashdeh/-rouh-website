@@ -736,7 +736,7 @@ async function openVolunteerWhatsApp(v){
   'العلاقات العامة':'https://chat.whatsapp.com/GrAuXBNMXPu40IWR4r2CJw?s=sw&p=i&mlu=4',
   'التقني':'https://chat.whatsapp.com/CqLWTkhVzPW0vsIMr2Xgar?s=sw&p=i&mlu=4',
   'فكرة':'https://chat.whatsapp.com/EuiNNbPQedBErniuShpYue?s=sw&p=i&mlu=4',
-  'الإعلامي':'https://chat.whatsapp.com/KIb9yLhNQucHAbRtpSBibZ?s=cl&p=i&mlu=4',
+  'الإعلامي':'https://chat.whatsapp.com/If0dpI1IF2B8mdYot3UlsB?s=sw&p=i&mlu=4',
   'التيسير':'https://chat.whatsapp.com/HyCISufWvtC50xMfqDHppJ?s=sw&p=i&mlu=4'
  };
 
