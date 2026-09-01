@@ -769,7 +769,7 @@ async function openVolunteerWhatsApp(v){
  'فريق مبادرة روح';
 
  const url =
-  'whatsapp://send?phone=' +
+  'https://web.whatsapp.com/send?phone=' +
   phone +
   '&text=' +
   encodeURIComponent(message);
@@ -897,7 +897,7 @@ async function changeVolunteerDepartment(v){
    'فريق مبادرة روح';
 
   const url=
-   'whatsapp://send?phone='+
+   'https://web.whatsapp.com/send?phone='+
    phone+
    '&text='+
    encodeURIComponent(message);
@@ -1051,7 +1051,7 @@ async function updateVolunteer(id,status){
      'فريق مبادرة روح';
 
     const url=
-     'whatsapp://send?phone='+
+     'https://web.whatsapp.com/send?phone='+
      phone+
      '&text='+
      encodeURIComponent(message);
