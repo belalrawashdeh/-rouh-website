@@ -626,7 +626,7 @@ async function volunteers(){
          ${
           isOwnerOrHR
            ? `<button class="btn light"
-                onclick="changeVolunteerDepartment(${v.id})">
+                onclick='changeVolunteerDepartment(${JSON.stringify(v)})'>
                 ✏️ تغيير القسم
               </button>`
            : ''
@@ -809,7 +809,12 @@ window.confirmVolunteerWhatsAppSent=confirmVolunteerWhatsAppSent;
 
 
 
-async function changeVolunteerDepartment(id){
+async function changeVolunteerDepartment(v){
+ if(!v || !v.id || !v.phone){
+  alert('بيانات المتطوع غير مكتملة');
+  return;
+ }
+
  const choice=prompt(
   'اختر القسم:\n'+
   '1 - الميداني\n'+
@@ -842,16 +847,60 @@ async function changeVolunteerDepartment(id){
   return;
  }
 
- if(!confirm('تغيير القسم إلى: '+department+' ؟'))
+ if(department===v.department){
+  alert('المتطوع موجود في هذا القسم أصلًا');
+  return;
+ }
+
+ if(!confirm(
+  'تغيير قسم '+(v.name||'المتطوع')+
+  ' من '+(v.department||'غير محدد')+
+  ' إلى '+department+' ؟'
+ ))
   return;
 
+ const departmentGroups={
+  'الميداني':'https://chat.whatsapp.com/DGStqSESpgjAq3DxIrljUB?s=sw&p=i&mlu=4',
+  'إدارة الموارد البشرية (HR)':'https://chat.whatsapp.com/Exl2HKLne4z1toK8sORvew?s=sw&p=i&mlu=4',
+  'الأكاديمي':'https://chat.whatsapp.com/ENASFRdtXWu7KXOja2eZNq?s=sw&p=i&mlu=4',
+  'العلاقات العامة':'https://chat.whatsapp.com/GrAuXBNMXPu40IWR4r2CJw?s=sw&p=i&mlu=4',
+  'التقني':'https://chat.whatsapp.com/CqLWTkhVzPW0vsIMr2Xgar?s=sw&p=i&mlu=4',
+  'فكرة':'https://chat.whatsapp.com/EuiNNbPQedBErniuShpYue?s=sw&p=i&mlu=4',
+  'الإعلامي':'https://chat.whatsapp.com/If0dpI1IF2B8mdYot3UlsB?s=sw&p=i&mlu=4',
+  'التيسير':'https://chat.whatsapp.com/HyCISufWvtC50xMfqDHppJ?s=sw&p=i&mlu=4'
+ };
+
  try{
-  await api('/api/admin/volunteers/'+id+'/department',{
+  await api('/api/admin/volunteers/'+v.id+'/department',{
    method:'PUT',
    body:JSON.stringify({department})
   });
 
   flash('✅ تم تغيير قسم المتطوع');
+
+  const phone=normalizeWhatsAppPhone(v.phone);
+  const groupUrl=departmentGroups[department] || '';
+
+  const message=
+   'مرحبًا '+(v.name||'')+' 💚\n\n'+
+   'نود إعلامك بأنه تم تغيير قسمك في مبادرة روح إلى:\n'+
+   '🏢 '+department+'\n\n'+
+   (
+    groupUrl
+     ? '👥 رابط مجموعة القسم الجديد على واتساب:\n'+groupUrl+'\n\n'
+     : ''
+   )+
+   'نتمنى لك التوفيق والاستمرار في صناعة الأثر معنا 🌱\n\n'+
+   'فريق مبادرة روح';
+
+  const url=
+   'whatsapp://send?phone='+
+   phone+
+   '&text='+
+   encodeURIComponent(message);
+
+  window.location.href=url;
+
   await volunteers();
 
  }catch(e){
