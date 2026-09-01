@@ -276,9 +276,9 @@ async function trash(){
        — ${esc(v.username||'-')}
        — ${esc(v.department||'-')}
 
-       <button class="btn light small"
-        onclick="restoreVolunteerAccount(${v.id})">
-        ♻️ استرجاع الحساب
+       <button class="btn danger small"
+        onclick="permanentlyDeleteVolunteerAccount(${v.id})">
+        🗑️ إزالة نهائيًا
        </button>
       </p>
      `).join('')||'<p class="muted">فارغة</p>'}
@@ -301,15 +301,18 @@ async function trash(){
 }
 window.restore=async(type,id)=>{await api(`/api/admin/trash/${type}/${id}/restore`,{method:'POST'});flash('تم الاسترجاع');loadTab('trash')};
 
-window.restoreVolunteerAccount=async id=>{
- if(!confirm('استرجاع حساب المتطوع وتفعيله؟')) return;
+window.permanentlyDeleteVolunteerAccount=async id=>{
+ if(!confirm(
+  'هل تريد إزالة حساب هذا المتطوع نهائيًا؟\n\n' +
+  'لا يمكن التراجع عن هذا الإجراء.'
+ )) return;
 
  try{
-  const r=await api('/api/admin/volunteer-accounts/'+id+'/restore',{
-   method:'POST'
+  const r=await api('/api/admin/volunteer-accounts/'+id+'/permanent',{
+   method:'DELETE'
   });
 
-  flash(r.message || 'تم استرجاع الحساب');
+  flash(r.message || 'تم حذف حساب المتطوع نهائيًا');
   loadTab('trash');
  }catch(e){
   flash(e.message,true);

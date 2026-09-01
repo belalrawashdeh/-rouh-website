@@ -1248,6 +1248,7 @@ const server=http.createServer(async (req,res)=>{
       FROM volunteer_applications va
       LEFT JOIN volunteers v
        ON v.application_id=va.id
+      WHERE v.deleted_at IS NULL
       ORDER BY
        CASE va.status
         WHEN 'pending' THEN 1
@@ -1281,6 +1282,7 @@ const server=http.createServer(async (req,res)=>{
       LEFT JOIN volunteers v
        ON v.application_id=va.id
       WHERE va.department=?
+       AND v.deleted_at IS NULL
       ORDER BY
        CASE va.status
         WHEN 'pending' THEN 1
@@ -1885,6 +1887,52 @@ const server=http.createServer(async (req,res)=>{
     return send(res,200,{
      ok:true,
      message:'تم نقل حساب المتطوع إلى سلة المحذوفات'
+    });
+   }
+
+
+   const volunteerAccountPermanentDeleteMatch=pathname.match(/^\/api\/admin\/volunteer-accounts\/(\d+)\/permanent$/);
+
+   if(volunteerAccountPermanentDeleteMatch && req.method==='DELETE'){
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    if(user.role!=='owner' && !isHRAdmin)
+     return send(res,403,{error:'الحذف النهائي متاح للمالك والموارد البشرية فقط'});
+
+    const volunteerId=volunteerAccountPermanentDeleteMatch[1];
+
+    const account=db.prepare(`
+     SELECT id
+     FROM volunteers
+     WHERE id=? AND deleted_at IS NOT NULL
+    `).get(volunteerId);
+
+    if(!account)
+     return send(res,404,{error:'الحساب غير موجود في سلة المحذوفات'});
+
+    db.prepare(`
+     DELETE FROM volunteer_sessions
+     WHERE volunteer_id=?
+    `).run(volunteerId);
+
+    db.prepare(`
+     DELETE FROM volunteers
+     WHERE id=? AND deleted_at IS NOT NULL
+    `).run(volunteerId);
+
+    audit(
+     user,
+     'delete',
+     'volunteer_account',
+     volunteerId,
+     'permanent_delete'
+    );
+
+    return send(res,200,{
+     ok:true,
+     message:'تم حذف حساب المتطوع نهائيًا'
     });
    }
 
