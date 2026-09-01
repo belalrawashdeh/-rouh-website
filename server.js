@@ -2087,7 +2087,7 @@ const server=http.createServer(async (req,res)=>{
         "SELECT COUNT(*) c FROM volunteers WHERE department=? AND active=1 AND deleted_at IS NULL"
        ).get(user.department||'').c,
        departmentContent:db.prepare(
-        "SELECT COUNT(*) c FROM department_content WHERE department=?"
+        "SELECT COUNT(*) c FROM department_content WHERE department=? AND deleted_at IS NULL"
        ).get(user.department||'').c
       },
       audit:[]
