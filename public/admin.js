@@ -175,7 +175,7 @@ async function dashboard(){
     </div>
 
     <div class="panel">
-     <b>عدد المنظمين</b>
+     <b>عدد المنضمين</b>
      <h2>${d.counts.organizers}</h2>
     </div>
 
@@ -210,7 +210,7 @@ async function dashboard(){
     <div class="panel"><b>الفعاليات</b><h2>${d.counts.events}</h2></div>
     <div class="panel"><b>الإنجازات</b><h2>${d.counts.achievements}</h2></div>
     <div class="panel"><b>المسؤولون</b><h2>${d.counts.users}</h2></div>
-    <div class="panel"><b>عدد المنظمين</b><h2>${d.counts.organizers}</h2></div>
+    <div class="panel"><b>عدد المنضمين</b><h2>${d.counts.organizers}</h2></div>
     <div class="panel"><b>الحسابات الفعّالة</b><h2>${d.counts.activeAccounts}</h2></div>
     <div class="panel"><b>المحتوى المنشور</b><h2>${d.counts.published}</h2></div>
    </div>
@@ -232,7 +232,7 @@ async function dashboard(){
     </div>
 
     <div class="panel">
-     <b>عدد المنظمين</b>
+     <b>عدد المنضمين</b>
      <h2>${d.counts.organizers}</h2>
     </div>
 
@@ -258,7 +258,7 @@ async function dashboard(){
 
    <div class="grid grid4">
     <div class="panel">
-     <b>منظمو القسم</b>
+     <b>عدد المنضمين للقسم</b>
      <h2>${d.counts.organizers}</h2>
     </div>
 
