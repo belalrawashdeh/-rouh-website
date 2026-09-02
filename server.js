@@ -1172,7 +1172,7 @@ const server=http.createServer(async (req,res)=>{
 
    if(pathname==='/api/admin/ideas' && req.method==='GET'){
     if(!isOwnerOrDeputy(user))
-     return send(res,403,{error:'الأفكار متاحة للمالك أو نائب المالك فقط'});
+     return send(res,403,{error:'الأفكار متاحة للمالك أو الريس فقط'});
 
     const items=db.prepare('SELECT * FROM ideas ORDER BY id DESC').all();
     return send(res,200,{items});
@@ -1181,7 +1181,7 @@ const server=http.createServer(async (req,res)=>{
    const ideaMatch=pathname.match(/^\/api\/admin\/ideas\/(\d+)$/);
    if(ideaMatch && req.method==='PUT'){
     if(!isOwnerOrDeputy(user))
-     return send(res,403,{error:'إدارة الأفكار من صلاحية المالك أو نائب المالك فقط'});
+     return send(res,403,{error:'إدارة الأفكار من صلاحية المالك أو الريس فقط'});
 
     const id=ideaMatch[1];
     const b=await body(req);
@@ -1723,7 +1723,7 @@ const server=http.createServer(async (req,res)=>{
      user.department==='إدارة الموارد البشرية (HR)';
 
     if(!isOwnerOrDeputy(user) && !isHRAdmin)
-     return send(res,403,{error:'تغيير قسم المتطوع متاح للمالك أو نائب المالك أو HR فقط'});
+     return send(res,403,{error:'تغيير قسم المتطوع متاح للمالك أو الريس أو HR فقط'});
 
     if(item.status!=='accepted')
      return send(res,400,{error:'يجب أن يكون المتطوع مقبولًا أولًا'});
@@ -1996,7 +1996,7 @@ const server=http.createServer(async (req,res)=>{
      user.department==='إدارة الموارد البشرية (HR)';
 
     if(!isOwnerOrDeputy(user) && !isHRAdmin)
-     return send(res,403,{error:'إرسال رسالة القبول من صلاحية المالك أو نائب المالك أو HR فقط'});
+     return send(res,403,{error:'إرسال رسالة القبول من صلاحية المالك أو الريس أو HR فقط'});
 
     const id=whatsappSentMatch[1];
 
@@ -2168,25 +2168,25 @@ const server=http.createServer(async (req,res)=>{
     return send(res,403,{error:'لا تملك الصلاحية'});
    }
    if(pathname==='/api/admin/content' && req.method==='GET'){
-    if(!isOwnerOrDeputy(user)) return send(res,403,{error:'محتوى الموقع متاح للمالك أو نائب المالك فقط'}); return send(res,200,{settings:settingsObj(),stats:statsObj(),faqs:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()});
+    if(!isOwnerOrDeputy(user)) return send(res,403,{error:'محتوى الموقع متاح للمالك أو الريس فقط'}); return send(res,200,{settings:settingsObj(),stats:statsObj(),faqs:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()});
    }
    if(pathname==='/api/admin/settings' && req.method==='PUT'){
-    if(!isOwnerOrDeputy(user)) return send(res,403,{error:'تعديل إعدادات الموقع من صلاحية المالك أو نائب المالك فقط'}); const b=await body(req); const st=db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
+    if(!isOwnerOrDeputy(user)) return send(res,403,{error:'تعديل إعدادات الموقع من صلاحية المالك أو الريس فقط'}); const b=await body(req); const st=db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
     for(const [k,v] of Object.entries(b)) st.run(k,typeof v==='string'?v:JSON.stringify(v)); audit(user,'update','settings','',Object.keys(b).join(',')); return send(res,200,{ok:true});
    }
    if(pathname==='/api/admin/stats' && req.method==='PUT'){
-    if(!isOwnerOrDeputy(user)) return send(res,403,{error:'تعديل الإحصائيات من صلاحية المالك أو نائب المالك فقط'}); const b=await body(req); const st=db.prepare('INSERT INTO stats(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value'); for(const k of ['volunteers','events','hours','beneficiaries']) if(k in b) st.run(k,Number(b[k])||0); audit(user,'update','stats',''); return send(res,200,{ok:true});
+    if(!isOwnerOrDeputy(user)) return send(res,403,{error:'تعديل الإحصائيات من صلاحية المالك أو الريس فقط'}); const b=await body(req); const st=db.prepare('INSERT INTO stats(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value'); for(const k of ['volunteers','events','hours','beneficiaries']) if(k in b) st.run(k,Number(b[k])||0); audit(user,'update','stats',''); return send(res,200,{ok:true});
    }
    if(pathname==='/api/admin/upload' && req.method==='POST'){
     if(!isOwnerOrDeputy(user))
-     return send(res,403,{error:'رفع صور الموقع من صلاحية المالك أو نائب المالك فقط'});
+     return send(res,403,{error:'رفع صور الموقع من صلاحية المالك أو الريس فقط'});
 
     const b=await body(req); const m=String(b.dataUrl||'').match(/^data:(image\/(jpeg|png|webp));base64,(.+)$/); if(!m) return send(res,400,{error:'صيغة الصورة غير مدعومة'}); const buf=Buffer.from(m[3],'base64'); if(buf.length>6*1024*1024) return send(res,400,{error:'حجم الصورة أكبر من 6MB'}); const ext=m[2]==='jpeg'?'jpg':m[2]; const name=`${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`; fs.writeFileSync(path.join(UPLOADS,name),buf); audit(user,'upload','image',name); return send(res,201,{url:`/uploads/${name}`});
    }
    const entMatch=pathname.match(/^\/api\/admin\/(events|achievements)(?:\/(\d+))?$/);
    if(entMatch){
     if(!isOwnerOrDeputy(user))
-     return send(res,403,{error:'إدارة الفعاليات والإنجازات من صلاحية المالك أو نائب المالك فقط'});
+     return send(res,403,{error:'إدارة الفعاليات والإنجازات من صلاحية المالك أو الريس فقط'});
 
     const entity=entMatch[1], id=entMatch[2], cfg=entityConfig(entity);
     if(req.method==='GET'&&!id){ const rows=db.prepare(`SELECT * FROM ${cfg.table} WHERE deleted_at IS NULL ORDER BY id DESC`).all().map(r=>({...r,gallery:safeJson(r.gallery)})); return send(res,200,{items:rows}); }
@@ -2234,7 +2234,7 @@ const server=http.createServer(async (req,res)=>{
     }
    }
    const faqMatch=pathname.match(/^\/api\/admin\/faqs(?:\/(\d+))?$/);
-   if(faqMatch){ if(!isOwnerOrDeputy(user)) return send(res,403,{error:'إدارة الأسئلة الشائعة من صلاحية المالك أو نائب المالك فقط'}); const id=faqMatch[1]; if(req.method==='GET'&&!id)return send(res,200,{items:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()}); const b=await body(req); if(req.method==='POST'&&!id){const r=db.prepare('INSERT INTO faqs(question,answer,sort_order,active) VALUES(?,?,?,?)').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1);audit(user,'create','faq',r.lastInsertRowid);return send(res,201,{id:r.lastInsertRowid});} if(req.method==='PUT'&&id){db.prepare('UPDATE faqs SET question=?,answer=?,sort_order=?,active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1,id);audit(user,'update','faq',id);return send(res,200,{ok:true});} if(req.method==='DELETE'&&id){
+   if(faqMatch){ if(!isOwnerOrDeputy(user)) return send(res,403,{error:'إدارة الأسئلة الشائعة من صلاحية المالك أو الريس فقط'}); const id=faqMatch[1]; if(req.method==='GET'&&!id)return send(res,200,{items:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()}); const b=await body(req); if(req.method==='POST'&&!id){const r=db.prepare('INSERT INTO faqs(question,answer,sort_order,active) VALUES(?,?,?,?)').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1);audit(user,'create','faq',r.lastInsertRowid);return send(res,201,{id:r.lastInsertRowid});} if(req.method==='PUT'&&id){db.prepare('UPDATE faqs SET question=?,answer=?,sort_order=?,active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1,id);audit(user,'update','faq',id);return send(res,200,{ok:true});} if(req.method==='DELETE'&&id){
       const item=db.prepare('SELECT * FROM faqs WHERE id=? AND deleted_at IS NULL').get(id);
       if(!item)return send(res,404,{error:'السؤال غير موجود'});
 
