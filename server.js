@@ -258,7 +258,7 @@ function currentUser(req){
  if(!token) return null;
 
  const row=db.prepare(`
-  SELECT u.id,u.name,u.email,u.phone,u.role,u.department,u.active,s.expires_at
+  SELECT u.id,u.name,u.email,u.phone,u.role,u.system_role,u.department,u.active,s.expires_at
   FROM sessions s
   JOIN users u ON u.id=s.user_id
   WHERE s.token=?
@@ -348,7 +348,7 @@ const server=http.createServer(async (req,res)=>{
      code:'ACCOUNT_SUSPENDED'
     });
    const token=crypto.randomBytes(32).toString('hex'); const exp=new Date(Date.now()+7*86400000).toISOString(); db.prepare('INSERT INTO sessions(token,user_id,expires_at) VALUES(?,?,?)').run(token,u.id,exp);
-   res.setHeader('Set-Cookie',`rouh_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${process.env.NODE_ENV==='production'?'; Secure':''}`); audit(u,'login','session',''); return send(res,200,{ok:true,user:{id:u.id,name:u.name,email:u.email,phone:u.phone,role:u.role,department:u.department}});
+   res.setHeader('Set-Cookie',`rouh_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${process.env.NODE_ENV==='production'?'; Secure':''}`); audit(u,'login','session',''); return send(res,200,{ok:true,user:{id:u.id,name:u.name,email:u.email,phone:u.phone,role:u.role,system_role:u.system_role,department:u.department}});
   }
   if(pathname==='/api/volunteer/login' && req.method==='POST'){
    const b=await body(req);
@@ -459,6 +459,7 @@ const server=http.createServer(async (req,res)=>{
      email:u.email,
      phone:u.phone,
      role:u.role,
+     system_role:u.system_role,
      department:u.department
     }:null
    });
@@ -910,12 +911,12 @@ const server=http.createServer(async (req,res)=>{
      user.role==='admin' &&
      user.department==='إدارة الموارد البشرية (HR)';
 
-    if(user.role!=='owner' && !isHRAdmin)
+    if(!isOwnerOrDeputy(user) && !isHRAdmin)
      department=user.department || '';
 
     let items;
 
-    if((user.role==='owner' || isHRAdmin) && !department){
+    if((isOwnerOrDeputy(user) || isHRAdmin) && !department){
      items=db.prepare(`
       SELECT dc.*,
              u.name created_by_name
@@ -949,7 +950,7 @@ const server=http.createServer(async (req,res)=>{
     const description=String(b.description||'').trim();
     const linkUrl=String(b.link_url||'').trim();
 
-    let department=user.role==='owner'
+    let department=isOwnerOrDeputy(user)
      ? String(b.department||'').trim()
      : String(user.department||'').trim();
 
@@ -1106,7 +1107,7 @@ const server=http.createServer(async (req,res)=>{
 
    if(pathname==='/api/admin/complaints' && req.method==='GET'){
     const canAccessComplaints=
-     user.role==='owner' ||
+     isOwnerOrDeputy(user) ||
      (
       user.role==='admin' &&
       user.department==='إدارة الموارد البشرية (HR)'
@@ -1136,7 +1137,7 @@ const server=http.createServer(async (req,res)=>{
 
    if(complaintMatch && req.method==='PUT'){
     const canAccessComplaints=
-     user.role==='owner' ||
+     isOwnerOrDeputy(user) ||
      (
       user.role==='admin' &&
       user.department==='إدارة الموارد البشرية (HR)'
@@ -1170,8 +1171,8 @@ const server=http.createServer(async (req,res)=>{
    }
 
    if(pathname==='/api/admin/ideas' && req.method==='GET'){
-    if(user.role!=='owner')
-     return send(res,403,{error:'الأفكار متاحة للمالك فقط'});
+    if(!isOwnerOrDeputy(user))
+     return send(res,403,{error:'الأفكار متاحة للمالك أو نائب المالك فقط'});
 
     const items=db.prepare('SELECT * FROM ideas ORDER BY id DESC').all();
     return send(res,200,{items});
@@ -1179,8 +1180,8 @@ const server=http.createServer(async (req,res)=>{
 
    const ideaMatch=pathname.match(/^\/api\/admin\/ideas\/(\d+)$/);
    if(ideaMatch && req.method==='PUT'){
-    if(user.role!=='owner')
-     return send(res,403,{error:'إدارة الأفكار من صلاحية المالك فقط'});
+    if(!isOwnerOrDeputy(user))
+     return send(res,403,{error:'إدارة الأفكار من صلاحية المالك أو نائب المالك فقط'});
 
     const id=ideaMatch[1];
     const b=await body(req);
@@ -1201,8 +1202,16 @@ const server=http.createServer(async (req,res)=>{
 
 
 
+   function isDeputyOwner(user){
+    return !!user && user.system_role==='deputy_owner';
+   }
+
+   function isOwnerOrDeputy(user){
+    return !!user && (user.role==='owner' || isDeputyOwner(user));
+   }
+
    function canManageVolunteer(user,item){
-    if(user.role==='owner') return true;
+    if(isOwnerOrDeputy(user)) return true;
 
     const isHRAdmin=
      user.role==='admin' &&
@@ -1225,7 +1234,7 @@ const server=http.createServer(async (req,res)=>{
 
     let items;
 
-    if(user.role==='owner' || isHRAdmin){
+    if(isOwnerOrDeputy(user) || isHRAdmin){
      items=db.prepare(`
       SELECT
        va.*,
@@ -1294,7 +1303,7 @@ const server=http.createServer(async (req,res)=>{
      `).all(user.department||'');
     }
 
-    if(user.role!=='owner' && !isHRAdmin){
+    if(!isOwnerOrDeputy(user) && !isHRAdmin){
      items=items.map(item=>({
       ...item,
       invite_token:null,
@@ -1349,7 +1358,7 @@ const server=http.createServer(async (req,res)=>{
      user.department==='إدارة الموارد البشرية (HR)';
 
     const isOwnerOrHR=
-     user.role==='owner' || isHRAdmin;
+     isOwnerOrDeputy(user) || isHRAdmin;
 
     if(b.status==='contacted'){
      if(!isOwnerOrHR)
@@ -1418,7 +1427,7 @@ const server=http.createServer(async (req,res)=>{
       return send(res,400,{error:'هذا الطلب ليس بانتظار موافقة القسم'});
 
      const canDepartmentDecide =
-      user.role==='owner' ||
+      isOwnerOrDeputy(user) ||
       (
        user.role==='admin' &&
        item.department===user.department
@@ -1489,7 +1498,7 @@ const server=http.createServer(async (req,res)=>{
 
     if(b.status==='cancel_department_acceptance'){
      const canCancelAcceptance =
-      user.role==='owner' ||
+      isOwnerOrDeputy(user) ||
       isHRAdmin ||
       (
        user.role==='admin' &&
@@ -1713,8 +1722,8 @@ const server=http.createServer(async (req,res)=>{
      user.role==='admin' &&
      user.department==='إدارة الموارد البشرية (HR)';
 
-    if(user.role!=='owner' && !isHRAdmin)
-     return send(res,403,{error:'تغيير قسم المتطوع متاح للمالك أو HR فقط'});
+    if(!isOwnerOrDeputy(user) && !isHRAdmin)
+     return send(res,403,{error:'تغيير قسم المتطوع متاح للمالك أو نائب المالك أو HR فقط'});
 
     if(item.status!=='accepted')
      return send(res,400,{error:'يجب أن يكون المتطوع مقبولًا أولًا'});
@@ -1778,7 +1787,7 @@ const server=http.createServer(async (req,res)=>{
 
    if(volunteerAccountToggleMatch && req.method==='PUT'){
     const canManageVolunteerAccount=
-     user.role==='owner' ||
+     isOwnerOrDeputy(user) ||
      (
       user.role==='admin' &&
       user.department==='إدارة الموارد البشرية (HR)'
@@ -1986,8 +1995,8 @@ const server=http.createServer(async (req,res)=>{
      user.role==='admin' &&
      user.department==='إدارة الموارد البشرية (HR)';
 
-    if(user.role!=='owner' && !isHRAdmin)
-     return send(res,403,{error:'إرسال رسالة القبول من صلاحية المالك أو HR فقط'});
+    if(!isOwnerOrDeputy(user) && !isHRAdmin)
+     return send(res,403,{error:'إرسال رسالة القبول من صلاحية المالك أو نائب المالك أو HR فقط'});
 
     const id=whatsappSentMatch[1];
 
@@ -2021,7 +2030,7 @@ const server=http.createServer(async (req,res)=>{
 
     const notifications=[];
 
-    if(user.role==='owner' || isHRAdmin){
+    if(isOwnerOrDeputy(user) || isHRAdmin){
      const pendingApplications=db.prepare(`
       SELECT COUNT(*) c
       FROM volunteer_applications
@@ -2084,6 +2093,20 @@ const server=http.createServer(async (req,res)=>{
    }
 
    if(pathname==='/api/admin/dashboard' && req.method==='GET'){
+    // Deputy Owner: global dashboard without sensitive audit log
+    if(isDeputyOwner(user)){
+     return send(res,200,{
+      dashboardType:'deputy',
+      counts:{
+       events:db.prepare('SELECT COUNT(*) c FROM events WHERE deleted_at IS NULL').get().c,
+       achievements:db.prepare('SELECT COUNT(*) c FROM achievements WHERE deleted_at IS NULL').get().c,
+       users:db.prepare('SELECT COUNT(*) c FROM users WHERE active=1').get().c,
+       published:db.prepare("SELECT (SELECT COUNT(*) FROM events WHERE status='published' AND deleted_at IS NULL)+(SELECT COUNT(*) FROM achievements WHERE status='published' AND deleted_at IS NULL) c").get().c
+      },
+      audit:[]
+     });
+    }
+
     // Owner: global dashboard
     if(user.role==='owner'){
      const dashboardAudit=db.prepare(
@@ -2145,25 +2168,25 @@ const server=http.createServer(async (req,res)=>{
     return send(res,403,{error:'لا تملك الصلاحية'});
    }
    if(pathname==='/api/admin/content' && req.method==='GET'){
-    if(user.role!=='owner') return send(res,403,{error:'محتوى الموقع متاح للمالك فقط'}); return send(res,200,{settings:settingsObj(),stats:statsObj(),faqs:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()});
+    if(!isOwnerOrDeputy(user)) return send(res,403,{error:'محتوى الموقع متاح للمالك أو نائب المالك فقط'}); return send(res,200,{settings:settingsObj(),stats:statsObj(),faqs:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()});
    }
    if(pathname==='/api/admin/settings' && req.method==='PUT'){
-    if(user.role!=='owner') return send(res,403,{error:'تعديل إعدادات الموقع من صلاحية المالك فقط'}); const b=await body(req); const st=db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
+    if(!isOwnerOrDeputy(user)) return send(res,403,{error:'تعديل إعدادات الموقع من صلاحية المالك أو نائب المالك فقط'}); const b=await body(req); const st=db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
     for(const [k,v] of Object.entries(b)) st.run(k,typeof v==='string'?v:JSON.stringify(v)); audit(user,'update','settings','',Object.keys(b).join(',')); return send(res,200,{ok:true});
    }
    if(pathname==='/api/admin/stats' && req.method==='PUT'){
-    if(user.role!=='owner') return send(res,403,{error:'تعديل الإحصائيات من صلاحية المالك فقط'}); const b=await body(req); const st=db.prepare('INSERT INTO stats(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value'); for(const k of ['volunteers','events','hours','beneficiaries']) if(k in b) st.run(k,Number(b[k])||0); audit(user,'update','stats',''); return send(res,200,{ok:true});
+    if(!isOwnerOrDeputy(user)) return send(res,403,{error:'تعديل الإحصائيات من صلاحية المالك أو نائب المالك فقط'}); const b=await body(req); const st=db.prepare('INSERT INTO stats(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value'); for(const k of ['volunteers','events','hours','beneficiaries']) if(k in b) st.run(k,Number(b[k])||0); audit(user,'update','stats',''); return send(res,200,{ok:true});
    }
    if(pathname==='/api/admin/upload' && req.method==='POST'){
-    if(user.role!=='owner')
-     return send(res,403,{error:'رفع صور الموقع من صلاحية المالك فقط'});
+    if(!isOwnerOrDeputy(user))
+     return send(res,403,{error:'رفع صور الموقع من صلاحية المالك أو نائب المالك فقط'});
 
     const b=await body(req); const m=String(b.dataUrl||'').match(/^data:(image\/(jpeg|png|webp));base64,(.+)$/); if(!m) return send(res,400,{error:'صيغة الصورة غير مدعومة'}); const buf=Buffer.from(m[3],'base64'); if(buf.length>6*1024*1024) return send(res,400,{error:'حجم الصورة أكبر من 6MB'}); const ext=m[2]==='jpeg'?'jpg':m[2]; const name=`${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`; fs.writeFileSync(path.join(UPLOADS,name),buf); audit(user,'upload','image',name); return send(res,201,{url:`/uploads/${name}`});
    }
    const entMatch=pathname.match(/^\/api\/admin\/(events|achievements)(?:\/(\d+))?$/);
    if(entMatch){
-    if(user.role!=='owner')
-     return send(res,403,{error:'إدارة الفعاليات والإنجازات من صلاحية المالك فقط'});
+    if(!isOwnerOrDeputy(user))
+     return send(res,403,{error:'إدارة الفعاليات والإنجازات من صلاحية المالك أو نائب المالك فقط'});
 
     const entity=entMatch[1], id=entMatch[2], cfg=entityConfig(entity);
     if(req.method==='GET'&&!id){ const rows=db.prepare(`SELECT * FROM ${cfg.table} WHERE deleted_at IS NULL ORDER BY id DESC`).all().map(r=>({...r,gallery:safeJson(r.gallery)})); return send(res,200,{items:rows}); }
@@ -2211,7 +2234,7 @@ const server=http.createServer(async (req,res)=>{
     }
    }
    const faqMatch=pathname.match(/^\/api\/admin\/faqs(?:\/(\d+))?$/);
-   if(faqMatch){ if(user.role!=='owner') return send(res,403,{error:'إدارة الأسئلة الشائعة من صلاحية المالك فقط'}); const id=faqMatch[1]; if(req.method==='GET'&&!id)return send(res,200,{items:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()}); const b=await body(req); if(req.method==='POST'&&!id){const r=db.prepare('INSERT INTO faqs(question,answer,sort_order,active) VALUES(?,?,?,?)').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1);audit(user,'create','faq',r.lastInsertRowid);return send(res,201,{id:r.lastInsertRowid});} if(req.method==='PUT'&&id){db.prepare('UPDATE faqs SET question=?,answer=?,sort_order=?,active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1,id);audit(user,'update','faq',id);return send(res,200,{ok:true});} if(req.method==='DELETE'&&id){
+   if(faqMatch){ if(!isOwnerOrDeputy(user)) return send(res,403,{error:'إدارة الأسئلة الشائعة من صلاحية المالك أو نائب المالك فقط'}); const id=faqMatch[1]; if(req.method==='GET'&&!id)return send(res,200,{items:db.prepare('SELECT * FROM faqs WHERE deleted_at IS NULL ORDER BY sort_order,id').all()}); const b=await body(req); if(req.method==='POST'&&!id){const r=db.prepare('INSERT INTO faqs(question,answer,sort_order,active) VALUES(?,?,?,?)').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1);audit(user,'create','faq',r.lastInsertRowid);return send(res,201,{id:r.lastInsertRowid});} if(req.method==='PUT'&&id){db.prepare('UPDATE faqs SET question=?,answer=?,sort_order=?,active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(b.question,b.answer,Number(b.sort_order)||0,b.active===false?0:1,id);audit(user,'update','faq',id);return send(res,200,{ok:true});} if(req.method==='DELETE'&&id){
       const item=db.prepare('SELECT * FROM faqs WHERE id=? AND deleted_at IS NULL').get(id);
       if(!item)return send(res,404,{error:'السؤال غير موجود'});
 
@@ -2301,7 +2324,7 @@ const server=http.createServer(async (req,res)=>{
      user.role==='admin' &&
      user.department==='إدارة الموارد البشرية (HR)';
 
-    if(user.role==='owner' || isHR){
+    if(isOwnerOrDeputy(user) || isHR){
      return send(res,200,{
       items:db.prepare(
        "SELECT id,name,department FROM users WHERE role='admin' AND active=1 AND department<>'' ORDER BY department,name"
@@ -2316,22 +2339,24 @@ const server=http.createServer(async (req,res)=>{
     });
    }
 
-   if(pathname==='/api/admin/users'&&req.method==='GET'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); return send(res,200,{items:db.prepare('SELECT id,name,email,phone,role,active,department,created_at FROM users ORDER BY id').all()}); }
-   if(pathname==='/api/admin/users'&&req.method==='POST'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); if(b.role!=='admin'||!b.name||!b.phone||!b.email||!b.password||b.password.length<8)return send(res,400,{error:'تحقق من البيانات وكلمة المرور'}); try{const r=db.prepare('INSERT INTO users(name,email,phone,password_hash,role,department) VALUES(?,?,?,?,?,?)').run(
+   if(pathname==='/api/admin/users'&&req.method==='GET'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); return send(res,200,{items:db.prepare('SELECT id,name,email,phone,role,system_role,active,department,created_at FROM users ORDER BY id').all()}); }
+   if(pathname==='/api/admin/users'&&req.method==='POST'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); if(!['admin','deputy_owner'].includes(b.role)||!b.name||!b.phone||!b.email||!b.password||b.password.length<8)return send(res,400,{error:'تحقق من البيانات وكلمة المرور'}); const storedRole=b.role==='deputy_owner'?'admin':'admin'; const systemRole=b.role==='deputy_owner'?'deputy_owner':''; try{const r=db.prepare('INSERT INTO users(name,email,phone,password_hash,role,department,system_role) VALUES(?,?,?,?,?,?,?)').run(
  b.name,
  b.email.toLowerCase(),
  String(b.phone||'').trim(),
  hashPassword(b.password),
- b.role,
- String(b.department||'')
+ storedRole,
+ b.role==='deputy_owner' ? '' : String(b.department||''),
+ systemRole
 );audit(user,'create','user',r.lastInsertRowid,b.email);return send(res,201,{id:r.lastInsertRowid});}catch{return send(res,409,{error:'البريد مستخدم مسبقًا'});} }
-   const um=pathname.match(/^\/api\/admin\/users\/(\d+)$/); if(um&&req.method==='PUT'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); const target=db.prepare('SELECT * FROM users WHERE id=?').get(um[1]); if(!target)return send(res,404,{error:'غير موجود'}); if(target.role==='owner')return send(res,400,{error:'لا يمكن تعديل حساب المالك من هنا'}); if(b.role&&b.role!=='admin')return send(res,400,{error:'صلاحية غير صحيحة'}); db.prepare('UPDATE users SET name=?,email=?,phone=?,role=?,active=?,department=? WHERE id=?').run(
+   const um=pathname.match(/^\/api\/admin\/users\/(\d+)$/); if(um&&req.method==='PUT'){ if(user.role!=='owner')return send(res,403,{error:'للمالك فقط'}); const b=await body(req); const target=db.prepare('SELECT * FROM users WHERE id=?').get(um[1]); if(!target)return send(res,404,{error:'غير موجود'}); if(target.role==='owner')return send(res,400,{error:'لا يمكن تعديل حساب المالك من هنا'}); if(b.role&&!['admin','deputy_owner'].includes(b.role))return send(res,400,{error:'صلاحية غير صحيحة'}); const requestedRole=b.role || (target.system_role==='deputy_owner'?'deputy_owner':'admin'); const storedRole='admin'; const systemRole=requestedRole==='deputy_owner'?'deputy_owner':''; db.prepare('UPDATE users SET name=?,email=?,phone=?,role=?,system_role=?,active=?,department=? WHERE id=?').run(
  b.name||target.name,
  String(b.email||target.email).trim().toLowerCase(),
  String(b.phone??target.phone??'').trim(),
- b.role||target.role,
+ storedRole,
+ systemRole,
  b.active===false?0:1,
- String(b.department??target.department??''),
+ requestedRole==='deputy_owner' ? '' : String(b.department??target.department??''),
  um[1]
 );audit(user,'update','user',um[1]);return send(res,200,{ok:true}); }
 
@@ -2554,6 +2579,12 @@ try{
  if(!userColumns.some(c=>c.name==='department')){
   db.exec("ALTER TABLE users ADD COLUMN department TEXT NOT NULL DEFAULT ''");
   console.log('Database migration: users.department added');
+
+ }
+
+ if(!userColumns.some(c=>c.name==='system_role')){
+  db.exec("ALTER TABLE users ADD COLUMN system_role TEXT NOT NULL DEFAULT ''");
+  console.log('Database migration: users.system_role added');
  }
 }catch(e){
  console.error('Database migration error:',e);

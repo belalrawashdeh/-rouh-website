@@ -53,8 +53,10 @@ async function renderDepartmentBar(){
   me.role==='admin' &&
   me.department==='إدارة الموارد البشرية (HR)';
 
+ const isDeputy=me.system_role==='deputy_owner';
+
  const canViewAll=
-  me.role==='owner' || isHR;
+  me.role==='owner' || isDeputy || isHR;
 
  if(!canViewAll){
   selectedDepartment=me.department || '';
@@ -142,12 +144,43 @@ async function renderDepartmentBar(){
  };
 }
 
-function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${esc(me.role)}</span></p>`;renderDepartmentBar();loadNotifications();document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;let allowed=true;if(need==='owner')allowed=me.role==='owner';else if(need==='hr')allowed=me.role==='owner'||(me.role==='admin'&&me.department==='إدارة الموارد البشرية (HR)');else allowed=['owner','admin'].includes(me.role);x.classList.toggle('hidden',!allowed)});loadTab('dashboard')}
+function showAdmin(){ $('#authView').classList.add('hidden');$('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${me.role==='owner'?'المالك':me.system_role==='deputy_owner'?'نائب المالك':'مسؤول قسم'}</span></p>`;renderDepartmentBar();loadNotifications();document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;let allowed=true;if(need==='owner')allowed=me.role==='owner';else if(need==='management')allowed=me.role==='owner'||me.system_role==='deputy_owner';else if(need==='trash')allowed=me.role==='owner'||(me.role==='admin'&&me.system_role!=='deputy_owner'&&me.department==='إدارة الموارد البشرية (HR)');else if(need==='hr')allowed=me.role==='owner'||me.system_role==='deputy_owner'||(me.role==='admin'&&me.department==='إدارة الموارد البشرية (HR)');else allowed=['owner','admin'].includes(me.role);x.classList.toggle('hidden',!allowed)});loadTab('dashboard')}
 $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=null;showAuth()};
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
 async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',approvals:'طلبات الموافقة',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='approvals')return deletionRequests();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
 async function dashboard(){
  const d=await api('/api/admin/dashboard');
+
+ if(d.dashboardType==='deputy'){
+  content.innerHTML=`
+   <div class="panel">
+    <h3>نائب المالك</h3>
+    <p class="muted">نظرة شاملة على إدارة المبادرة.</p>
+   </div>
+
+   <div class="grid grid4">
+    <div class="panel">
+     <b>الفعاليات</b>
+     <h2>${d.counts.events}</h2>
+    </div>
+
+    <div class="panel">
+     <b>الإنجازات</b>
+     <h2>${d.counts.achievements}</h2>
+    </div>
+
+    <div class="panel">
+     <b>المسؤولون الفعالون</b>
+     <h2>${d.counts.users}</h2>
+    </div>
+
+    <div class="panel">
+     <b>المحتوى المنشور</b>
+     <h2>${d.counts.published}</h2>
+    </div>
+   </div>`;
+  return;
+ }
 
  if(d.dashboardType==='owner'){
   const auditPanel=`
@@ -319,8 +352,11 @@ window.permanentlyDeleteVolunteerAccount=async id=>{
  }
 };
 
-async function users(){const d=await api('/api/admin/users');content.innerHTML=`<div class="panel"><button class="btn green" onclick="userForm()">+ إضافة مسؤول</button></div><div class="panel"><table class="table"><tr><th>الاسم</th><th>الهاتف</th><th>البريد</th><th>الصلاحية</th><th>القسم</th><th>الحالة</th><th></th></tr>${d.items.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.phone||'-')}</td><td>${esc(u.email)}</td><td>${esc(u.role)}</td><td>${esc(u.department||'-')}</td><td>${u.active?'فعال':'موقوف'}</td><td>${u.role!=='owner'?`<button class="btn light small" onclick='userForm(${JSON.stringify(u).replaceAll("'","&#39;")})'>تعديل</button>`:''}</td></tr>`).join('')}</table></div>`}
-window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userForm" class="formGrid"><div class="field"><label>الاسم</label><input name="name" value="${esc(u.name||'')}" required></div><div class="field"><label>رقم الهاتف</label><input name="phone" type="tel" value="${esc(u.phone||'')}" maxlength="30" required></div><div class="field"><label>البريد</label><input name="email" type="email" value="${esc(u.email||'')}" required></div>${u.id?'':`<div class="field"><label>كلمة المرور</label><input name="password" type="password" minlength="8" required></div>`}<div class="field"><label>الصلاحية</label><select name="role"><option value="admin" selected>Admin القسم</option></select></div>
+async function users(){const d=await api('/api/admin/users');content.innerHTML=`<div class="panel"><button class="btn green" onclick="userForm()">+ إضافة مسؤول</button></div><div class="panel"><table class="table"><tr><th>الاسم</th><th>الهاتف</th><th>البريد</th><th>الصلاحية</th><th>القسم</th><th>الحالة</th><th></th></tr>${d.items.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.phone||'-')}</td><td>${esc(u.email)}</td><td>${u.role==='owner'?'المالك':u.system_role==='deputy_owner'?'نائب المالك':'مسؤول قسم'}</td><td>${esc(u.department||'-')}</td><td>${u.active?'فعال':'موقوف'}</td><td>${u.role!=='owner'?`<button class="btn light small" onclick='userForm(${JSON.stringify(u).replaceAll("'","&#39;")})'>تعديل</button>`:''}</td></tr>`).join('')}</table></div>`}
+window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userForm" class="formGrid"><div class="field"><label>الاسم</label><input name="name" value="${esc(u.name||'')}" required></div><div class="field"><label>رقم الهاتف</label><input name="phone" type="tel" value="${esc(u.phone||'')}" maxlength="30" required></div><div class="field"><label>البريد</label><input name="email" type="email" value="${esc(u.email||'')}" required></div>${u.id?'':`<div class="field"><label>كلمة المرور</label><input name="password" type="password" minlength="8" required></div>`}<div class="field"><label>الصلاحية</label><select name="role">
+<option value="admin" ${u.system_role!=='deputy_owner'?'selected':''}>مسؤول قسم</option>
+<option value="deputy_owner" ${u.system_role==='deputy_owner'?'selected':''}>نائب المالك</option>
+</select></div>
 <div class="field">
 <label>القسم</label>
 <select name="department">
@@ -423,7 +459,7 @@ async function volunteers(){
  const allItems=d.items.filter(v=>v.status!=='rejected');
 
  const items=allItems.filter(v=>{
-  if(me.role==='owner' || (
+  if(me.role==='owner' || me.system_role==='deputy_owner' || (
    me.role==='admin' &&
    me.department==='إدارة الموارد البشرية (HR)'
   )){
@@ -439,7 +475,7 @@ async function volunteers(){
   me.department==='إدارة الموارد البشرية (HR)';
 
  const isOwnerOrHR=
-  me.role==='owner' || isHR;
+  me.role==='owner' || me.system_role==='deputy_owner' || isHR;
 
  const statusText={
   pending:'قيد المراجعة',
@@ -539,6 +575,7 @@ async function volunteers(){
         v.department_approval==='pending' &&
         (
          me.role==='owner' ||
+         me.system_role==='deputy_owner' ||
          (
           me.role==='admin' &&
           me.department===v.department
@@ -1460,10 +1497,11 @@ async function saveIdea(id){
 
 async function departmentWork(){
  const isOwner=me.role==='owner';
+ const isDeputy=me.system_role==='deputy_owner';
  const isHR=
   me.role==='admin' &&
   me.department==='إدارة الموارد البشرية (HR)';
- const canViewAll=isOwner || isHR;
+ const canViewAll=isOwner || isDeputy || isHR;
 
  const departments=[
   'الميداني',
@@ -1488,6 +1526,7 @@ async function departmentWork(){
 
  const canEditDepartment=
   isOwner ||
+  isDeputy ||
   (!isHR && department===me.department) ||
   (isHR && department===me.department);
 
