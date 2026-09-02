@@ -2101,6 +2101,8 @@ const server=http.createServer(async (req,res)=>{
        events:db.prepare('SELECT COUNT(*) c FROM events WHERE deleted_at IS NULL').get().c,
        achievements:db.prepare('SELECT COUNT(*) c FROM achievements WHERE deleted_at IS NULL').get().c,
        users:db.prepare('SELECT COUNT(*) c FROM users WHERE active=1').get().c,
+       organizers:db.prepare("SELECT COUNT(*) c FROM volunteer_applications WHERE status='accepted'").get().c,
+       activeAccounts:db.prepare("SELECT COUNT(*) c FROM volunteers WHERE active=1 AND deleted_at IS NULL").get().c,
        published:db.prepare("SELECT (SELECT COUNT(*) FROM events WHERE status='published' AND deleted_at IS NULL)+(SELECT COUNT(*) FROM achievements WHERE status='published' AND deleted_at IS NULL) c").get().c
       },
       audit:[]
@@ -2119,6 +2121,8 @@ const server=http.createServer(async (req,res)=>{
        events:db.prepare('SELECT COUNT(*) c FROM events WHERE deleted_at IS NULL').get().c,
        achievements:db.prepare('SELECT COUNT(*) c FROM achievements WHERE deleted_at IS NULL').get().c,
        users:db.prepare('SELECT COUNT(*) c FROM users WHERE active=1').get().c,
+       organizers:db.prepare("SELECT COUNT(*) c FROM volunteer_applications WHERE status='accepted'").get().c,
+       activeAccounts:db.prepare("SELECT COUNT(*) c FROM volunteers WHERE active=1 AND deleted_at IS NULL").get().c,
        published:db.prepare("SELECT (SELECT COUNT(*) FROM events WHERE status='published' AND deleted_at IS NULL)+(SELECT COUNT(*) FROM achievements WHERE status='published' AND deleted_at IS NULL) c").get().c
       },
       audit:dashboardAudit
@@ -2137,7 +2141,10 @@ const server=http.createServer(async (req,res)=>{
        applications:db.prepare(
         "SELECT COUNT(*) c FROM volunteer_applications WHERE status!='rejected'"
        ).get().c,
-       activeVolunteers:db.prepare(
+       organizers:db.prepare(
+        "SELECT COUNT(*) c FROM volunteer_applications WHERE status='accepted'"
+       ).get().c,
+       activeAccounts:db.prepare(
         "SELECT COUNT(*) c FROM volunteers WHERE active=1 AND deleted_at IS NULL"
        ).get().c,
        newComplaints:db.prepare(
@@ -2155,6 +2162,12 @@ const server=http.createServer(async (req,res)=>{
       department:user.department||'',
       counts:{
        volunteers:db.prepare(
+        "SELECT COUNT(*) c FROM volunteers WHERE department=? AND active=1 AND deleted_at IS NULL"
+       ).get(user.department||'').c,
+       organizers:db.prepare(
+        "SELECT COUNT(*) c FROM volunteer_applications WHERE department=? AND status='accepted'"
+       ).get(user.department||'').c,
+       activeAccounts:db.prepare(
         "SELECT COUNT(*) c FROM volunteers WHERE department=? AND active=1 AND deleted_at IS NULL"
        ).get(user.department||'').c,
        departmentContent:db.prepare(
