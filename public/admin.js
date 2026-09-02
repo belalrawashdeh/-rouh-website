@@ -774,11 +774,26 @@ async function openVolunteerWhatsApp(v){
   '&type=phone_number&app_absent=0&text=' +
   encodeURIComponent(message);
 
- const whatsappWindow=window.open(url,'_blank');
+ const openMode=prompt(
+  'كيف تريد فتح واتساب؟\n\n1 = WhatsApp Web\n2 = تطبيق WhatsApp',
+  '1'
+ );
 
- if(!whatsappWindow){
-  alert('المتصفح منع فتح واتساب. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');
-  return;
+ if(openMode===null) return;
+
+ if(openMode.trim()==='2'){
+  window.location.href=
+   'whatsapp://send?phone='+
+   phone+
+   '&text='+
+   encodeURIComponent(message);
+ }else{
+  const whatsappWindow=window.open(url,'_blank');
+
+  if(!whatsappWindow){
+   alert('المتصفح منع فتح واتساب. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');
+   return;
+  }
  }
 
  flash('📱 تم فتح رسالة القبول في واتساب');
@@ -902,7 +917,22 @@ async function changeVolunteerDepartment(v){
    '&type=phone_number&app_absent=0&text='+
    encodeURIComponent(message);
 
-  window.location.href=url;
+  const openMode=prompt(
+   'كيف تريد فتح واتساب؟\n\n1 = WhatsApp Web\n2 = تطبيق WhatsApp',
+   '1'
+  );
+
+  if(openMode===null) return;
+
+  if(openMode.trim()==='2'){
+   window.location.href=
+    'whatsapp://send?phone='+
+    phone+
+    '&text='+
+    encodeURIComponent(message);
+  }else{
+   window.open(url,'_blank');
+  }
 
   await volunteers();
 
@@ -1056,7 +1086,22 @@ async function updateVolunteer(id,status){
      '&type=phone_number&app_absent=0&text='+
      encodeURIComponent(message);
 
-    window.open(url,'_blank');
+    const openMode=prompt(
+     'كيف تريد فتح واتساب؟\n\n1 = WhatsApp Web\n2 = تطبيق WhatsApp',
+     '1'
+    );
+
+    if(openMode===null) return;
+
+    if(openMode.trim()==='2'){
+     window.location.href=
+      'whatsapp://send?phone='+
+      phone+
+      '&text='+
+      encodeURIComponent(message);
+    }else{
+     window.open(url,'_blank');
+    }
    }
 
    flash('💬 تم تسجيل التواصل وفتح واتساب');
