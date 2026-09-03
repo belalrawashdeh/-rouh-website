@@ -518,9 +518,13 @@ async function tasks(){
   return status||'—';
  };
 
- const volunteerOptions=volunteers.map(v=>
-  `<option value="${v.id}">${esc(v.name)}${v.department?` — ${esc(v.department)}`:''}</option>`
- ).join('');
+ const departments=[
+  ...new Set(
+   volunteers
+    .map(v=>String(v.department||'').trim())
+    .filter(Boolean)
+  )
+ ].sort((a,b)=>a.localeCompare(b,'ar'));
 
  const rows=items.length ? items.map(t=>`
   <tr>
@@ -528,7 +532,9 @@ async function tasks(){
    <td>${esc(t.department||'—')}</td>
    <td>
     <b>${esc(t.title)}</b>
-    ${t.description?`<div class="muted" style="margin-top:5px">${esc(t.description)}</div>`:''}
+    ${t.description
+     ? `<div class="muted" style="margin-top:5px">${esc(t.description)}</div>`
+     : ''}
    </td>
    <td>${t.due_date?esc(t.due_date):'—'}</td>
    <td>${statusLabel(t.status)}</td>
@@ -543,17 +549,26 @@ async function tasks(){
  content.innerHTML=`
   <div class="panel">
    <h2>📋 إسناد مهمة</h2>
-   <p class="muted">اختر المتطوع وحدد المهمة وتاريخ التسليم.</p>
+   <p class="muted">اختر القسم أولًا، ثم اختر المتطوع.</p>
 
    ${volunteers.length ? `
    <form id="taskForm">
     <div class="formGrid">
 
      <label class="field">
+      <span>القسم</span>
+      <select id="taskDepartment" required>
+       <option value="">اختر القسم</option>
+       ${departments.map(d=>
+        `<option value="${esc(d)}">${esc(d)}</option>`
+       ).join('')}
+      </select>
+     </label>
+
+     <label class="field">
       <span>المتطوع</span>
-      <select id="taskVolunteer" required>
-       <option value="">اختر المتطوع</option>
-       ${volunteerOptions}
+      <select id="taskVolunteer" required disabled>
+       <option value="">اختر القسم أولًا</option>
       </select>
      </label>
 
@@ -604,16 +619,51 @@ async function tasks(){
   </div>
  `;
 
+ const departmentSelect=document.getElementById('taskDepartment');
+ const volunteerSelect=document.getElementById('taskVolunteer');
+
+ if(departmentSelect && volunteerSelect){
+  departmentSelect.onchange=()=>{
+   const department=departmentSelect.value;
+
+   const filtered=volunteers.filter(v=>
+    String(v.department||'').trim()===department
+   );
+
+   volunteerSelect.innerHTML=department
+    ? `<option value="">اختر المتطوع</option>`+
+      filtered.map(v=>
+       `<option value="${v.id}">${esc(v.name)}</option>`
+      ).join('')
+    : '<option value="">اختر القسم أولًا</option>';
+
+   volunteerSelect.disabled=!department;
+  };
+
+  if(departments.length===1){
+   departmentSelect.value=departments[0];
+   departmentSelect.dispatchEvent(new Event('change'));
+  }
+ }
+
  const form=document.getElementById('taskForm');
 
  if(form){
   form.onsubmit=async e=>{
    e.preventDefault();
 
-   const volunteer_id=Number(document.getElementById('taskVolunteer').value);
-   const title=document.getElementById('taskTitle').value.trim();
-   const description=document.getElementById('taskDescription').value.trim();
-   const due_date=document.getElementById('taskDueDate').value;
+   const volunteer_id=Number(
+    document.getElementById('taskVolunteer').value
+   );
+
+   const title=
+    document.getElementById('taskTitle').value.trim();
+
+   const description=
+    document.getElementById('taskDescription').value.trim();
+
+   const due_date=
+    document.getElementById('taskDueDate').value;
 
    if(!volunteer_id || !title){
     alert('اختر المتطوع واكتب عنوان المهمة');
