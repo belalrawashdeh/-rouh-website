@@ -173,7 +173,7 @@ function showAdmin(){
 $('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${me.role==='owner'?'المالك':me.system_role==='deputy_owner'?'الريس':'مسؤول قسم'}</span></p>`;renderDepartmentBar();loadNotifications();document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;let allowed=true;if(need==='owner')allowed=me.role==='owner';else if(need==='management')allowed=me.role==='owner'||me.system_role==='deputy_owner';else if(need==='trash')allowed=me.role==='owner'||(me.role==='admin'&&me.system_role!=='deputy_owner'&&me.department==='إدارة الموارد البشرية (HR)');else if(need==='hr')allowed=me.role==='owner'||me.system_role==='deputy_owner'||(me.role==='admin'&&me.department==='إدارة الموارد البشرية (HR)');else allowed=['owner','admin'].includes(me.role);x.classList.toggle('hidden',!allowed)});loadTab('dashboard')}
 $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=null;showAuth()};
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
-async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين',tasks:'المهام','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',approvals:'طلبات الموافقة',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='tasks')return tasks();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='approvals')return deletionRequests();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
+async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين',tasks:'المهام',ai:'مساعد روح','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',approvals:'طلبات الموافقة',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='tasks')return tasks();if(tab==='ai')return aiAssistant();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='approvals')return deletionRequests();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
 async function dashboard(){
  const d=await api('/api/admin/dashboard');
 
@@ -2087,3 +2087,136 @@ document.addEventListener('click',e=>{
 setInterval(()=>{
  if(me) loadNotifications();
 },60000);
+
+
+async function aiAssistant(){
+ content.innerHTML=`
+  <div class="panel">
+   <h2>🤖 مساعد روح الذكي</h2>
+   <p class="muted">
+    اسأل عن المتطوعين والمهام أو اطلب تحليلًا أو مسودة.
+    المساعد للقراءة والاقتراح فقط ولا يعدّل بيانات النظام.
+   </p>
+
+   <div id="aiChat" style="margin:18px 0;display:grid;gap:12px">
+    <div class="notice">
+     💚 أهلًا، أنا مساعد روح. كيف أقدر أساعدك؟
+     <div style="margin-top:12px">
+      <button class="btn" type="button" id="aiServices">
+       ✨ اعرض الخدمات التي أستطيع مساعدتك فيها
+      </button>
+     </div>
+    </div>
+   </div>
+
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+    <button class="btn aiQuick" type="button" data-q="اعطيني ملخص سريع عن وضع روح حاليًا">📊 ملخص روح</button>
+    <button class="btn aiQuick" type="button" data-q="لخص لي وضع طلبات التطوع الحالية">📝 طلبات التطوع</button>
+    <button class="btn aiQuick" type="button" data-q="لخص لي وضع المهام الحالية">📋 المهام</button>
+    <button class="btn aiQuick" type="button" data-q="هل توجد شكاوى تحتاج متابعة؟ لخصها بدون معلومات شخصية">📩 الشكاوى</button>
+   </div>
+
+   <form id="aiForm">
+    <textarea
+     id="aiMessage"
+     rows="4"
+     maxlength="2000"
+     placeholder="مثال: لخص لي وضع المهام الحالية..."
+     required
+    ></textarea>
+
+    <div style="margin-top:10px">
+     <button class="btn" id="aiSend" type="submit">
+      إرسال للمساعد 🤖
+     </button>
+    </div>
+   </form>
+  </div>
+ `;
+
+ const form=$('#aiForm');
+ const input=$('#aiMessage');
+ const chat=$('#aiChat');
+ const sendBtn=$('#aiSend');
+
+ document.querySelectorAll('.aiQuick').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+   input.value=btn.dataset.q;
+   input.focus();
+  });
+ });
+ const servicesBtn=$('#aiServices');
+
+ servicesBtn.addEventListener('click',()=>{
+  chat.insertAdjacentHTML('beforeend',`
+   <div class="panel">
+    <strong>🤖 أقدر أساعدك في:</strong><br><br>
+    👥 <strong>المتطوعون:</strong> العدد، الأقسام والحسابات الفعالة.<br>
+    📝 <strong>طلبات التطوع:</strong> pending وaccepted وrejected وتحليل الطلبات.<br>
+    📋 <strong>المهام:</strong> الجديدة، قيد التنفيذ، المكتملة والمتأخرة.<br>
+    📅 <strong>الفعاليات:</strong> عرضها وتلخيصها وتحليلها.<br>
+    🏆 <strong>الإنجازات:</strong> تلخيص الإنجازات والأثر المسجل.<br>
+    💡 <strong>الأفكار:</strong> تحليل الأفكار واقتراح تطويرها.<br>
+    📩 <strong>الشكاوى:</strong> تلخيص الحالات التي تحتاج متابعة حسب صلاحيتك.<br>
+    🏢 <strong>الأقسام:</strong> تحليل محتوى الأقسام والبيانات المتاحة لك.<br>
+    📊 <strong>التقارير:</strong> إعداد تقرير شامل أو مختصر عن وضع روح.<br>
+    ✍️ <strong>الكتابة:</strong> مسودات رسائل وإعلانات ونصوص ومقترحات.<br><br>
+    <span class="muted">أنا للقراءة والتحليل والاقتراح فقط، ولا أعدّل بيانات النظام.</span>
+   </div>
+  `);
+ });
+
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();
+
+  const message=input.value.trim();
+  if(!message)return;
+
+  chat.insertAdjacentHTML(
+   'beforeend',
+   `<div class="panel"><strong>أنت:</strong><br>${esc(message)}</div>`
+  );
+
+  input.value='';
+  sendBtn.disabled=true;
+  sendBtn.textContent='يفكر...';
+
+  const thinking=document.createElement('div');
+  thinking.className='notice';
+  thinking.textContent='🤖 مساعد روح يفكر...';
+  chat.appendChild(thinking);
+
+  try{
+   const r=await fetch('/api/admin/ai',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message})
+   });
+
+   const data=await r.json();
+   thinking.remove();
+
+   if(!r.ok)
+    throw new Error(data.error||'تعذر تشغيل مساعد روح');
+
+   const box=document.createElement('div');
+   box.className='panel';
+   box.innerHTML='<strong>🤖 مساعد روح:</strong><br>'+
+    esc(data.answer)
+     .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+     .replace(/\n/g,'<br>');
+   chat.appendChild(box);
+
+  }catch(err){
+   thinking.remove();
+   chat.insertAdjacentHTML(
+    'beforeend',
+    `<div class="notice error">${esc(err.message)}</div>`
+   );
+  }finally{
+   sendBtn.disabled=false;
+   sendBtn.textContent='إرسال للمساعد 🤖';
+   input.focus();
+  }
+ });
+}
