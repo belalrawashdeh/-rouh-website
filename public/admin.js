@@ -173,7 +173,7 @@ function showAdmin(){
 $('#adminView').classList.remove('hidden');$('#userBox').innerHTML=`<p><b>${esc(me.name)}</b><br><span class="muted">${me.role==='owner'?'المالك':me.system_role==='deputy_owner'?'الريس':'مسؤول قسم'}</span></p>`;renderDepartmentBar();loadNotifications();document.querySelectorAll('[data-role]').forEach(x=>{const need=x.dataset.role;let allowed=true;if(need==='owner')allowed=me.role==='owner';else if(need==='management')allowed=me.role==='owner'||me.system_role==='deputy_owner';else if(need==='trash')allowed=me.role==='owner'||(me.role==='admin'&&me.system_role!=='deputy_owner'&&me.department==='إدارة الموارد البشرية (HR)');else if(need==='hr')allowed=me.role==='owner'||me.system_role==='deputy_owner'||(me.role==='admin'&&me.department==='إدارة الموارد البشرية (HR)');else allowed=['owner','admin'].includes(me.role);x.classList.toggle('hidden',!allowed)});loadTab('dashboard')}
 $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=null;showAuth()};
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
-async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',approvals:'طلبات الموافقة',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='approvals')return deletionRequests();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
+async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين',tasks:'المهام','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',approvals:'طلبات الموافقة',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='tasks')return tasks();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='approvals')return deletionRequests();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
 async function dashboard(){
  const d=await api('/api/admin/dashboard');
 
@@ -500,6 +500,147 @@ window.decideDeletionRequest=async(id,action)=>{
 async function audit(){const d=await api('/api/admin/audit');content.innerHTML=`<div class="panel"><table class="table"><tr><th>المسؤول</th><th>الإجراء</th><th>العنصر</th><th>التفاصيل</th><th>الوقت</th></tr>${d.items.map(a=>`<tr><td>${esc(a.user_name||'النظام')}</td><td>${esc(a.action)}</td><td>${esc(a.entity)} ${esc(a.entity_id)}</td><td>${esc(a.details)}</td><td>${esc(a.created_at)}</td></tr>`).join('')}</table></div>`}
 init().catch(e=>console.error(e));
 
+
+
+async function tasks(){
+ const [vr,tr]=await Promise.all([
+  api('/api/admin/tasks/volunteers'),
+  api('/api/admin/tasks')
+ ]);
+
+ const volunteers=vr.items||[];
+ const items=tr.items||[];
+
+ const statusLabel=status=>{
+  if(status==='new')return '🆕 جديدة';
+  if(status==='in_progress')return '⏳ قيد التنفيذ';
+  if(status==='completed')return '✅ مكتملة';
+  return status||'—';
+ };
+
+ const volunteerOptions=volunteers.map(v=>
+  `<option value="${v.id}">${esc(v.name)}${v.department?` — ${esc(v.department)}`:''}</option>`
+ ).join('');
+
+ const rows=items.length ? items.map(t=>`
+  <tr>
+   <td>${esc(t.volunteer_name||'—')}</td>
+   <td>${esc(t.department||'—')}</td>
+   <td>
+    <b>${esc(t.title)}</b>
+    ${t.description?`<div class="muted" style="margin-top:5px">${esc(t.description)}</div>`:''}
+   </td>
+   <td>${t.due_date?esc(t.due_date):'—'}</td>
+   <td>${statusLabel(t.status)}</td>
+   <td>${esc(t.created_by_name||'—')}</td>
+  </tr>
+ `).join('') : `
+  <tr>
+   <td colspan="6" class="muted">لا توجد مهام حتى الآن.</td>
+  </tr>
+ `;
+
+ content.innerHTML=`
+  <div class="panel">
+   <h2>📋 إسناد مهمة</h2>
+   <p class="muted">اختر المتطوع وحدد المهمة وتاريخ التسليم.</p>
+
+   ${volunteers.length ? `
+   <form id="taskForm">
+    <div class="formGrid">
+
+     <label class="field">
+      <span>المتطوع</span>
+      <select id="taskVolunteer" required>
+       <option value="">اختر المتطوع</option>
+       ${volunteerOptions}
+      </select>
+     </label>
+
+     <label class="field">
+      <span>عنوان المهمة</span>
+      <input id="taskTitle" maxlength="200" required
+       placeholder="مثال: تجهيز تقرير الفعالية">
+     </label>
+
+     <label class="field">
+      <span>تاريخ التسليم</span>
+      <input id="taskDueDate" type="date">
+     </label>
+
+     <label class="field" style="grid-column:1/-1">
+      <span>تفاصيل المهمة</span>
+      <textarea id="taskDescription" rows="4"
+       placeholder="اكتب تفاصيل المهمة المطلوبة..."></textarea>
+     </label>
+
+    </div>
+
+    <button class="btn green" type="submit">إسناد المهمة</button>
+   </form>
+   ` : `
+    <div class="notice">لا يوجد متطوعون متاحون لإسناد مهمة حاليًا.</div>
+   `}
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+   <h2>المهام الحالية</h2>
+
+   <div style="overflow:auto">
+    <table>
+     <thead>
+      <tr>
+       <th>المتطوع</th>
+       <th>القسم</th>
+       <th>المهمة</th>
+       <th>التسليم</th>
+       <th>الحالة</th>
+       <th>أُسندت بواسطة</th>
+      </tr>
+     </thead>
+     <tbody>${rows}</tbody>
+    </table>
+   </div>
+  </div>
+ `;
+
+ const form=document.getElementById('taskForm');
+
+ if(form){
+  form.onsubmit=async e=>{
+   e.preventDefault();
+
+   const volunteer_id=Number(document.getElementById('taskVolunteer').value);
+   const title=document.getElementById('taskTitle').value.trim();
+   const description=document.getElementById('taskDescription').value.trim();
+   const due_date=document.getElementById('taskDueDate').value;
+
+   if(!volunteer_id || !title){
+    alert('اختر المتطوع واكتب عنوان المهمة');
+    return;
+   }
+
+   try{
+    await api('/api/admin/tasks',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({
+      volunteer_id,
+      title,
+      description,
+      due_date
+     })
+    });
+
+    alert('✅ تم إسناد المهمة بنجاح');
+    await tasks();
+
+   }catch(err){
+    alert(err.message||'تعذر إسناد المهمة');
+   }
+  };
+ }
+}
 
 async function volunteers(){
  const d=await api('/api/admin/volunteers');

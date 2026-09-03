@@ -840,6 +840,112 @@ const server=http.createServer(async (req,res)=>{
   }
 
 
+
+  // Volunteer tasks: list own tasks
+  if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
+   const token=parseCookies(req).rouh_volunteer_session;
+
+   if(!token)
+    return send(res,401,{error:'يجب تسجيل الدخول'});
+
+   const volunteer=db.prepare(`
+    SELECT v.id,v.name,v.department
+    FROM volunteer_sessions s
+    JOIN volunteers v ON v.id=s.volunteer_id
+    WHERE s.token=?
+      AND s.expires_at>CURRENT_TIMESTAMP
+      AND v.active=1
+      AND v.deleted_at IS NULL
+   `).get(token);
+
+   if(!volunteer)
+    return send(res,401,{error:'انتهت الجلسة'});
+
+   const items=db.prepare(`
+    SELECT t.id,
+           t.title,
+           t.description,
+           t.due_date,
+           t.status,
+           t.created_at,
+           t.completed_at,
+           u.name created_by_name
+    FROM volunteer_tasks t
+    LEFT JOIN users u ON u.id=t.created_by
+    WHERE t.volunteer_id=?
+    ORDER BY
+     CASE t.status
+      WHEN 'new' THEN 1
+      WHEN 'in_progress' THEN 2
+      WHEN 'completed' THEN 3
+      ELSE 4
+     END,
+     t.id DESC
+   `).all(volunteer.id);
+
+   return send(res,200,{items});
+  }
+
+  // Volunteer tasks: update own task status
+  if(pathname.startsWith('/api/volunteer/tasks/') && req.method==='PUT'){
+   const match=pathname.match(/^\/api\/volunteer\/tasks\/(\d+)\/status$/);
+
+   if(match){
+    const token=parseCookies(req).rouh_volunteer_session;
+
+    if(!token)
+     return send(res,401,{error:'يجب تسجيل الدخول'});
+
+    const volunteer=db.prepare(`
+     SELECT v.id
+     FROM volunteer_sessions s
+     JOIN volunteers v ON v.id=s.volunteer_id
+     WHERE s.token=?
+       AND s.expires_at>CURRENT_TIMESTAMP
+       AND v.active=1
+       AND v.deleted_at IS NULL
+    `).get(token);
+
+    if(!volunteer)
+     return send(res,401,{error:'انتهت الجلسة'});
+
+    const taskId=Number(match[1]);
+    const task=db.prepare(`
+     SELECT id,status
+     FROM volunteer_tasks
+     WHERE id=? AND volunteer_id=?
+    `).get(taskId,volunteer.id);
+
+    if(!task)
+     return send(res,404,{error:'المهمة غير موجودة'});
+
+    const b=await body(req);
+    const status=String(b.status||'');
+
+    if(!['in_progress','completed'].includes(status))
+     return send(res,400,{error:'حالة المهمة غير صحيحة'});
+
+    if(task.status==='completed')
+     return send(res,400,{error:'المهمة مكتملة بالفعل'});
+
+    if(task.status==='new' && status==='completed')
+     return send(res,400,{error:'ابدأ المهمة أولًا قبل إكمالها'});
+
+    db.prepare(`
+     UPDATE volunteer_tasks
+     SET status=?,
+         updated_at=CURRENT_TIMESTAMP,
+         completed_at=CASE
+          WHEN ?='completed' THEN CURRENT_TIMESTAMP
+          ELSE NULL
+         END
+     WHERE id=? AND volunteer_id=?
+    `).run(status,status,taskId,volunteer.id);
+
+    return send(res,200,{ok:true,status});
+   }
+  }
+
   if(pathname==='/api/volunteer/department' && req.method==='GET'){
    const token=parseCookies(req).rouh_volunteer_session;
 
@@ -1224,6 +1330,127 @@ const server=http.createServer(async (req,res)=>{
      item &&
      item.department===user.department
     );
+   }
+
+
+   // Tasks - available volunteers
+   if(pathname==='/api/admin/tasks/volunteers' && req.method==='GET'){
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    let items;
+
+    if(isOwnerOrDeputy(user) || isHRAdmin){
+     items=db.prepare(`
+      SELECT id,name,username,department
+      FROM volunteers
+      WHERE active=1
+        AND deleted_at IS NULL
+      ORDER BY department,name
+     `).all();
+    }else if(user.role==='admin'){
+     items=db.prepare(`
+      SELECT id,name,username,department
+      FROM volunteers
+      WHERE active=1
+        AND deleted_at IS NULL
+        AND department=?
+      ORDER BY name
+     `).all(user.department);
+    }else{
+     return send(res,403,{error:'لا تملك الصلاحية'});
+    }
+
+    return send(res,200,{items});
+   }
+
+   // Tasks - list
+   if(pathname==='/api/admin/tasks' && req.method==='GET'){
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    let items;
+
+    if(isOwnerOrDeputy(user) || isHRAdmin){
+     items=db.prepare(`
+      SELECT t.*,v.name volunteer_name,u.name created_by_name
+      FROM volunteer_tasks t
+      JOIN volunteers v ON v.id=t.volunteer_id
+      LEFT JOIN users u ON u.id=t.created_by
+      ORDER BY t.id DESC
+     `).all();
+    }else if(user.role==='admin'){
+     items=db.prepare(`
+      SELECT t.*,v.name volunteer_name,u.name created_by_name
+      FROM volunteer_tasks t
+      JOIN volunteers v ON v.id=t.volunteer_id
+      LEFT JOIN users u ON u.id=t.created_by
+      WHERE t.department=?
+      ORDER BY t.id DESC
+     `).all(user.department);
+    }else{
+     return send(res,403,{error:'لا تملك الصلاحية'});
+    }
+
+    return send(res,200,{items});
+   }
+
+   // Tasks - create
+   if(pathname==='/api/admin/tasks' && req.method==='POST'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const b=await body(req);
+    const volunteerId=Number(b.volunteer_id);
+    const title=String(b.title||'').trim();
+    const description=String(b.description||'').trim();
+    const dueDate=String(b.due_date||'').trim();
+
+    if(!volunteerId || !title)
+     return send(res,400,{error:'اختر المتطوع واكتب عنوان المهمة'});
+
+    if(title.length>200 || description.length>5000)
+     return send(res,400,{error:'بيانات المهمة أطول من الحد المسموح'});
+
+    const volunteer=db.prepare(`
+     SELECT id,name,department
+     FROM volunteers
+     WHERE id=?
+       AND active=1
+       AND deleted_at IS NULL
+    `).get(volunteerId);
+
+    if(!volunteer)
+     return send(res,404,{error:'المتطوع غير موجود أو حسابه غير فعال'});
+
+    if(!canManageVolunteer(user,volunteer))
+     return send(res,403,{error:'لا يمكنك إعطاء مهمة لمتطوع من قسم آخر'});
+
+    const r=db.prepare(`
+     INSERT INTO volunteer_tasks(
+      volunteer_id,department,title,description,due_date,created_by
+     )
+     VALUES(?,?,?,?,?,?)
+    `).run(
+     volunteer.id,
+     volunteer.department||'',
+     title,
+     description,
+     dueDate,
+     user.id
+    );
+
+    audit(
+     user,
+     'create',
+     'volunteer_task',
+     r.lastInsertRowid,
+     `${title} - ${volunteer.name}`
+    );
+
+    return send(res,201,{ok:true,id:r.lastInsertRowid});
    }
 
    // Volunteer applications - Owner/Admin only
@@ -2602,5 +2829,26 @@ try{
 }catch(e){
  console.error('Database migration error:',e);
 }
+
+
+// Volunteer tasks
+db.exec(`
+ CREATE TABLE IF NOT EXISTS volunteer_tasks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  volunteer_id INTEGER NOT NULL,
+  department TEXT NOT NULL DEFAULT '',
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  due_date TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'new'
+   CHECK(status IN ('new','in_progress','completed')),
+  created_by INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  completed_at TEXT DEFAULT NULL,
+  FOREIGN KEY(volunteer_id) REFERENCES volunteers(id),
+  FOREIGN KEY(created_by) REFERENCES users(id)
+ );
+`);
 
 server.listen(PORT,'0.0.0.0',()=>console.log(`Rouh website: http://localhost:${PORT}`));

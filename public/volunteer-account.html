@@ -193,6 +193,11 @@ button{
 </div>
 
 <div class="section">
+<h2>📋 مهامي</h2>
+<div id="volunteerTasks">جارٍ تحميل المهام...</div>
+</div>
+
+<div class="section">
 <h2>👤 مسؤولو قسمي</h2>
 <div id="departmentAdmins">
 جارٍ التحميل...
@@ -237,6 +242,98 @@ function escapeHtml(value){
   .replaceAll("'","&#39;");
 }
 
+
+
+async function loadTasks(){
+ const el=document.getElementById('volunteerTasks');
+ if(!el)return;
+
+ try{
+  const response=await fetch('/api/volunteer/tasks');
+  const data=await response.json();
+
+  if(!response.ok)
+   throw new Error(data.error||'تعذر تحميل المهام');
+
+  const items=data.items||[];
+
+  if(!items.length){
+   el.innerHTML='<div class="muted">لا توجد مهام مسندة إليك حاليًا 🌱</div>';
+   return;
+  }
+
+  el.innerHTML=items.map(task=>{
+   let status='';
+   let action='';
+
+   if(task.status==='new'){
+    status='🆕 جديدة';
+    action=`<button type="button"
+     onclick="updateTaskStatus(${task.id},'in_progress')">
+     ابدأ المهمة ⏳
+    </button>`;
+   }
+   else if(task.status==='in_progress'){
+    status='⏳ قيد التنفيذ';
+    action=`<button type="button"
+     onclick="updateTaskStatus(${task.id},'completed')">
+     تم الإنجاز ✅
+    </button>`;
+   }
+   else{
+    status='✅ مكتملة';
+    action='<div class="muted">تم إنجاز المهمة بنجاح 💚</div>';
+   }
+
+   return `
+    <div class="workItem" style="margin-bottom:12px">
+     <strong>${escapeHtml(task.title||'')}</strong>
+
+     ${task.description
+      ? `<p>${escapeHtml(task.description)}</p>`
+      : ''}
+
+     <p><b>الحالة:</b> ${status}</p>
+
+     ${task.due_date
+      ? `<p><b>موعد التسليم:</b> ${escapeHtml(task.due_date)}</p>`
+      : ''}
+
+     <div class="muted" style="margin-bottom:10px">
+      أُسندت بواسطة:
+      ${escapeHtml(task.created_by_name||'إدارة روح')}
+     </div>
+
+     ${action}
+    </div>
+   `;
+  }).join('');
+
+ }catch(error){
+  el.innerHTML=
+   `<div class="muted">${escapeHtml(error.message||'تعذر تحميل المهام')}</div>`;
+ }
+}
+
+async function updateTaskStatus(id,status){
+ try{
+  const response=await fetch(`/api/volunteer/tasks/${id}/status`,{
+   method:'PUT',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({status})
+  });
+
+  const data=await response.json();
+
+  if(!response.ok)
+   throw new Error(data.error||'تعذر تحديث المهمة');
+
+  await loadTasks();
+
+ }catch(error){
+  alert(error.message||'تعذر تحديث المهمة');
+ }
+}
 
 async function loadAccount(){
 
