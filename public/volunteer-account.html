@@ -193,6 +193,29 @@ button{
 </div>
 
 <div class="section">
+<h2>🤖 مساعدي في روح</h2>
+<p>مساعدك الشخصي لفهم مهامك، ترتيبها، ومساعدتك في العمل داخل روح.</p>
+
+<div id="volunteerAiChat">
+  <p>💚 أهلًا! كيف أقدر أساعدك؟</p>
+</div>
+
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+  <button type="button" onclick="askVolunteerAI('شو مهامي الحالية؟')">📋 مهامي</button>
+  <button type="button" onclick="askVolunteerAI('رتب لي مهامي حسب الأولوية')">🎯 رتب مهامي</button>
+  <button type="button" onclick="askVolunteerAI('شو محتوى وتعليمات قسمي؟')">🏢 قسمي</button>
+  <button type="button" onclick="askVolunteerAI('شو الفعاليات المتاحة؟')">📅 الفعاليات</button>
+</div>
+
+<textarea id="volunteerAiMessage" rows="3"
+ placeholder="اسأل مساعدك في روح..." style="width:100%"></textarea>
+
+<button type="button" onclick="sendVolunteerAI()" style="margin-top:8px">
+إرسال 🤖
+</button>
+</div>
+
+<div class="section">
 <h2>📋 مهامي</h2>
 <div id="volunteerTasks">جارٍ تحميل المهام...</div>
 </div>
@@ -459,6 +482,56 @@ document.getElementById('logout').addEventListener('click',async()=>{
 });
 
 loadAccount();
+
+
+async function askVolunteerAI(message){
+ const input=document.getElementById('volunteerAiMessage');
+ input.value=message;
+ await sendVolunteerAI();
+}
+
+async function sendVolunteerAI(){
+ const input=document.getElementById('volunteerAiMessage');
+ const chat=document.getElementById('volunteerAiChat');
+ const message=input.value.trim();
+
+ if(!message)return;
+
+ chat.innerHTML+=
+  '<p><strong>أنت:</strong> '+escapeHtml(message)+'</p>';
+
+ input.value='';
+
+ const wait=document.createElement('p');
+ wait.textContent='🤖 يفكر...';
+ chat.appendChild(wait);
+
+ try{
+  const r=await fetch('/api/volunteer/ai',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({message})
+  });
+
+  const data=await r.json();
+  wait.remove();
+
+  if(!r.ok)
+   throw new Error(data.error||'تعذر تشغيل المساعد');
+
+  const answer=escapeHtml(data.answer||'')
+   .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+   .replace(/\n/g,'<br>');
+
+  chat.innerHTML+=
+   '<p><strong>🤖 مساعدي:</strong><br>'+answer+'</p>';
+
+ }catch(err){
+  wait.remove();
+  chat.innerHTML+=
+   '<p>'+escapeHtml(err.message)+'</p>';
+ }
+}
 
 </script>
 
