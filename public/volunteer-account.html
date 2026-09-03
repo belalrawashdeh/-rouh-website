@@ -106,10 +106,48 @@ button{
  font-size:14px;
 }
 
+
+.welcomeCard{
+ margin:18px 0 22px;
+ padding:22px 24px;
+ border-radius:22px;
+ background:linear-gradient(135deg,rgba(24,94,66,.14),rgba(255,255,255,.95));
+ border:1px solid rgba(24,94,66,.15);
+ box-shadow:0 12px 35px rgba(0,0,0,.06);
+ animation:welcomeIn .55s ease both;
+}
+
+.welcomeCard h2{
+ margin:0 0 7px;
+ font-size:28px;
+}
+
+.welcomeCard p{
+ margin:0;
+ opacity:.75;
+ font-size:15px;
+}
+
+@keyframes welcomeIn{
+ from{
+  opacity:0;
+  transform:translateY(-12px);
+ }
+ to{
+  opacity:1;
+  transform:translateY(0);
+ }
+}
+
 </style>
 </head>
 
 <body>
+
+<div id="welcomeCard" class="welcomeCard" style="display:none">
+ <h2 id="welcomeTitle"></h2>
+ <p id="welcomeText"></p>
+</div>
 
 <div class="card">
 
@@ -180,7 +218,11 @@ button{
 
 </div>
 
+
+
+
 <div id="message"></div>
+
 
 </div>
 
@@ -209,6 +251,21 @@ async function loadAccount(){
   }
 
   const v=data.volunteer;
+
+  const welcomeCard=document.getElementById('welcomeCard');
+  const welcomeTitle=document.getElementById('welcomeTitle');
+  const welcomeText=document.getElementById('welcomeText');
+
+  if(welcomeCard && welcomeTitle && welcomeText){
+   const firstName=String(v.name||'').trim().split(/\s+/)[0] || 'صديق روح';
+
+   welcomeTitle.textContent=`أهلًا بعودتك يا ${firstName} 👋`;
+   welcomeText.textContent=v.department
+    ? `جاهز تترك أثر اليوم؟ 💚 أنت ضمن قسم ${v.department}`
+    : 'جاهز تترك أثر اليوم؟ 💚';
+
+   welcomeCard.style.display='block';
+  }
 
   document.getElementById('name').textContent=v.name||'';
   document.getElementById('username').textContent=v.username||'';
