@@ -978,6 +978,227 @@ async function volunteers(){
 }
 
 
+
+function chooseWhatsAppMode(){
+ return new Promise(resolve=>{
+  const overlay=document.createElement('div');
+
+  overlay.style.cssText=`
+   position:fixed;
+   inset:0;
+   background:rgba(20,30,38,.48);
+   backdrop-filter:blur(6px);
+   display:flex;
+   align-items:center;
+   justify-content:center;
+   z-index:99999;
+   padding:20px;
+  `;
+
+  overlay.innerHTML=`
+   <div class="rouhWhatsAppDialog">
+    <div class="rouhWhatsAppIcon">💬</div>
+
+    <h2>اختر طريقة فتح الواتساب</h2>
+    <p>كيف تود فتح رابط التواصل؟</p>
+
+    <label class="rouhWhatsAppOption">
+     <input type="radio" name="rouhWhatsappMode" value="web">
+     <span class="rouhRadio"></span>
+     <span class="rouhWhatsAppText">
+      <strong>واتساب ويب</strong>
+      <small>فتح المحادثة في المتصفح</small>
+     </span>
+    </label>
+
+    <label class="rouhWhatsAppOption">
+     <input type="radio" name="rouhWhatsappMode" value="app">
+     <span class="rouhRadio"></span>
+     <span class="rouhWhatsAppText">
+      <strong>واتساب تطبيق</strong>
+      <small>فتح المحادثة في تطبيق واتساب</small>
+     </span>
+    </label>
+
+    <div class="rouhWhatsAppActions">
+     <button type="button" data-cancel>إلغاء</button>
+     <button type="button" data-confirm disabled>فتح واتساب</button>
+    </div>
+   </div>
+  `;
+
+  const style=document.createElement('style');
+
+  style.textContent=`
+   .rouhWhatsAppDialog{
+    width:min(430px,100%);
+    background:#fff;
+    border-radius:30px;
+    padding:30px;
+    box-shadow:0 25px 80px rgba(0,0,0,.25);
+    direction:rtl;
+    font-family:inherit;
+   }
+
+   .rouhWhatsAppIcon{
+    width:52px;
+    height:52px;
+    display:grid;
+    place-items:center;
+    background:#edf5ed;
+    border-radius:16px;
+    font-size:27px;
+    margin-bottom:15px;
+   }
+
+   .rouhWhatsAppDialog h2{
+    margin:0 0 5px;
+    color:#263747;
+    font-size:24px;
+   }
+
+   .rouhWhatsAppDialog>p{
+    margin:0 0 22px;
+    color:#6f777d;
+    font-size:14px;
+   }
+
+   .rouhWhatsAppOption{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    padding:17px;
+    margin:10px 0;
+    border:2px solid #e8ded1;
+    border-radius:19px;
+    cursor:pointer;
+    transition:.18s;
+   }
+
+   .rouhWhatsAppOption:hover,
+   .rouhWhatsAppOption.selected{
+    border-color:#7f9880;
+    background:#f1f6f0;
+   }
+
+   .rouhWhatsAppOption input{
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
+   }
+
+   .rouhRadio{
+    width:23px;
+    height:23px;
+    min-width:23px;
+    border:3px solid #a4adb3;
+    border-radius:50%;
+    position:relative;
+   }
+
+   .rouhWhatsAppOption.selected .rouhRadio{
+    border-color:#718b73;
+   }
+
+   .rouhWhatsAppOption.selected .rouhRadio:after{
+    content:"";
+    position:absolute;
+    width:11px;
+    height:11px;
+    border-radius:50%;
+    background:#718b73;
+    top:3px;
+    left:3px;
+   }
+
+   .rouhWhatsAppText strong{
+    display:block;
+    color:#263747;
+    font-size:16px;
+   }
+
+   .rouhWhatsAppText small{
+    display:block;
+    color:#6f777d;
+    font-size:12px;
+    margin-top:3px;
+   }
+
+   .rouhWhatsAppActions{
+    display:flex;
+    gap:10px;
+    justify-content:flex-start;
+    margin-top:23px;
+   }
+
+   .rouhWhatsAppActions button{
+    border-radius:999px;
+    padding:11px 22px;
+    cursor:pointer;
+    font:inherit;
+   }
+
+   .rouhWhatsAppActions [data-cancel]{
+    background:#fff;
+    color:#263747;
+    border:1px solid #e8ded1;
+   }
+
+   .rouhWhatsAppActions [data-confirm]{
+    background:#6f826f;
+    color:#fff;
+    border:0;
+   }
+
+   .rouhWhatsAppActions [data-confirm]:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+   }
+
+   @media(max-width:500px){
+    .rouhWhatsAppDialog{
+     padding:23px;
+     border-radius:24px;
+    }
+   }
+  `;
+
+  document.head.appendChild(style);
+  document.body.appendChild(overlay);
+
+  const options=overlay.querySelectorAll('.rouhWhatsAppOption');
+  const confirm=overlay.querySelector('[data-confirm]');
+
+  options.forEach(option=>{
+   option.addEventListener('click',()=>{
+    options.forEach(x=>x.classList.remove('selected'));
+    option.classList.add('selected');
+    option.querySelector('input').checked=true;
+    confirm.disabled=false;
+   });
+  });
+
+  overlay.querySelector('[data-cancel]').onclick=()=>{
+   overlay.remove();
+   style.remove();
+   resolve(null);
+  };
+
+  confirm.onclick=()=>{
+   const selected=overlay.querySelector(
+    'input[name="rouhWhatsappMode"]:checked'
+   );
+
+   if(!selected) return;
+
+   overlay.remove();
+   style.remove();
+
+   resolve(selected.value);
+  };
+ });
+}
+
 function normalizeWhatsAppPhone(phone){
  let p=String(phone||'').replace(/\D/g,'');
 
@@ -1193,10 +1414,7 @@ async function changeVolunteerDepartment(v){
    '&type=phone_number&app_absent=0&text='+
    encodeURIComponent(message);
 
-  const openMode=prompt(
-   'كيف تريد فتح واتساب؟\n\n1 = WhatsApp Web\n2 = تطبيق WhatsApp',
-   '1'
-  );
+  const openMode=await chooseWhatsAppMode();
 
   if(openMode===null) return;
 
