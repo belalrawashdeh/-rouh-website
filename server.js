@@ -1678,6 +1678,83 @@ ${message}`;
     return send(res,200,{items});
    }
 
+   // Volunteer profile + real task statistics
+   if(
+    pathname.startsWith('/api/admin/volunteers/') &&
+    req.method==='GET'
+   ){
+    const id=Number(pathname.split('/').pop());
+
+    if(!id)
+     return send(res,400,{error:'معرّف المتطوع غير صحيح'});
+
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    const volunteer=db.prepare(`
+     SELECT
+      v.id,
+      v.name,
+      v.email,
+      v.phone,
+      v.department,
+      v.active,
+      v.created_at,
+      va.major,
+      va.level,
+      va.city,
+      va.status application_status,
+      va.department_approval
+     FROM volunteers v
+     LEFT JOIN volunteer_applications va
+      ON va.id=v.application_id
+     WHERE v.id=?
+       AND v.deleted_at IS NULL
+    `).get(id);
+
+    if(!volunteer)
+     return send(res,404,{error:'المتطوع غير موجود'});
+
+    const canView =
+     isOwnerOrDeputy(user) ||
+     isHRAdmin ||
+     (
+      user.role==='admin' &&
+      user.department===volunteer.department
+     );
+
+    if(!canView)
+     return send(res,403,{error:'لا تملك صلاحية عرض هذا المتطوع'});
+
+    const stats=db.prepare(`
+     SELECT
+      COUNT(*) total,
+      SUM(CASE WHEN status='new' THEN 1 ELSE 0 END) new_tasks,
+      SUM(CASE WHEN status='in_progress' THEN 1 ELSE 0 END) in_progress,
+      SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) completed,
+      MAX(updated_at) last_activity
+     FROM volunteer_tasks
+     WHERE volunteer_id=?
+    `).get(id);
+
+    const total=Number(stats.total||0);
+    const completed=Number(stats.completed||0);
+
+    volunteer.task_stats={
+     total,
+     new:Number(stats.new_tasks||0),
+     in_progress:Number(stats.in_progress||0),
+     completed,
+     completion_rate:total
+      ? Math.round((completed/total)*100)
+      : 0,
+     last_activity:stats.last_activity||null
+    };
+
+    return send(res,200,{volunteer});
+   }
+
    // Tasks - list
    if(pathname==='/api/admin/tasks' && req.method==='GET'){
     const isHRAdmin=
