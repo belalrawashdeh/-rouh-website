@@ -277,26 +277,59 @@ async function dashboard(){
 
  if(d.dashboardType==='department'){
   content.innerHTML=`
-   <div class="panel">
-    <h3>${esc(d.department||'القسم')}</h3>
-    <p class="muted">لوحة التحكم الخاصة بقسمك.</p>
+   <div class="deptDashboardHero">
+    <div>
+     <span class="deptKicker">ROUH DEPARTMENT</span>
+     <h2>🏢 ${esc(d.department||'القسم')}</h2>
+     <p>لوحة التحكم الخاصة بقسمك ومتابعة فريقك.</p>
+    </div>
+    <div class="deptHeroIcon">🌱</div>
    </div>
 
-   <div class="grid grid4">
-    <div class="panel">
-     <b>عدد المنضمين للقسم</b>
-     <h2>${d.counts.organizers}</h2>
+   <div class="deptStats">
+    <div class="deptStat">
+     <span>👥</span>
+     <b>${d.counts.organizers}</b>
+     <small>المنضمون للقسم</small>
     </div>
 
-    <div class="panel">
-     <b>الحسابات الفعّالة</b>
-     <h2>${d.counts.activeAccounts}</h2>
+    <div class="deptStat">
+     <span>🟢</span>
+     <b>${d.counts.activeAccounts}</b>
+     <small>الحسابات الفعّالة</small>
     </div>
 
-    <div class="panel">
+    <div class="deptStat">
+     <span>📂</span>
+     <b>${d.counts.departmentContent}</b>
+     <small>محتوى القسم</small>
+    </div>
+   </div>
+
+   <div class="deptQuickGrid">
+    <button onclick="loadTab('tasks')">
+     <span>📋</span>
+     <b>المهام</b>
+     <small>إدارة ومتابعة مهام القسم</small>
+    </button>
+
+    <button onclick="loadTab('volunteers')">
+     <span>👥</span>
+     <b>المتطوعون</b>
+     <small>متابعة أعضاء القسم</small>
+    </button>
+
+    <button onclick="loadTab('department-work')">
+     <span>📂</span>
      <b>محتوى القسم</b>
-     <h2>${d.counts.departmentContent}</h2>
-    </div>
+     <small>إدارة محتوى القسم</small>
+    </button>
+
+    <button onclick="loadTab('ai')">
+     <span>🤖</span>
+     <b>مساعد روح</b>
+     <small>مساعدك في إدارة العمل</small>
+    </button>
    </div>`;
   return;
  }
