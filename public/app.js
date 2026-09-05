@@ -26,7 +26,7 @@ async function updateVolunteerNavigation(){
    if(v){
     el.href='/volunteer-account';
     el.target='_self';
-    el.textContent='حسابي';
+    el.textContent=id==='navJoin'?'انضم الآن':'انضم إلينا';
    }else{
     el.href='/volunteer-apply';
     el.target='_self';
