@@ -417,6 +417,74 @@ const server=http.createServer(async (req,res)=>{
    });
   }
 
+  // Volunteer notifications
+  if(pathname==='/api/volunteer/notifications' && req.method==='GET'){
+   const token=parseCookies(req).rouh_volunteer_session;
+
+   if(!token)
+    return send(res,401,{error:'يجب تسجيل الدخول'});
+
+   const volunteer=db.prepare(`
+    SELECT v.id
+    FROM volunteer_sessions s
+    JOIN volunteers v ON v.id=s.volunteer_id
+    WHERE s.token=?
+      AND s.expires_at>CURRENT_TIMESTAMP
+      AND v.active=1
+      AND v.deleted_at IS NULL
+   `).get(token);
+
+   if(!volunteer)
+    return send(res,401,{error:'انتهت الجلسة'});
+
+   const items=db.prepare(`
+    SELECT id,title,message,type,is_read,created_at
+    FROM volunteer_notifications
+    WHERE volunteer_id=?
+    ORDER BY id DESC
+    LIMIT 30
+   `).all(volunteer.id);
+
+   const unread=db.prepare(`
+    SELECT COUNT(*) count
+    FROM volunteer_notifications
+    WHERE volunteer_id=? AND is_read=0
+   `).get(volunteer.id);
+
+   return send(res,200,{
+    items,
+    unread:Number(unread.count||0)
+   });
+  }
+
+  if(pathname==='/api/volunteer/notifications/read' && req.method==='PUT'){
+   const token=parseCookies(req).rouh_volunteer_session;
+
+   if(!token)
+    return send(res,401,{error:'يجب تسجيل الدخول'});
+
+   const volunteer=db.prepare(`
+    SELECT v.id
+    FROM volunteer_sessions s
+    JOIN volunteers v ON v.id=s.volunteer_id
+    WHERE s.token=?
+      AND s.expires_at>CURRENT_TIMESTAMP
+      AND v.active=1
+      AND v.deleted_at IS NULL
+   `).get(token);
+
+   if(!volunteer)
+    return send(res,401,{error:'انتهت الجلسة'});
+
+   db.prepare(`
+    UPDATE volunteer_notifications
+    SET is_read=1
+    WHERE volunteer_id=?
+   `).run(volunteer.id);
+
+   return send(res,200,{ok:true});
+  }
+
   if(pathname==='/api/volunteer/me' && req.method==='GET'){
    const token=parseCookies(req).rouh_volunteer_session;
 
@@ -856,7 +924,7 @@ const server=http.createServer(async (req,res)=>{
 
 
   // Volunteer tasks: list own tasks
-  
+
 if(pathname==='/api/volunteer/ai' && req.method==='POST'){
  const token=getCookie(req,'rouh_volunteer_session');
  if(!token) return send(res,401,{error:'غير مسجل الدخول'});
@@ -1830,6 +1898,17 @@ ${message}`;
      description,
      dueDate,
      user.id
+    );
+
+    db.prepare(`
+     INSERT INTO volunteer_notifications
+      (volunteer_id,title,message,type)
+     VALUES (?,?,?,?)
+    `).run(
+     volunteer.id,
+     'مهمة جديدة 📋',
+     `تم إسناد مهمة جديدة لك: ${title}`,
+     'task'
     );
 
     audit(
@@ -3223,7 +3302,19 @@ try{
 
 // Volunteer tasks
 db.exec(`
- CREATE TABLE IF NOT EXISTS volunteer_tasks (
+
+CREATE TABLE IF NOT EXISTS volunteer_notifications (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ volunteer_id INTEGER NOT NULL,
+ title TEXT NOT NULL,
+ message TEXT NOT NULL DEFAULT '',
+ type TEXT NOT NULL DEFAULT 'info',
+ is_read INTEGER NOT NULL DEFAULT 0,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(volunteer_id) REFERENCES volunteers(id)
+);
+
+CREATE TABLE IF NOT EXISTS volunteer_tasks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   volunteer_id INTEGER NOT NULL,
   department TEXT NOT NULL DEFAULT '',
