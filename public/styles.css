@@ -1446,3 +1446,152 @@ header[id]{
   font-size:9px;
  }
 }
+
+/* ===== Volunteer Profile ===== */
+
+.volunteerProfile{
+ margin-bottom:24px;
+}
+
+.profileHeader{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:20px;
+ margin-bottom:25px;
+ padding-bottom:20px;
+ border-bottom:1px solid #e8ece8;
+}
+
+.profileHeader h2{
+ margin:0 0 6px;
+ font-size:27px;
+}
+
+.profileInfoGrid{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:14px;
+ margin-bottom:25px;
+}
+
+.profileInfo{
+ background:#f7f9f6;
+ border:1px solid #e7ece5;
+ border-radius:16px;
+ padding:17px;
+}
+
+.profileInfo span{
+ display:block;
+ color:#718078;
+ font-size:13px;
+ margin-bottom:8px;
+}
+
+.profileInfo b{
+ display:block;
+ word-break:break-word;
+}
+
+.profileSection{
+ margin-top:20px;
+ padding:22px;
+ background:#fafbf9;
+ border:1px solid #e7ece5;
+ border-radius:20px;
+}
+
+.profileSection h3{
+ margin:0 0 18px;
+}
+
+.profileStats{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:14px;
+}
+
+.profileStat{
+ text-align:center;
+ background:white;
+ border:1px solid #e7ece5;
+ border-radius:16px;
+ padding:20px 12px;
+}
+
+.profileStat strong{
+ display:block;
+ font-size:28px;
+ margin-bottom:6px;
+}
+
+.profileStat span{
+ color:#718078;
+ font-size:13px;
+}
+
+.completionBox{
+ margin-top:20px;
+ padding:18px;
+ background:white;
+ border:1px solid #e7ece5;
+ border-radius:16px;
+}
+
+.completionBox>div:first-child{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:12px;
+}
+
+.completionBox strong{
+ font-size:22px;
+}
+
+.progressBar{
+ height:10px;
+ background:#e7ece5;
+ border-radius:99px;
+ overflow:hidden;
+}
+
+.progressBar span{
+ display:block;
+ height:100%;
+ background:#4f7d5c;
+ border-radius:99px;
+ transition:width .4s ease;
+}
+
+@media(max-width:800px){
+ .profileInfoGrid,
+ .profileStats{
+  grid-template-columns:repeat(2,1fr);
+ }
+
+ .profileHeader{
+  align-items:flex-start;
+  flex-direction:column-reverse;
+ }
+
+ .profileHeader .btn{
+  width:100%;
+ }
+}
+
+@media(max-width:500px){
+ .profileInfoGrid,
+ .profileStats{
+  grid-template-columns:1fr;
+ }
+
+ .profileSection{
+  padding:15px;
+ }
+
+ .profileHeader h2{
+  font-size:22px;
+ }
+}

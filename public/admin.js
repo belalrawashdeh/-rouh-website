@@ -930,6 +930,11 @@ async function volunteers(){
         }
        }else{
         actions+=`
+         <button class="btn light"
+          onclick="viewVolunteerProfile(${v.volunteer_id})">
+          👁️ عرض الملف
+         </button>
+
          <span class="notice">
           👤 لديه حساب
           ${v.volunteer_active ? '🟢 فعال' : '🔴 معطل'}
@@ -1011,6 +1016,125 @@ async function volunteers(){
 }
 
 
+
+
+async function viewVolunteerProfile(id){
+ try{
+  const d=await api('/api/admin/volunteers/'+id);
+
+  const v=d.volunteer;
+  const st=v.task_stats||{
+   total:0,
+   new:0,
+   in_progress:0,
+   completed:0,
+   completion_rate:0,
+   last_activity:null
+  };
+
+  content.innerHTML=`
+   <div class="panel volunteerProfile">
+
+    <div class="profileHeader">
+     <button class="btn light" onclick="loadTab('volunteers')">
+      ← العودة للمتطوعين
+     </button>
+
+     <div>
+      <h2>${esc(v.name||'متطوع')}</h2>
+      <p class="muted">
+       ${v.department
+        ? '🏢 '+esc(v.department)
+        : 'لم يتم تحديد القسم'}
+      </p>
+     </div>
+    </div>
+
+    <div class="profileInfoGrid">
+
+     <div class="profileInfo">
+      <span>📧 البريد الإلكتروني</span>
+      <b>${esc(v.email||'-')}</b>
+     </div>
+
+     <div class="profileInfo">
+      <span>📱 رقم الهاتف</span>
+      <b>${esc(v.phone||'-')}</b>
+     </div>
+
+     <div class="profileInfo">
+      <span>👤 اسم المستخدم</span>
+      <b>${esc(v.username||'-')}</b>
+     </div>
+
+     <div class="profileInfo">
+      <span>📅 تاريخ الانضمام</span>
+      <b>${esc(v.created_at||'-')}</b>
+     </div>
+
+    </div>
+
+    <div class="profileSection">
+     <h3>📊 أداء المتطوع</h3>
+
+     <div class="profileStats">
+
+      <div class="profileStat">
+       <strong>${st.total}</strong>
+       <span>إجمالي المهام</span>
+      </div>
+
+      <div class="profileStat">
+       <strong>${st.new}</strong>
+       <span>مهام جديدة</span>
+      </div>
+
+      <div class="profileStat">
+       <strong>${st.in_progress}</strong>
+       <span>قيد التنفيذ</span>
+      </div>
+
+      <div class="profileStat">
+       <strong>${st.completed}</strong>
+       <span>مكتملة</span>
+      </div>
+
+     </div>
+
+     <div class="completionBox">
+      <div>
+       <b>نسبة إنجاز المهام</b>
+       <strong>${st.completion_rate}%</strong>
+      </div>
+
+      <div class="progressBar">
+       <span style="width:${st.completion_rate}%"></span>
+      </div>
+     </div>
+
+     <p class="muted">
+      🕒 آخر نشاط:
+      ${esc(st.last_activity||'لا يوجد نشاط بعد')}
+     </p>
+
+    </div>
+
+   </div>
+  `;
+
+ }catch(e){
+  content.innerHTML=`
+   <div class="panel">
+    <div class="notice error">
+     ${esc(e.message||'تعذر تحميل ملف المتطوع')}
+    </div>
+    <button class="btn light" onclick="loadTab('volunteers')">
+     ← العودة
+    </button>
+   </div>
+  `;
+ }
+}
 
 function chooseWhatsAppMode(){
  return new Promise(resolve=>{
