@@ -725,6 +725,113 @@ async function tasks(){
  }
 }
 
+async function volunteerHours(){
+ const d=await api('/api/admin/volunteer-hours');
+ const items=d.items||[];
+
+ const canReview=
+  me.role==='owner' ||
+  me.system_role==='deputy_owner' ||
+  me.role==='admin';
+
+ const status={
+  pending:'⏳ بانتظار المراجعة',
+  approved:'✅ معتمدة',
+  rejected:'❌ مرفوضة'
+ };
+
+ content.innerHTML=`
+  <div class="panel">
+   <h3>⏱️ الساعات التطوعية</h3>
+
+   <p class="muted">
+    مراجعة الساعات التي سجلها المتطوعون واعتمادها أو رفضها.
+   </p>
+
+   ${
+    !items.length
+     ? '<div class="notice">لا توجد سجلات ساعات حاليًا.</div>'
+     : `
+      <div class="volunteerTableWrap">
+       <table class="volunteerTable">
+        <thead>
+         <tr>
+          <th>المتطوع</th>
+          <th>القسم</th>
+          <th>النشاط</th>
+          <th>الساعات</th>
+          <th>الوصف</th>
+          <th>الحالة</th>
+          <th>الإجراء</th>
+         </tr>
+        </thead>
+
+        <tbody>
+         ${items.map(h=>`
+          <tr>
+           <td>${esc(h.volunteer_name||'-')}</td>
+           <td>${esc(h.department||'-')}</td>
+           <td>${esc(h.activity||'-')}</td>
+           <td><b>${Number(h.hours||0)}</b> ساعة</td>
+           <td>${esc(h.description||'-')}</td>
+           <td>${status[h.status]||h.status}</td>
+           <td>
+            ${
+             canReview && h.status==='pending'
+              ? `
+               <div class="rowActions">
+                <button class="btn green"
+                 onclick="reviewVolunteerHours(${h.id},'approved')">
+                 ✅ اعتماد
+                </button>
+
+                <button class="btn danger"
+                 onclick="reviewVolunteerHours(${h.id},'rejected')">
+                 ❌ رفض
+                </button>
+               </div>
+              `
+              : '<span class="muted">تمت المراجعة</span>'
+            }
+           </td>
+          </tr>
+         `).join('')}
+        </tbody>
+       </table>
+      </div>
+     `
+   }
+  </div>
+ `;
+}
+
+async function reviewVolunteerHours(id,action){
+ const message=
+  action==='approved'
+   ? 'هل تريد اعتماد هذه الساعات؟'
+   : 'هل تريد رفض هذه الساعات؟';
+
+ if(!confirm(message)) return;
+
+ try{
+  await api('/api/admin/volunteer-hours/'+id,{
+   method:'PUT',
+   body:JSON.stringify({action})
+  });
+
+  flash(
+   action==='approved'
+    ? 'تم اعتماد الساعات'
+    : 'تم رفض الساعات'
+  );
+
+  await volunteerHours();
+
+ }catch(e){
+  flash(e.message||'تعذر مراجعة الساعات',true);
+ }
+}
+
 async function volunteers(){
  const d=await api('/api/admin/volunteers');
 

@@ -825,6 +825,60 @@ button{
 </div>
 
 <div class="section">
+<h2>⏱️ ساعاتي التطوعية</h2>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
+ <div class="adminItem">
+  <b id="approvedHours">0</b>
+  <div class="muted">ساعات معتمدة</div>
+ </div>
+
+ <div class="adminItem">
+  <b id="pendingHours">0</b>
+  <div class="muted">بانتظار المراجعة</div>
+ </div>
+</div>
+
+<form id="hoursForm">
+ <input
+  id="hoursValue"
+  type="number"
+  min="0.5"
+  max="24"
+  step="0.5"
+  placeholder="عدد الساعات"
+  required
+  style="width:100%;box-sizing:border-box;margin-bottom:8px;padding:12px"
+ >
+
+ <input
+  id="hoursActivity"
+  type="text"
+  maxlength="200"
+  placeholder="اسم النشاط"
+  required
+  style="width:100%;box-sizing:border-box;margin-bottom:8px;padding:12px"
+ >
+
+ <textarea
+  id="hoursDescription"
+  rows="3"
+  maxlength="2000"
+  placeholder="وصف مختصر للنشاط (اختياري)"
+  style="width:100%;box-sizing:border-box;margin-bottom:8px;padding:12px"
+ ></textarea>
+
+ <button type="submit" class="back">
+  ➕ تسجيل ساعات
+ </button>
+</form>
+
+<div id="hoursList" style="margin-top:15px">
+ جارٍ تحميل الساعات...
+</div>
+</div>
+
+<div class="section">
 <h2>📋 مهامي</h2>
 <div id="volunteerTasks">جارٍ تحميل المهام...</div>
 </div>
@@ -1028,6 +1082,85 @@ async function updateTaskStatus(id,status){
  }
 }
 
+async function loadVolunteerHours(){
+ const list=document.getElementById('hoursList');
+ if(!list)return;
+
+ try{
+  const response=await fetch('/api/volunteer/hours');
+  const data=await response.json();
+
+  if(!response.ok)
+   throw new Error(data.error||'تعذر تحميل الساعات');
+
+  document.getElementById('approvedHours').textContent=
+   Number(data.totals?.approved||0);
+
+  document.getElementById('pendingHours').textContent=
+   Number(data.totals?.pending||0);
+
+  if(!data.items?.length){
+   list.innerHTML='<div class="muted">لم تسجل أي ساعات بعد.</div>';
+   return;
+  }
+
+  const status={
+   pending:'⏳ بانتظار المراجعة',
+   approved:'✅ معتمدة',
+   rejected:'❌ مرفوضة'
+  };
+
+  list.innerHTML=data.items.map(h=>`
+   <div class="workItem">
+    <b>${escapeHtml(h.activity||'نشاط تطوعي')}</b>
+    <div>⏱️ ${Number(h.hours||0)} ساعة</div>
+    <div class="muted">${escapeHtml(h.description||'')}</div>
+    <div style="margin-top:7px">
+     ${status[h.status]||h.status}
+    </div>
+   </div>
+  `).join('');
+
+ }catch(e){
+  list.innerHTML=
+   `<div class="muted">${escapeHtml(e.message||'تعذر تحميل الساعات')}</div>`;
+ }
+}
+
+async function submitVolunteerHours(e){
+ e.preventDefault();
+
+ const hours=Number(document.getElementById('hoursValue').value);
+ const activity=document.getElementById('hoursActivity').value.trim();
+ const description=document.getElementById('hoursDescription').value.trim();
+
+ try{
+  const response=await fetch('/api/volunteer/hours',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({hours,activity,description})
+  });
+
+  const data=await response.json();
+
+  if(!response.ok)
+   throw new Error(data.error||'تعذر تسجيل الساعات');
+
+  alert('✅ تم إرسال الساعات للمراجعة');
+
+  document.getElementById('hoursForm').reset();
+  await loadVolunteerHours();
+
+ }catch(e){
+  alert(e.message||'تعذر تسجيل الساعات');
+ }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+ const form=document.getElementById('hoursForm');
+ if(form) form.addEventListener('submit',submitVolunteerHours);
+});
+
 async function loadAccount(){
 
  try{
@@ -1130,6 +1263,7 @@ async function loadAccount(){
   }
 
   await loadNotifications();
+  await loadVolunteerHours();
 
   document.getElementById('loading').style.display='none';
   document.getElementById('account').style.display='block';

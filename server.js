@@ -1922,6 +1922,234 @@ ${message}`;
     return send(res,201,{ok:true,id:r.lastInsertRowid});
    }
 
+   // Volunteer hours API
+
+   if(pathname==='/api/volunteer/hours' && req.method==='GET'){
+    const token=parseCookies(req).rouh_volunteer_session;
+
+    if(!token)
+     return send(res,401,{error:'يجب تسجيل الدخول'});
+
+    const volunteer=db.prepare(`
+     SELECT v.id,v.name,v.department
+     FROM volunteer_sessions s
+     JOIN volunteers v ON v.id=s.volunteer_id
+     WHERE s.token=?
+       AND s.expires_at>CURRENT_TIMESTAMP
+       AND v.active=1
+       AND v.deleted_at IS NULL
+    `).get(token);
+
+    if(!volunteer)
+     return send(res,401,{error:'انتهت الجلسة'});
+
+    const items=db.prepare(`
+     SELECT id,hours,activity,description,status,
+            created_at,approved_at
+     FROM volunteer_hours
+     WHERE volunteer_id=?
+     ORDER BY id DESC
+    `).all(volunteer.id);
+
+    const totals=db.prepare(`
+     SELECT
+      COALESCE(SUM(CASE WHEN status='approved' THEN hours ELSE 0 END),0) approved,
+      COALESCE(SUM(CASE WHEN status='pending' THEN hours ELSE 0 END),0) pending
+     FROM volunteer_hours
+     WHERE volunteer_id=?
+    `).get(volunteer.id);
+
+    return send(res,200,{
+     items,
+     totals:{
+      approved:Number(totals.approved||0),
+      pending:Number(totals.pending||0)
+     }
+    });
+   }
+
+   if(pathname==='/api/volunteer/hours' && req.method==='POST'){
+    const token=parseCookies(req).rouh_volunteer_session;
+
+    if(!token)
+     return send(res,401,{error:'يجب تسجيل الدخول'});
+
+    const volunteer=db.prepare(`
+     SELECT v.id,v.name,v.department
+     FROM volunteer_sessions s
+     JOIN volunteers v ON v.id=s.volunteer_id
+     WHERE s.token=?
+       AND s.expires_at>CURRENT_TIMESTAMP
+       AND v.active=1
+       AND v.deleted_at IS NULL
+    `).get(token);
+
+    if(!volunteer)
+     return send(res,401,{error:'انتهت الجلسة'});
+
+    const b=await body(req);
+
+    const hours=Number(b.hours);
+    const activity=String(b.activity||'').trim();
+    const description=String(b.description||'').trim();
+
+    if(!Number.isFinite(hours) || hours<=0 || hours>24)
+     return send(res,400,{error:'عدد الساعات يجب أن يكون بين 0 و24'});
+
+    if(!activity)
+     return send(res,400,{error:'اكتب اسم النشاط'});
+
+    if(activity.length>200 || description.length>2000)
+     return send(res,400,{error:'البيانات أطول من الحد المسموح'});
+
+    const r=db.prepare(`
+     INSERT INTO volunteer_hours
+      (volunteer_id,department,hours,activity,description,status,created_by)
+     VALUES(?,?,?,?,?,'pending',NULL)
+    `).run(
+     volunteer.id,
+     volunteer.department||'',
+     hours,
+     activity,
+     description
+    );
+
+    return send(res,201,{
+     ok:true,
+     id:Number(r.lastInsertRowid)
+    });
+   }
+
+      // Volunteer hours - admin review
+   if(pathname==='/api/admin/volunteer-hours' && req.method==='GET'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    let items;
+
+    if(isOwnerOrDeputy(user) || isHRAdmin){
+     items=db.prepare(`
+      SELECT
+       vh.*,
+       v.name AS volunteer_name,
+       v.username AS volunteer_username
+      FROM volunteer_hours vh
+      JOIN volunteers v ON v.id=vh.volunteer_id
+      WHERE v.active=1
+        AND v.deleted_at IS NULL
+      ORDER BY
+       CASE vh.status
+        WHEN 'pending' THEN 1
+        WHEN 'approved' THEN 2
+        ELSE 3
+       END,
+       vh.id DESC
+     `).all();
+    }else{
+     items=db.prepare(`
+      SELECT
+       vh.*,
+       v.name AS volunteer_name,
+       v.username AS volunteer_username
+      FROM volunteer_hours vh
+      JOIN volunteers v ON v.id=vh.volunteer_id
+      WHERE vh.department=?
+        AND v.active=1
+        AND v.deleted_at IS NULL
+      ORDER BY
+       CASE vh.status
+        WHEN 'pending' THEN 1
+        WHEN 'approved' THEN 2
+        ELSE 3
+       END,
+       vh.id DESC
+     `).all(user.department||'');
+    }
+
+    return send(res,200,{items});
+   }
+
+   if(pathname.startsWith('/api/admin/volunteer-hours/') && req.method==='PUT'){
+    if(!['owner','admin'].includes(user.role))
+     return send(res,403,{error:'لا تملك الصلاحية'});
+
+    const id=Number(pathname.split('/').pop());
+    const b=await body(req);
+    const action=String(b.action||'').trim();
+
+    if(!id || !['approved','rejected'].includes(action))
+     return send(res,400,{error:'الإجراء غير صحيح'});
+
+    const item=db.prepare(`
+     SELECT id,volunteer_id,department,status
+     FROM volunteer_hours
+     WHERE id=?
+    `).get(id);
+
+    if(!item)
+     return send(res,404,{error:'طلب الساعات غير موجود'});
+
+    if(user.role==='admin' &&
+       user.department!=='إدارة الموارد البشرية (HR)' &&
+       item.department!==user.department)
+     return send(res,403,{error:'لا يمكنك مراجعة ساعات قسم آخر'});
+
+    if(item.status!=='pending')
+     return send(res,400,{error:'تمت مراجعة طلب الساعات مسبقًا'});
+
+    if(action==='approved'){
+     db.prepare(`
+      UPDATE volunteer_hours
+      SET status='approved',
+          approved_by=?,
+          approved_at=CURRENT_TIMESTAMP
+      WHERE id=?
+    `).run(user.id,id);
+
+     db.prepare(`
+      INSERT INTO volunteer_notifications
+       (volunteer_id,title,message,type)
+      VALUES (?,?,?,'hours')
+     `).run(
+      item.volunteer_id,
+      'تم اعتماد ساعاتك ⏱️',
+      'تم اعتماد الساعات التطوعية التي أرسلتها.'
+     );
+    }else{
+     db.prepare(`
+      UPDATE volunteer_hours
+      SET status='rejected',
+          approved_by=?,
+          approved_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(user.id,id);
+
+     db.prepare(`
+      INSERT INTO volunteer_notifications
+       (volunteer_id,title,message,type)
+      VALUES (?,?,?,'hours')
+     `).run(
+      item.volunteer_id,
+      'لم يتم اعتماد الساعات',
+      'لم يتم اعتماد طلب الساعات التطوعية.'
+     );
+    }
+
+    audit(
+     user,
+     action==='approved'?'approve':'reject',
+     'volunteer_hours',
+     id,
+     `مراجعة ساعات المتطوع`
+    );
+
+    return send(res,200,{ok:true});
+   }
+
    // Volunteer applications - Owner/Admin only
    if(pathname==='/api/admin/volunteers' && req.method==='GET'){
     const isHRAdmin=
@@ -3329,6 +3557,27 @@ CREATE TABLE IF NOT EXISTS volunteer_tasks (
   completed_at TEXT DEFAULT NULL,
   FOREIGN KEY(volunteer_id) REFERENCES volunteers(id),
   FOREIGN KEY(created_by) REFERENCES users(id)
+ );
+`);
+
+// Volunteer hours
+db.exec(`
+ CREATE TABLE IF NOT EXISTS volunteer_hours (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  volunteer_id INTEGER NOT NULL,
+  department TEXT NOT NULL DEFAULT '',
+  hours REAL NOT NULL DEFAULT 0,
+  activity TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending'
+   CHECK(status IN ('pending','approved','rejected')),
+  created_by INTEGER,
+  approved_by INTEGER DEFAULT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  approved_at TEXT DEFAULT NULL,
+  FOREIGN KEY(volunteer_id) REFERENCES volunteers(id),
+  FOREIGN KEY(created_by) REFERENCES users(id),
+  FOREIGN KEY(approved_by) REFERENCES users(id)
  );
 `);
 
