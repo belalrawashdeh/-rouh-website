@@ -1271,14 +1271,11 @@ async function openVolunteerWhatsApp(v){
   '&type=phone_number&app_absent=0&text=' +
   encodeURIComponent(message);
 
- const openMode=prompt(
-  'كيف تريد فتح واتساب؟\n\n1 = WhatsApp Web\n2 = تطبيق WhatsApp',
-  '1'
- );
+ const openMode=await chooseWhatsAppMode();
 
  if(openMode===null) return;
 
- if(openMode.trim()==='2'){
+ if(openMode==='app'){
   window.location.href=
    'whatsapp://send?phone='+
    phone+
@@ -1418,7 +1415,7 @@ async function changeVolunteerDepartment(v){
 
   if(openMode===null) return;
 
-  if(openMode.trim()==='2'){
+  if(openMode==='app'){
    window.location.href=
     'whatsapp://send?phone='+
     phone+
@@ -1580,14 +1577,11 @@ async function updateVolunteer(id,status){
      '&type=phone_number&app_absent=0&text='+
      encodeURIComponent(message);
 
-    const openMode=prompt(
-     'كيف تريد فتح واتساب؟\n\n1 = WhatsApp Web\n2 = تطبيق WhatsApp',
-     '1'
-    );
+    const openMode=await chooseWhatsAppMode();
 
     if(openMode===null) return;
 
-    if(openMode.trim()==='2'){
+    if(openMode==='app'){
      window.location.href=
       'whatsapp://send?phone='+
       phone+
