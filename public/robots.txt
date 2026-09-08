@@ -1,4 +1,14 @@
 User-agent: *
 Allow: /
 
+Disallow: /admin
+Disallow: /admin.html
+Disallow: /volunteer-account
+Disallow: /volunteer-account.html
+Disallow: /volunteer-login
+Disallow: /volunteer-login.html
+Disallow: /volunteer-register
+Disallow: /volunteer-register.html
+Disallow: /googlec6373ebe16d18c55.html
+
 Sitemap: https://rouh-website-production.up.railway.app/sitemap.xml
