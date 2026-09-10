@@ -1137,17 +1137,25 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
            t.due_date,
            t.status,
            t.created_at,
+           t.started_at,
+           t.submitted_at,
            t.completed_at,
+           t.submission_note,
+           t.submission_url,
+           t.revision_note,
            u.name created_by_name
     FROM volunteer_tasks t
     LEFT JOIN users u ON u.id=t.created_by
     WHERE t.volunteer_id=?
     ORDER BY
      CASE t.status
-      WHEN 'new' THEN 1
-      WHEN 'in_progress' THEN 2
-      WHEN 'completed' THEN 3
-      ELSE 4
+      WHEN 'revision_requested' THEN 1
+      WHEN 'new' THEN 2
+      WHEN 'in_progress' THEN 3
+      WHEN 'submitted' THEN 4
+      WHEN 'not_completed' THEN 5
+      WHEN 'completed' THEN 6
+      ELSE 7
      END,
      t.id DESC
    `).all(volunteer.id);
@@ -1179,6 +1187,7 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
      return send(res,401,{error:'انتهت الجلسة'});
 
     const taskId=Number(match[1]);
+
     const task=db.prepare(`
      SELECT id,status
      FROM volunteer_tasks
@@ -1190,33 +1199,84 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
 
     const b=await body(req);
     const status=String(b.status||'');
+    const submissionNote=String(b.submission_note||'').trim();
+    const submissionUrl=String(b.submission_url||'').trim();
 
-    if(!['in_progress','completed','not_completed'].includes(status))
+    if(!['in_progress','submitted','not_completed'].includes(status))
      return send(res,400,{error:'حالة المهمة غير صحيحة'});
 
-    if(task.status==='completed')
-     return send(res,400,{error:'المهمة مكتملة بالفعل'});
+    if(['completed','not_completed','submitted'].includes(task.status))
+     return send(res,400,{error:'لا يمكن تعديل هذه المهمة بهذه الحالة'});
 
-    if(task.status==='not_completed')
-     return send(res,400,{error:'تم تسجيل المهمة مسبقًا على أنها لم يتم إنهاؤها'});
-
+    // New task can only be started
     if(task.status==='new' && status!=='in_progress')
      return send(res,400,{error:'يجب بدء تنفيذ المهمة أولًا'});
 
+    // Revision request can only return to work
+    if(task.status==='revision_requested' && status!=='in_progress')
+     return send(res,400,{error:'ابدأ تعديل المهمة أولًا'});
+
+    // In-progress task can only be submitted or marked unfinished
     if(task.status==='in_progress' &&
-       !['completed','not_completed'].includes(status))
+       !['submitted','not_completed'].includes(status))
      return send(res,400,{error:'انتقال حالة المهمة غير مسموح'});
+
+    if(status==='submitted' && !submissionNote && !submissionUrl)
+     return send(res,400,{
+      error:'أضف ملاحظة للتسليم أو رابط العمل على الأقل'
+     });
+
+    if(submissionUrl && submissionUrl.length>1000)
+     return send(res,400,{error:'رابط التسليم طويل جدًا'});
+
+    if(submissionNote.length>5000)
+     return send(res,400,{error:'ملاحظة التسليم طويلة جدًا'});
 
     db.prepare(`
      UPDATE volunteer_tasks
-     SET status=?,
-         updated_at=CURRENT_TIMESTAMP,
-         completed_at=CASE
-          WHEN ?='completed' THEN CURRENT_TIMESTAMP
-          ELSE NULL
-         END
+     SET
+      status=?,
+      updated_at=CURRENT_TIMESTAMP,
+
+      started_at=CASE
+       WHEN ?='in_progress' AND started_at IS NULL
+        THEN CURRENT_TIMESTAMP
+       ELSE started_at
+      END,
+
+      submitted_at=CASE
+       WHEN ?='submitted' THEN CURRENT_TIMESTAMP
+       WHEN ?='in_progress' THEN NULL
+       ELSE submitted_at
+      END,
+
+      submission_note=CASE
+       WHEN ?='submitted' THEN ?
+       ELSE submission_note
+      END,
+
+      submission_url=CASE
+       WHEN ?='submitted' THEN ?
+       ELSE submission_url
+      END,
+
+      revision_note=CASE
+       WHEN ?='in_progress' THEN ''
+       ELSE revision_note
+      END
+
      WHERE id=? AND volunteer_id=?
-    `).run(status,status,taskId,volunteer.id);
+    `).run(
+     status,
+     status,
+     status,
+     status,
+     status,submissionNote,
+     status,submissionUrl,
+     status,
+     taskId,
+     volunteer.id
+    );
 
     return send(res,200,{ok:true,status});
    }
@@ -1877,6 +1937,8 @@ ${message}`;
       SUM(CASE WHEN status='new' THEN 1 ELSE 0 END) new_tasks,
       SUM(CASE WHEN status='in_progress' THEN 1 ELSE 0 END) in_progress,
       SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) completed,
+      SUM(CASE WHEN status='submitted' THEN 1 ELSE 0 END) submitted,
+      SUM(CASE WHEN status='revision_requested' THEN 1 ELSE 0 END) revision_requested,
       SUM(CASE WHEN status='not_completed' THEN 1 ELSE 0 END) not_completed,
       MAX(updated_at) last_activity
      FROM volunteer_tasks
@@ -1891,6 +1953,8 @@ ${message}`;
      new:Number(stats.new_tasks||0),
      in_progress:Number(stats.in_progress||0),
      completed,
+     submitted:Number(stats.submitted||0),
+     revision_requested:Number(stats.revision_requested||0),
      not_completed:Number(stats.not_completed||0),
      completion_rate:total
       ? Math.round((completed/total)*100)
@@ -1998,6 +2062,105 @@ ${message}`;
     );
 
     return send(res,201,{ok:true,id:r.lastInsertRowid});
+   }
+
+   // Tasks - review submitted task
+   const taskReviewMatch=pathname.match(
+    /^\/api\/admin\/tasks\/(\d+)\/review$/
+   );
+
+   if(taskReviewMatch && req.method==='PUT'){
+    const taskId=Number(taskReviewMatch[1]);
+
+    const task=db.prepare(`
+     SELECT t.*,v.name volunteer_name
+     FROM volunteer_tasks t
+     JOIN volunteers v ON v.id=t.volunteer_id
+     WHERE t.id=?
+    `).get(taskId);
+
+    if(!task)
+     return send(res,404,{error:'المهمة غير موجودة'});
+
+    const isHRAdmin=
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    const canReview=
+     isOwnerOrDeputy(user) ||
+     isHRAdmin ||
+     (
+      user.role==='admin' &&
+      user.department===task.department
+     );
+
+    if(!canReview)
+     return send(res,403,{
+      error:'لا تملك صلاحية مراجعة مهمة من قسم آخر'
+     });
+
+    if(task.status!=='submitted')
+     return send(res,400,{
+      error:'يمكن مراجعة المهام التي تم تسليمها فقط'
+     });
+
+    const b=await body(req);
+    const action=String(b.action||'');
+    const revisionNote=String(b.revision_note||'').trim();
+
+    if(!['completed','revision_requested'].includes(action))
+     return send(res,400,{error:'إجراء المراجعة غير صحيح'});
+
+    if(action==='revision_requested' && !revisionNote)
+     return send(res,400,{
+      error:'اكتب ملاحظة التعديل المطلوبة'
+     });
+
+    db.prepare(`
+     UPDATE volunteer_tasks
+     SET
+      status=?,
+      revision_note=?,
+      reviewed_by=?,
+      reviewed_at=CURRENT_TIMESTAMP,
+      completed_at=CASE
+       WHEN ?='completed' THEN CURRENT_TIMESTAMP
+       ELSE NULL
+      END,
+      updated_at=CURRENT_TIMESTAMP
+     WHERE id=?
+    `).run(
+     action,
+     action==='revision_requested' ? revisionNote : '',
+     user.id,
+     action,
+     taskId
+    );
+
+    db.prepare(`
+     INSERT INTO volunteer_notifications
+      (volunteer_id,title,message,type)
+     VALUES(?,?,?,?)
+    `).run(
+     task.volunteer_id,
+     action==='completed'
+      ? 'تم اعتماد المهمة ✅'
+      : 'مطلوب تعديل على المهمة ↩️',
+     action==='completed'
+      ? `تم اعتماد إنجاز مهمتك: ${task.title}`
+      : `تمت إعادة مهمتك للتعديل: ${task.title} — ${revisionNote}`,
+     'task'
+    );
+
+    audit(
+     user,
+     action==='completed' ? 'approve' : 'request_revision',
+     'volunteer_task',
+     taskId,
+     `${task.title} - ${task.volunteer_name}`
+    );
+
+    return send(res,200,{ok:true,status:action});
    }
 
    // Volunteer hours API
@@ -3720,15 +3883,133 @@ CREATE TABLE IF NOT EXISTS volunteer_tasks (
   description TEXT NOT NULL DEFAULT '',
   due_date TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'new'
-   CHECK(status IN ('new','in_progress','completed')),
+   CHECK(status IN (
+    'new',
+    'in_progress',
+    'submitted',
+    'revision_requested',
+    'completed',
+    'not_completed'
+   )),
   created_by INTEGER,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  started_at TEXT DEFAULT NULL,
+  submitted_at TEXT DEFAULT NULL,
   completed_at TEXT DEFAULT NULL,
+  submission_note TEXT NOT NULL DEFAULT '',
+  submission_url TEXT NOT NULL DEFAULT '',
+  revision_note TEXT NOT NULL DEFAULT '',
+  reviewed_at TEXT DEFAULT NULL,
+  reviewed_by INTEGER DEFAULT NULL,
   FOREIGN KEY(volunteer_id) REFERENCES volunteers(id),
-  FOREIGN KEY(created_by) REFERENCES users(id)
+  FOREIGN KEY(created_by) REFERENCES users(id),
+  FOREIGN KEY(reviewed_by) REFERENCES users(id)
  );
 `);
+
+// Migrate volunteer_tasks to submission/review workflow
+{
+ const taskTableRow=db.prepare(`
+  SELECT sql
+  FROM sqlite_master
+  WHERE type='table' AND name='volunteer_tasks'
+ `).get();
+
+ const taskTableSql=String(taskTableRow?.sql||'');
+
+ const taskColumns=db.prepare(`
+  PRAGMA table_info(volunteer_tasks)
+ `).all().map(c=>c.name);
+
+ const needsTaskMigration=
+  !taskColumns.includes('submission_note') ||
+  !taskColumns.includes('submission_url') ||
+  !taskColumns.includes('revision_note') ||
+  !taskColumns.includes('submitted_at') ||
+  !taskColumns.includes('started_at') ||
+  !taskColumns.includes('reviewed_at') ||
+  !taskColumns.includes('reviewed_by') ||
+  !taskTableSql.includes("'submitted'") ||
+  !taskTableSql.includes("'revision_requested'") ||
+  !taskTableSql.includes("'not_completed'");
+
+ if(needsTaskMigration){
+  console.log('Migrating volunteer_tasks workflow...');
+
+  db.exec(`
+   PRAGMA foreign_keys=OFF;
+   BEGIN IMMEDIATE;
+
+   CREATE TABLE volunteer_tasks_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    volunteer_id INTEGER NOT NULL,
+    department TEXT NOT NULL DEFAULT '',
+    title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    due_date TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'new'
+     CHECK(status IN (
+      'new',
+      'in_progress',
+      'submitted',
+      'revision_requested',
+      'completed',
+      'not_completed'
+     )),
+    created_by INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    started_at TEXT DEFAULT NULL,
+    submitted_at TEXT DEFAULT NULL,
+    completed_at TEXT DEFAULT NULL,
+    submission_note TEXT NOT NULL DEFAULT '',
+    submission_url TEXT NOT NULL DEFAULT '',
+    revision_note TEXT NOT NULL DEFAULT '',
+    reviewed_at TEXT DEFAULT NULL,
+    reviewed_by INTEGER DEFAULT NULL,
+    FOREIGN KEY(volunteer_id) REFERENCES volunteers(id),
+    FOREIGN KEY(created_by) REFERENCES users(id),
+    FOREIGN KEY(reviewed_by) REFERENCES users(id)
+   );
+
+   INSERT INTO volunteer_tasks_new(
+    id,
+    volunteer_id,
+    department,
+    title,
+    description,
+    due_date,
+    status,
+    created_by,
+    created_at,
+    updated_at,
+    completed_at
+   )
+   SELECT
+    id,
+    volunteer_id,
+    department,
+    title,
+    description,
+    due_date,
+    status,
+    created_by,
+    created_at,
+    updated_at,
+    completed_at
+   FROM volunteer_tasks;
+
+   DROP TABLE volunteer_tasks;
+   ALTER TABLE volunteer_tasks_new RENAME TO volunteer_tasks;
+
+   COMMIT;
+   PRAGMA foreign_keys=ON;
+  `);
+
+  console.log('Volunteer tasks migration complete.');
+ }
+}
 
 // Volunteer hours
 db.exec(`

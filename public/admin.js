@@ -579,6 +579,8 @@ async function tasks(){
  const statusLabel=status=>{
   if(status==='new')return '🆕 جديدة';
   if(status==='in_progress')return '⏳ قيد التنفيذ';
+  if(status==='submitted')return '📥 تم التسليم';
+  if(status==='revision_requested')return '↩️ مطلوب تعديل';
   if(status==='completed')return '✅ مكتملة';
   if(status==='not_completed')return '❌ لم يتم إنهاؤها';
   return status||'—';
@@ -603,7 +605,49 @@ async function tasks(){
      : ''}
    </td>
    <td>${t.due_date?esc(t.due_date):'—'}</td>
-   <td>${statusLabel(t.status)}</td>
+   <td>
+    ${statusLabel(t.status)}
+
+    ${t.status==='submitted' ? `
+     <div style="margin-top:8px">
+
+      ${t.submission_note
+       ? `<div class="muted" style="margin-bottom:6px">
+           <b>ملاحظة التسليم:</b>
+           ${esc(t.submission_note)}
+          </div>`
+       : ''}
+
+      ${t.submission_url
+       ? `<div style="margin-bottom:8px">
+           <a href="${esc(t.submission_url)}"
+              target="_blank"
+              rel="noopener noreferrer">
+            🔗 فتح رابط التسليم
+           </a>
+          </div>`
+       : ''}
+
+      <button class="btn"
+       onclick="reviewVolunteerTask(${t.id},'completed')">
+       ✅ اعتماد الإنجاز
+      </button>
+
+      <button class="btn light"
+       onclick="reviewVolunteerTask(${t.id},'revision_requested')">
+       ↩️ طلب تعديل
+      </button>
+
+     </div>
+    ` : ''}
+
+    ${t.status==='revision_requested' && t.revision_note
+     ? `<div class="muted" style="margin-top:6px">
+         ملاحظة التعديل: ${esc(t.revision_note)}
+        </div>`
+     : ''}
+   </td>
+
    <td>${esc(t.created_by_name||'—')}</td>
   </tr>
  `).join('') : `
@@ -1158,6 +1202,49 @@ async function volunteers(){
 
 
 
+async function reviewVolunteerTask(id,action){
+ try{
+  let revisionNote='';
+
+  if(action==='completed'){
+   const ok=confirm(
+    'هل تريد اعتماد هذه المهمة كمكتملة؟'
+   );
+
+   if(!ok)return;
+  }
+
+  if(action==='revision_requested'){
+   revisionNote=prompt(
+    'اكتب التعديل المطلوب من المتطوع:'
+   );
+
+   if(revisionNote===null)return;
+
+   revisionNote=revisionNote.trim();
+
+   if(!revisionNote){
+    alert('يجب كتابة التعديل المطلوب');
+    return;
+   }
+  }
+
+  await api(`/api/admin/tasks/${id}/review`,{
+   method:'PUT',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({
+    action,
+    revision_note:revisionNote
+   })
+  });
+
+  await loadTasksAdmin();
+
+ }catch(e){
+  alert(e.message||'تعذر مراجعة المهمة');
+ }
+}
+
 async function viewVolunteerProfile(id){
  try{
   const d=await api('/api/admin/volunteers/'+id);
@@ -1168,6 +1255,8 @@ async function viewVolunteerProfile(id){
    new:0,
    in_progress:0,
    completed:0,
+   submitted:0,
+   revision_requested:0,
    not_completed:0,
    completion_rate:0,
    last_activity:null
@@ -1233,6 +1322,16 @@ async function viewVolunteerProfile(id){
       <div class="profileStat">
        <strong>${st.in_progress}</strong>
        <span>قيد التنفيذ</span>
+      </div>
+
+      <div class="profileStat">
+       <strong>${st.submitted||0}</strong>
+       <span>بانتظار المراجعة</span>
+      </div>
+
+      <div class="profileStat">
+       <strong>${st.revision_requested||0}</strong>
+       <span>مطلوب تعديل</span>
       </div>
 
       <div class="profileStat">

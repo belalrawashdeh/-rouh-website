@@ -1021,12 +1021,30 @@ async function loadTasks(){
      ابدأ المهمة ⏳
     </button>`;
    }
+   else if(task.status==='revision_requested'){
+    status='↩️ مطلوب تعديل';
+
+    action=`
+     ${task.revision_note
+      ? `<div style="margin-bottom:10px;padding:10px;border:1px solid #ddd;border-radius:10px">
+          <b>ملاحظة الإدارة:</b><br>
+          ${escapeHtml(task.revision_note)}
+         </div>`
+      : ''}
+
+     <button type="button"
+      onclick="updateTaskStatus(${task.id},'in_progress')">
+      بدء التعديل ⏳
+     </button>
+    `;
+   }
    else if(task.status==='in_progress'){
     status='⏳ قيد التنفيذ';
+
     action=`
      <button type="button"
-      onclick="updateTaskStatus(${task.id},'completed')">
-      تم الإنجاز ✅
+      onclick="submitTask(${task.id})">
+      تسليم المهمة 📤
      </button>
 
      <button type="button"
@@ -1035,13 +1053,22 @@ async function loadTasks(){
      </button>
     `;
    }
+   else if(task.status==='submitted'){
+    status='📥 تم التسليم — بانتظار المراجعة';
+
+    action=`
+     <div class="muted">
+      تم إرسال المهمة للإدارة وبانتظار مراجعتها.
+     </div>
+    `;
+   }
    else if(task.status==='not_completed'){
     status='❌ لم يتم إنهاؤها';
     action='<div class="muted">تم تسجيل أن المهمة لم يتم إنهاؤها.</div>';
    }
    else{
     status='✅ مكتملة';
-    action='<div class="muted">تم إنجاز المهمة بنجاح 💚</div>';
+    action='<div class="muted">تم اعتماد إنجاز المهمة بنجاح 💚</div>';
    }
 
    return `
@@ -1058,6 +1085,10 @@ async function loadTasks(){
       ? `<p><b>موعد التسليم:</b> ${escapeHtml(task.due_date)}</p>`
       : ''}
 
+     ${task.submitted_at
+      ? `<p><b>وقت التسليم:</b> ${escapeHtml(task.submitted_at)}</p>`
+      : ''}
+
      <div class="muted" style="margin-bottom:10px">
       أُسندت بواسطة:
       ${escapeHtml(task.created_by_name||'إدارة روح')}
@@ -1071,6 +1102,53 @@ async function loadTasks(){
  }catch(error){
   el.innerHTML=
    `<div class="muted">${escapeHtml(error.message||'تعذر تحميل المهام')}</div>`;
+ }
+}
+
+async function submitTask(id){
+ const submissionNote=prompt(
+  'اكتب ملاحظة التسليم أو وصف ما تم إنجازه:'
+ );
+
+ if(submissionNote===null)return;
+
+ const submissionUrl=prompt(
+  'ضع رابط العمل إن وجد (Google Drive / Canva / ملف...):'
+ );
+
+ if(submissionUrl===null)return;
+
+ if(!submissionNote.trim() && !submissionUrl.trim()){
+  alert('أضف ملاحظة أو رابطًا للتسليم على الأقل');
+  return;
+ }
+
+ const confirmed=confirm(
+  'هل تريد تسليم المهمة الآن للإدارة للمراجعة؟'
+ );
+
+ if(!confirmed)return;
+
+ try{
+  const response=await fetch(`/api/volunteer/tasks/${id}/status`,{
+   method:'PUT',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({
+    status:'submitted',
+    submission_note:submissionNote.trim(),
+    submission_url:submissionUrl.trim()
+   })
+  });
+
+  const data=await response.json();
+
+  if(!response.ok)
+   throw new Error(data.error||'تعذر تسليم المهمة');
+
+  await loadTasks();
+
+ }catch(error){
+  alert(error.message||'تعذر تسليم المهمة');
  }
 }
 
