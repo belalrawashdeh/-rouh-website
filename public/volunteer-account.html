@@ -1361,6 +1361,7 @@ async function loadAccount(){
   }
 
   await loadNotifications();
+  await loadTasks();
   await loadVolunteerHours();
 
   document.getElementById('loading').style.display='none';
