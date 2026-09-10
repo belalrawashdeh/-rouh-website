@@ -1222,8 +1222,14 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
     if(!['in_progress','submitted','not_completed'].includes(status))
      return send(res,400,{error:'حالة المهمة غير صحيحة'});
 
-    if(['completed','not_completed','submitted'].includes(task.status))
+    if(['completed','not_completed'].includes(task.status))
      return send(res,400,{error:'لا يمكن تعديل هذه المهمة بهذه الحالة'});
+
+    // Submitted task can only be withdrawn back to work
+    if(task.status==='submitted' && status!=='in_progress')
+     return send(res,400,{
+      error:'يمكن فقط سحب التسليم وإعادته إلى قيد التنفيذ'
+     });
 
     // New task can only be started
     if(task.status==='new' && status!=='in_progress')

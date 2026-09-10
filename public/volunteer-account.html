@@ -1051,7 +1051,7 @@ async function loadTasks(){
 
      <button type="button"
       onclick="updateTaskStatus(${task.id},'not_completed')">
-      لم يتم إنهاؤها ❌
+      ❌ لم أتمكن من إنجاز المهمة
      </button>
     `;
    }
@@ -1069,6 +1069,11 @@ async function loadTasks(){
      <button type="button"
       onclick="viewMySubmission(${task.id})">
       👁️ عرض تسليمي
+     </button>
+
+     <button type="button"
+      onclick="withdrawTaskSubmission(${task.id})">
+      ↩️ سحب التسليم للتعديل
      </button>
     `;
    }
@@ -1489,11 +1494,22 @@ function viewMySubmission(id){
 }
 
 
+async function withdrawTaskSubmission(id){
+ const confirmed=confirm(
+  'هل تريد سحب التسليم للتعديل؟\n\nسيعود العمل إلى حالة قيد التنفيذ، ويمكنك تعديله ثم إرساله للمراجعة مرة أخرى.'
+ );
+
+ if(!confirmed)return;
+
+ await updateTaskStatus(id,'in_progress');
+}
+
+
 async function updateTaskStatus(id,status){
  try{
   if(status==='not_completed'){
    const confirmed=confirm(
-    'هل أنت متأكد من أن المهمة لم يتم إنهاؤها؟\nسيتم تسجيل هذه الحالة لدى الإدارة.'
+    '⚠️ هل أنت متأكد أنك لم تتمكن من إنجاز المهمة؟\n\nسيتم إغلاق المهمة ونقلها إلى الأرشيف كغير مكتملة.\nهذا الخيار ليس للتراجع عن التسليم.'
    );
 
    if(!confirmed)return;
