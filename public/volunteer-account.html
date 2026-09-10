@@ -1073,7 +1073,7 @@ async function loadTasks(){
 
      <button type="button"
       onclick="withdrawTaskSubmission(${task.id})">
-      ↩️ سحب التسليم للتعديل
+      ✏️ تعديل التسليم
      </button>
     `;
    }
@@ -1164,6 +1164,21 @@ function fileToBase64(file){
 async function submitTask(id){
  closeTaskSubmissionModal();
 
+ const task=(window.currentVolunteerTasks||[])
+  .find(t=>Number(t.id)===Number(id));
+
+ const previousNote=task
+  ? String(task.submission_note||'')
+  : '';
+
+ const previousUrl=task
+  ? String(task.submission_url||'')
+  : '';
+
+ const previousFileName=task
+  ? String(task.submission_file_name||'')
+  : '';
+
  const modal=document.createElement('div');
  modal.id='taskSubmissionModal';
 
@@ -1246,6 +1261,21 @@ async function submitTask(id){
     PDF، Word، Excel، PowerPoint، TXT أو صورة — بحد أقصى 8 MB.
    </div>
 
+   ${previousFileName
+    ? `<div style="
+        margin-top:10px;
+        padding:10px;
+        border:1px solid #ddd;
+        border-radius:10px
+       ">
+        📎 الملف الحالي:
+        <b>${escapeHtml(previousFileName)}</b>
+        <div class="muted" style="margin-top:5px">
+         إذا لم ترفع ملفًا جديدًا، سيبقى هذا الملف مع التسليم.
+        </div>
+       </div>`
+    : ''}
+
    <div id="taskSubmissionError"
     style="
      display:none;
@@ -1278,6 +1308,14 @@ async function submitTask(id){
 
  document.body.appendChild(modal);
 
+ document.getElementById(
+  'taskSubmissionNote'
+ ).value=previousNote;
+
+ document.getElementById(
+  'taskSubmissionUrl'
+ ).value=previousUrl;
+
  modal.addEventListener('click',e=>{
   if(e.target===modal)
    closeTaskSubmissionModal();
@@ -1304,11 +1342,26 @@ async function submitTask(id){
    'taskSubmissionError'
   );
 
-  if(!note && !url && !file){
+  if(!note && !url && !file && !previousFileName){
    errorEl.textContent=
     'اكتب العمل أو أضف رابطًا أو ارفع ملفًا على الأقل.';
    errorEl.style.display='block';
    return;
+  }
+
+  if(url){
+   try{
+    const parsedUrl=new URL(url);
+
+    if(!['http:','https:'].includes(parsedUrl.protocol))
+     throw new Error('invalid protocol');
+
+   }catch{
+    errorEl.textContent=
+     'رابط العمل يجب أن يبدأ بـ http:// أو https://';
+    errorEl.style.display='block';
+    return;
+   }
   }
 
   if(file && file.size>8*1024*1024){
@@ -1496,7 +1549,7 @@ function viewMySubmission(id){
 
 async function withdrawTaskSubmission(id){
  const confirmed=confirm(
-  'هل تريد سحب التسليم للتعديل؟\n\nسيعود العمل إلى حالة قيد التنفيذ، ويمكنك تعديله ثم إرساله للمراجعة مرة أخرى.'
+  '✏️ هل تريد تعديل التسليم؟\n\nسيتم التراجع عن التسليم الحالي وإعادة المهمة إلى قيد التنفيذ، وبعد التعديل يمكنك إرسالها للمراجعة مرة أخرى.'
  );
 
  if(!confirmed)return;

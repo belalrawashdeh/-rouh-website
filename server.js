@@ -1194,7 +1194,11 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
     const taskId=Number(match[1]);
 
     const task=db.prepare(`
-     SELECT id,status
+     SELECT
+      id,
+      status,
+      submission_file_name,
+      submission_file_path
      FROM volunteer_tasks
      WHERE id=? AND volunteer_id=?
     `).get(taskId,volunteer.id);
@@ -1244,11 +1248,17 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
        !['submitted','not_completed'].includes(status))
      return send(res,400,{error:'انتقال حالة المهمة غير مسموح'});
 
+    const hasExistingSubmissionFile=Boolean(
+     task.submission_file_name &&
+     task.submission_file_path
+    );
+
     if(
      status==='submitted' &&
      !submissionNote &&
      !submissionUrl &&
-     !submissionFileData
+     !submissionFileData &&
+     !hasExistingSubmissionFile
     )
      return send(res,400,{
       error:'أضف العمل المكتوب أو رابطًا أو ملفًا على الأقل'
@@ -1256,6 +1266,22 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
 
     if(submissionUrl && submissionUrl.length>1000)
      return send(res,400,{error:'رابط التسليم طويل جدًا'});
+
+    if(submissionUrl){
+     try{
+      const parsedSubmissionUrl=new URL(submissionUrl);
+
+      if(!['http:','https:'].includes(
+       parsedSubmissionUrl.protocol
+      ))
+       throw new Error('invalid protocol');
+
+     }catch{
+      return send(res,400,{
+       error:'رابط العمل يجب أن يبدأ بـ http:// أو https://'
+      });
+     }
+    }
 
     if(submissionNote.length>5000)
      return send(res,400,{error:'ملاحظة التسليم طويلة جدًا'});
