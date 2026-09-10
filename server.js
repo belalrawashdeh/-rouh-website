@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS volunteer_applications (
  accepted_at TEXT,
  rejected_at TEXT,
  invite_token TEXT,
+ deleted_at TEXT DEFAULT NULL,
  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -163,6 +164,12 @@ try {
 
 try {
  db.exec("ALTER TABLE volunteer_applications ADD COLUMN department TEXT DEFAULT ''");
+} catch(e) {
+ if (!String(e.message).includes("duplicate column name")) throw e;
+}
+
+try {
+ db.exec("ALTER TABLE volunteer_applications ADD COLUMN deleted_at TEXT DEFAULT NULL");
 } catch(e) {
  if (!String(e.message).includes("duplicate column name")) throw e;
 }
@@ -570,12 +577,43 @@ const server=http.createServer(async (req,res)=>{
    const internalEmail=`phone-${phoneDigits}@volunteer.rouh.local`;
 
    const existing=db.prepare(`
-    SELECT id,status
+    SELECT id,status,deleted_at
     FROM volunteer_applications
     WHERE email=?
    `).get(internalEmail);
 
    if(existing){
+    if(existing.deleted_at){
+     db.prepare(`
+      UPDATE volunteer_applications
+      SET name=?,
+          phone=?,
+          major=?,
+          level=?,
+          city=?,
+          status='pending',
+          department='',
+          department_approval='',
+          department_decided_at=NULL,
+          department_decided_by=NULL,
+          contacted_at=NULL,
+          invite_token=NULL,
+          accepted_at=NULL,
+          rejected_at=NULL,
+          whatsapp_sent_at=NULL,
+          deleted_at=NULL,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(name,phone,major,level,city,existing.id);
+
+     return send(res,200,{
+      ok:true,
+      existing:true,
+      resubmitted:true,
+      id:Number(existing.id)
+     });
+    }
+
     if(existing.status==='rejected'){
      db.prepare(`
       UPDATE volunteer_applications
@@ -659,12 +697,43 @@ const server=http.createServer(async (req,res)=>{
    const internalEmail=`phone-${phoneDigits}@volunteer.rouh.local`;
 
    const existing=db.prepare(`
-    SELECT id,status
+    SELECT id,status,deleted_at
     FROM volunteer_applications
     WHERE email=?
    `).get(internalEmail);
 
    if(existing){
+    if(existing.deleted_at){
+     db.prepare(`
+      UPDATE volunteer_applications
+      SET name=?,
+          phone=?,
+          major=?,
+          level=?,
+          city=?,
+          status='pending',
+          department='',
+          department_approval='',
+          department_decided_at=NULL,
+          department_decided_by=NULL,
+          contacted_at=NULL,
+          invite_token=NULL,
+          accepted_at=NULL,
+          rejected_at=NULL,
+          whatsapp_sent_at=NULL,
+          deleted_at=NULL,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+     `).run(name,phone,major,level,city,existing.id);
+
+     return send(res,200,{
+      ok:true,
+      existing:true,
+      resubmitted:true,
+      id:Number(existing.id)
+     });
+    }
+
     if(existing.status==='rejected'){
      db.prepare(`
       UPDATE volunteer_applications
@@ -2181,7 +2250,8 @@ ${message}`;
       FROM volunteer_applications va
       LEFT JOIN volunteers v
        ON v.application_id=va.id
-      WHERE v.deleted_at IS NULL
+      WHERE va.deleted_at IS NULL
+       AND v.deleted_at IS NULL
       ORDER BY
        CASE va.status
         WHEN 'pending' THEN 1
@@ -2215,6 +2285,7 @@ ${message}`;
       LEFT JOIN volunteers v
        ON v.application_id=va.id
       WHERE va.department=?
+       AND va.deleted_at IS NULL
        AND v.deleted_at IS NULL
       ORDER BY
        CASE va.status
@@ -2586,24 +2657,29 @@ ${message}`;
      });
     }
 
-    /* المالك يحذف مباشرة */
-    db.prepare(`
-     DELETE FROM volunteer_applications
-     WHERE id=?
+    /* المالك ينقل المتطوع إلى سلة المحذوفات */
+    const result=db.prepare(`
+     UPDATE volunteer_applications
+     SET deleted_at=CURRENT_TIMESTAMP,
+         updated_at=CURRENT_TIMESTAMP
+     WHERE id=? AND deleted_at IS NULL
     `).run(id);
+
+    if(Number(result.changes)===0)
+     return send(res,409,{error:'المتطوع موجود أصلًا في سلة المحذوفات'});
 
     audit(
      user,
-     'delete',
+     'trash',
      'volunteer_application',
      id,
-     'allow_reapply'
+     'soft_delete'
     );
 
     return send(res,200,{
      ok:true,
      pendingApproval:false,
-     message:'تم حذف الطلب والسماح بالتقديم من جديد'
+     message:'تم نقل المتطوع إلى سلة المحذوفات'
     });
    }
 
@@ -3227,7 +3303,90 @@ ${message}`;
      ).all(),
      department_content:db.prepare(
       'SELECT id,title,department,deleted_at FROM department_content WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC'
-     ).all()
+     ).all(),
+     volunteer_applications:db.prepare(`
+      SELECT id,name,phone,department,status,deleted_at
+      FROM volunteer_applications
+      WHERE deleted_at IS NOT NULL
+      ORDER BY deleted_at DESC
+     `).all()
+    });
+   }
+
+   const volunteerApplicationRestoreMatch=pathname.match(
+    /^\/api\/admin\/trash\/volunteer_application\/(\d+)\/restore$/
+   );
+
+   if(volunteerApplicationRestoreMatch && req.method==='POST'){
+    if(user.role!=='owner')
+     return send(res,403,{error:'استعادة المتطوع متاحة للمالك فقط'});
+
+    const id=volunteerApplicationRestoreMatch[1];
+
+    const result=db.prepare(`
+     UPDATE volunteer_applications
+     SET deleted_at=NULL,
+         updated_at=CURRENT_TIMESTAMP
+     WHERE id=? AND deleted_at IS NOT NULL
+    `).run(id);
+
+    if(Number(result.changes)===0)
+     return send(res,404,{error:'المتطوع غير موجود في سلة المحذوفات'});
+
+    audit(
+     user,
+     'restore',
+     'volunteer_application',
+     id,
+     'restore_from_trash'
+    );
+
+    return send(res,200,{
+     ok:true,
+     message:'تم استعادة المتطوع'
+    });
+   }
+
+   const volunteerApplicationPermanentMatch=pathname.match(
+    /^\/api\/admin\/trash\/volunteer_application\/(\d+)\/permanent$/
+   );
+
+   if(volunteerApplicationPermanentMatch && req.method==='DELETE'){
+    if(user.role!=='owner')
+     return send(res,403,{error:'الحذف النهائي متاح للمالك فقط'});
+
+    const id=volunteerApplicationPermanentMatch[1];
+
+    const account=db.prepare(`
+     SELECT id
+     FROM volunteers
+     WHERE application_id=?
+    `).get(id);
+
+    if(account)
+     return send(res,409,{
+      error:'لا يمكن حذف الطلب نهائيًا لأنه مرتبط بحساب متطوع'
+     });
+
+    const result=db.prepare(`
+     DELETE FROM volunteer_applications
+     WHERE id=? AND deleted_at IS NOT NULL
+    `).run(id);
+
+    if(Number(result.changes)===0)
+     return send(res,404,{error:'المتطوع غير موجود في سلة المحذوفات'});
+
+    audit(
+     user,
+     'delete',
+     'volunteer_application',
+     id,
+     'permanent_delete'
+    );
+
+    return send(res,200,{
+     ok:true,
+     message:'تم حذف المتطوع نهائيًا'
     });
    }
 
@@ -3399,8 +3558,10 @@ ${message}`;
       });
 
      db.prepare(`
-      DELETE FROM volunteer_applications
-      WHERE id=?
+      UPDATE volunteer_applications
+      SET deleted_at=CURRENT_TIMESTAMP,
+          updated_at=CURRENT_TIMESTAMP
+      WHERE id=? AND deleted_at IS NULL
      `).run(request.entity_id);
     }
     else if(request.entity_type==='events'){

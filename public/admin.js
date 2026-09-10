@@ -354,7 +354,8 @@ async function trash(){
   events:[],
   achievements:[],
   faqs:[],
-  department_content:[]
+  department_content:[],
+  volunteer_applications:[]
  };
 
  if(me.role==='owner'){
@@ -405,12 +406,38 @@ async function trash(){
   }catch(e){}
  }
 
+ const deletedVolunteerApplications=
+  me.role==='owner'
+   ? `<div class="panel">
+       <h3>المتطوعون المحذوفون</h3>
+
+       ${d.volunteer_applications.map(v=>`
+        <p>
+         <b>${esc(v.name||'')}</b>
+         — ${esc(v.phone||'-')}
+         — ${esc(v.department||'-')}
+
+         <button class="btn light small"
+          onclick="restoreVolunteerApplication(${v.id})">
+          ↩️ استعادة
+         </button>
+
+         <button class="btn danger small"
+          onclick="permanentlyDeleteVolunteerApplication(${v.id})">
+          🗑️ إزالة نهائيًا
+         </button>
+        </p>
+       `).join('')||'<p class="muted">فارغة</p>'}
+      </div>`
+   : '';
+
  const generalTrash=
   me.role==='owner'
    ? group('الفعاليات','events',d.events)+
      group('الإنجازات','achievements',d.achievements)+
      group('الأسئلة','faqs',d.faqs)+
-     group('محتوى الأقسام','department_content',d.department_content)
+     group('محتوى الأقسام','department_content',d.department_content)+
+     deletedVolunteerApplications
    : '';
 
  content.innerHTML=
@@ -2711,6 +2738,62 @@ window.restoreVolunteerAccount=async id=>{
   });
 
   flash(r.message || 'تم استرجاع حساب المتطوع');
+  loadTab('trash');
+ }catch(e){
+  flash(e.message,true);
+ }
+};
+
+
+window.deleteVolunteer=async id=>{
+ if(!confirm('هل تريد نقل هذا المتطوع إلى سلة المحذوفات؟')) return;
+
+ try{
+  const r=await api('/api/admin/volunteers/'+id,{
+   method:'DELETE'
+  });
+
+  flash(
+   r.pendingApproval
+    ? 'تم إرسال طلب الحذف للمالك'
+    : (r.message || 'تم نقل المتطوع إلى سلة المحذوفات')
+  );
+
+  loadTab('volunteers');
+ }catch(e){
+  flash(e.message,true);
+ }
+};
+
+window.restoreVolunteerApplication=async id=>{
+ if(!confirm('هل تريد استعادة هذا المتطوع؟')) return;
+
+ try{
+  const r=await api(
+   '/api/admin/trash/volunteer_application/'+id+'/restore',
+   {method:'POST'}
+  );
+
+  flash(r.message || 'تم استعادة المتطوع');
+  loadTab('trash');
+ }catch(e){
+  flash(e.message,true);
+ }
+};
+
+window.permanentlyDeleteVolunteerApplication=async id=>{
+ if(!confirm(
+  'هل تريد إزالة هذا المتطوع نهائيًا؟\n\n' +
+  'لا يمكن التراجع عن هذا الإجراء.'
+ )) return;
+
+ try{
+  const r=await api(
+   '/api/admin/trash/volunteer_application/'+id+'/permanent',
+   {method:'DELETE'}
+  );
+
+  flash(r.message || 'تم حذف المتطوع نهائيًا');
   loadTab('trash');
  }catch(e){
   flash(e.message,true);
