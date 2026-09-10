@@ -1238,7 +1238,7 @@ async function reviewVolunteerTask(id,action){
    })
   });
 
-  await loadTasksAdmin();
+  await tasks();
 
  }catch(e){
   alert(e.message||'تعذر مراجعة المهمة');
