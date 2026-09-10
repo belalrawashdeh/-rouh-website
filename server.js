@@ -9,8 +9,10 @@ const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
 const UPLOADS = path.join(PUBLIC, 'uploads');
 const DATA = path.join(ROOT, 'data');
+const TASK_SUBMISSIONS = path.join(DATA, 'task-submissions');
 fs.mkdirSync(UPLOADS, { recursive: true });
 fs.mkdirSync(DATA, { recursive: true });
+fs.mkdirSync(TASK_SUBMISSIONS, { recursive: true });
 
 const db = new DatabaseSync(path.join(DATA, 'rouh.db'));
 db.exec(`
@@ -1142,6 +1144,9 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
            t.completed_at,
            t.submission_note,
            t.submission_url,
+           t.submission_file_name,
+           t.submission_file_type,
+           t.submission_file_size,
            t.revision_note,
            u.name created_by_name
     FROM volunteer_tasks t
@@ -1202,6 +1207,18 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
     const submissionNote=String(b.submission_note||'').trim();
     const submissionUrl=String(b.submission_url||'').trim();
 
+    const submissionFileName=String(
+     b.submission_file_name||''
+    ).trim();
+
+    const submissionFileType=String(
+     b.submission_file_type||''
+    ).trim();
+
+    const submissionFileData=String(
+     b.submission_file_data||''
+    );
+
     if(!['in_progress','submitted','not_completed'].includes(status))
      return send(res,400,{error:'حالة المهمة غير صحيحة'});
 
@@ -1221,9 +1238,14 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
        !['submitted','not_completed'].includes(status))
      return send(res,400,{error:'انتقال حالة المهمة غير مسموح'});
 
-    if(status==='submitted' && !submissionNote && !submissionUrl)
+    if(
+     status==='submitted' &&
+     !submissionNote &&
+     !submissionUrl &&
+     !submissionFileData
+    )
      return send(res,400,{
-      error:'أضف ملاحظة للتسليم أو رابط العمل على الأقل'
+      error:'أضف العمل المكتوب أو رابطًا أو ملفًا على الأقل'
      });
 
     if(submissionUrl && submissionUrl.length>1000)
@@ -1231,6 +1253,98 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
 
     if(submissionNote.length>5000)
      return send(res,400,{error:'ملاحظة التسليم طويلة جدًا'});
+
+    let savedFileName='';
+    let savedFilePath='';
+    let savedFileType='';
+    let savedFileSize=0;
+
+    if(status==='submitted' && submissionFileData){
+     const allowedTypes=new Set([
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain',
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+     ]);
+
+     if(!allowedTypes.has(submissionFileType))
+      return send(res,400,{
+       error:'نوع الملف غير مسموح'
+      });
+
+     let fileBuffer;
+
+     try{
+      fileBuffer=Buffer.from(submissionFileData,'base64');
+     }catch{
+      return send(res,400,{error:'تعذر قراءة الملف'});
+     }
+
+     const maxFileSize=8*1024*1024;
+
+     if(!fileBuffer.length || fileBuffer.length>maxFileSize)
+      return send(res,400,{
+       error:'حجم الملف يجب ألا يتجاوز 8 MB'
+      });
+
+     const safeOriginalName=path
+      .basename(submissionFileName||'file')
+      .replace(/[^a-zA-Z0-9._()\-\u0600-\u06FF ]/g,'_')
+      .slice(0,180);
+
+     const extension=path.extname(safeOriginalName).toLowerCase();
+
+     const allowedExtensions=new Set([
+      '.pdf','.doc','.docx',
+      '.xls','.xlsx',
+      '.ppt','.pptx',
+      '.txt',
+      '.jpg','.jpeg','.png','.webp'
+     ]);
+
+     if(!allowedExtensions.has(extension))
+      return send(res,400,{
+       error:'امتداد الملف غير مسموح'
+      });
+
+     const taskFolder=path.join(
+      TASK_SUBMISSIONS,
+      String(taskId)
+     );
+
+     fs.mkdirSync(taskFolder,{recursive:true});
+
+     const diskName=
+      Date.now()+'-'+
+      crypto.randomBytes(8).toString('hex')+
+      extension;
+
+     const absolutePath=path.join(
+      taskFolder,
+      diskName
+     );
+
+     fs.writeFileSync(
+      absolutePath,
+      fileBuffer
+     );
+
+     savedFileName=safeOriginalName;
+     savedFilePath=path.relative(
+      DATA,
+      absolutePath
+     );
+     savedFileType=submissionFileType;
+     savedFileSize=fileBuffer.length;
+    }
+
 
     db.prepare(`
      UPDATE volunteer_tasks
@@ -1260,6 +1374,26 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
        ELSE submission_url
       END,
 
+      submission_file_name=CASE
+       WHEN ?='submitted' AND ?<>'' THEN ?
+       ELSE submission_file_name
+      END,
+
+      submission_file_path=CASE
+       WHEN ?='submitted' AND ?<>'' THEN ?
+       ELSE submission_file_path
+      END,
+
+      submission_file_type=CASE
+       WHEN ?='submitted' AND ?<>'' THEN ?
+       ELSE submission_file_type
+      END,
+
+      submission_file_size=CASE
+       WHEN ?='submitted' AND ?>0 THEN ?
+       ELSE submission_file_size
+      END,
+
       revision_note=CASE
        WHEN ?='in_progress' THEN ''
        ELSE revision_note
@@ -1273,6 +1407,12 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
      status,
      status,submissionNote,
      status,submissionUrl,
+
+     status,savedFilePath,savedFileName,
+     status,savedFilePath,savedFilePath,
+     status,savedFilePath,savedFileType,
+     status,savedFileSize,savedFileSize,
+
      status,
      taskId,
      volunteer.id
@@ -1280,6 +1420,131 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
 
     return send(res,200,{ok:true,status});
    }
+  }
+
+  // Secure task submission file
+  const taskSubmissionFileMatch=pathname.match(
+   /^\/api\/tasks\/(\d+)\/submission-file$/
+  );
+
+  if(taskSubmissionFileMatch && req.method==='GET'){
+   const taskId=Number(taskSubmissionFileMatch[1]);
+
+   const task=db.prepare(`
+    SELECT id,
+           volunteer_id,
+           department,
+           submission_file_name,
+           submission_file_path,
+           submission_file_type
+    FROM volunteer_tasks
+    WHERE id=?
+   `).get(taskId);
+
+   if(!task || !task.submission_file_path)
+    return send(res,404,{
+     error:'لا يوجد ملف مرفق لهذه المهمة'
+    });
+
+   let allowed=false;
+
+   // المتطوع يستطيع فتح ملف مهمته فقط
+   const volunteerToken=
+    parseCookies(req).rouh_volunteer_session;
+
+   if(volunteerToken){
+    const volunteer=db.prepare(`
+     SELECT v.id
+     FROM volunteer_sessions vs
+     JOIN volunteers v
+      ON v.id=vs.volunteer_id
+     WHERE vs.token=?
+       AND vs.expires_at>CURRENT_TIMESTAMP
+       AND v.active=1
+       AND v.deleted_at IS NULL
+    `).get(volunteerToken);
+
+    if(
+     volunteer &&
+     volunteer.id===task.volunteer_id
+    ){
+     allowed=true;
+    }
+   }
+
+   // الأدمن المصرح له
+   if(!allowed){
+    const admin=currentUser(req);
+
+    if(admin && !admin.suspended){
+     const isHRAdmin=
+      admin.role==='admin' &&
+      admin.department==='إدارة الموارد البشرية (HR)';
+
+     allowed=
+      isOwnerOrDeputy(admin) ||
+      isHRAdmin ||
+      (
+       admin.role==='admin' &&
+       admin.department===task.department
+      );
+    }
+   }
+
+   if(!allowed)
+    return send(res,403,{
+     error:'لا تملك صلاحية عرض هذا الملف'
+    });
+
+   const absolutePath=path.resolve(
+    DATA,
+    task.submission_file_path
+   );
+
+   const allowedRoot=path.resolve(
+    TASK_SUBMISSIONS
+   );
+
+   // منع الوصول لأي ملف خارج task-submissions
+   if(
+    absolutePath!==allowedRoot &&
+    !absolutePath.startsWith(
+     allowedRoot+path.sep
+    )
+   ){
+    return send(res,403,{
+     error:'مسار الملف غير صالح'
+    });
+   }
+
+   if(!fs.existsSync(absolutePath))
+    return send(res,404,{
+     error:'الملف غير موجود على الخادم'
+    });
+
+   const fileName=String(
+    task.submission_file_name||'submission'
+   ).replace(/["\r\n]/g,'');
+
+   res.writeHead(200,{
+    'Content-Type':
+     task.submission_file_type||
+     'application/octet-stream',
+
+    'Content-Disposition':
+     `inline; filename*=UTF-8''${
+      encodeURIComponent(fileName)
+     }`,
+
+    'Cache-Control':'private, no-store',
+    'X-Content-Type-Options':'nosniff'
+   });
+
+   fs.createReadStream(
+    absolutePath
+   ).pipe(res);
+
+   return;
   }
 
   if(pathname==='/api/volunteer/department' && req.method==='GET'){
@@ -3899,6 +4164,10 @@ CREATE TABLE IF NOT EXISTS volunteer_tasks (
   completed_at TEXT DEFAULT NULL,
   submission_note TEXT NOT NULL DEFAULT '',
   submission_url TEXT NOT NULL DEFAULT '',
+  submission_file_name TEXT NOT NULL DEFAULT '',
+  submission_file_path TEXT NOT NULL DEFAULT '',
+  submission_file_type TEXT NOT NULL DEFAULT '',
+  submission_file_size INTEGER NOT NULL DEFAULT 0,
   revision_note TEXT NOT NULL DEFAULT '',
   reviewed_at TEXT DEFAULT NULL,
   reviewed_by INTEGER DEFAULT NULL,
@@ -3925,6 +4194,10 @@ CREATE TABLE IF NOT EXISTS volunteer_tasks (
  const needsTaskMigration=
   !taskColumns.includes('submission_note') ||
   !taskColumns.includes('submission_url') ||
+  !taskColumns.includes('submission_file_name') ||
+  !taskColumns.includes('submission_file_path') ||
+  !taskColumns.includes('submission_file_type') ||
+  !taskColumns.includes('submission_file_size') ||
   !taskColumns.includes('revision_note') ||
   !taskColumns.includes('submitted_at') ||
   !taskColumns.includes('started_at') ||
@@ -3965,6 +4238,10 @@ CREATE TABLE IF NOT EXISTS volunteer_tasks (
     completed_at TEXT DEFAULT NULL,
     submission_note TEXT NOT NULL DEFAULT '',
     submission_url TEXT NOT NULL DEFAULT '',
+  submission_file_name TEXT NOT NULL DEFAULT '',
+  submission_file_path TEXT NOT NULL DEFAULT '',
+  submission_file_type TEXT NOT NULL DEFAULT '',
+  submission_file_size INTEGER NOT NULL DEFAULT 0,
     revision_note TEXT NOT NULL DEFAULT '',
     reviewed_at TEXT DEFAULT NULL,
     reviewed_by INTEGER DEFAULT NULL,

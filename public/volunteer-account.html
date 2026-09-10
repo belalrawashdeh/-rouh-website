@@ -998,10 +998,12 @@ async function loadTasks(){
 
   const items=data.items||[];
 
+  window.currentVolunteerTasks=items;
+
   const taskCounter=document.getElementById('dashboardTaskCount');
   if(taskCounter){
    taskCounter.textContent=items.filter(
-    task=>task.status!=='completed'
+    task=>!['completed','not_completed'].includes(task.status)
    ).length;
   }
 
@@ -1054,12 +1056,20 @@ async function loadTasks(){
     `;
    }
    else if(task.status==='submitted'){
-    status='📥 تم التسليم — بانتظار المراجعة';
+    status='📥 تم رفع العمل — قيد التقييم';
 
     action=`
-     <div class="muted">
-      تم إرسال المهمة للإدارة وبانتظار مراجعتها.
+     <div style="padding:12px;border:1px solid #ddd;border-radius:12px;margin-bottom:10px">
+      <b>⏳ تم رفع شغلك بنجاح</b>
+      <div class="muted" style="margin-top:5px">
+       العمل الآن لدى الإدارة للمراجعة والتقييم.
+      </div>
      </div>
+
+     <button type="button"
+      onclick="viewMySubmission(${task.id})">
+      👁️ عرض تسليمي
+     </button>
     `;
    }
    else if(task.status==='not_completed'){
@@ -1067,8 +1077,21 @@ async function loadTasks(){
     action='<div class="muted">تم تسجيل أن المهمة لم يتم إنهاؤها.</div>';
    }
    else{
-    status='✅ مكتملة';
-    action='<div class="muted">تم اعتماد إنجاز المهمة بنجاح 💚</div>';
+    status='✅ تم قبول العمل';
+
+    action=`
+     <div style="padding:12px;border:1px solid #ddd;border-radius:12px;margin-bottom:10px">
+      <b>✅ تم قبول واعتماد عملك</b>
+      <div class="muted" style="margin-top:5px">
+       يمكنك الرجوع إلى العمل الذي تم اعتماده في أي وقت.
+      </div>
+     </div>
+
+     <button type="button"
+      onclick="viewMySubmission(${task.id})">
+      👁️ عرض العمل المقبول
+     </button>
+    `;
    }
 
    return `
@@ -1105,52 +1128,366 @@ async function loadTasks(){
  }
 }
 
+function closeTaskSubmissionModal(){
+ const modal=document.getElementById('taskSubmissionModal');
+ if(modal)modal.remove();
+}
+
+function fileToBase64(file){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();
+
+  reader.onload=()=>{
+   const result=String(reader.result||'');
+   const comma=result.indexOf(',');
+
+   resolve(
+    comma>=0
+     ? result.slice(comma+1)
+     : result
+   );
+  };
+
+  reader.onerror=()=>reject(
+   new Error('تعذر قراءة الملف')
+  );
+
+  reader.readAsDataURL(file);
+ });
+}
+
 async function submitTask(id){
- const submissionNote=prompt(
-  'اكتب ملاحظة التسليم أو وصف ما تم إنجازه:'
- );
+ closeTaskSubmissionModal();
 
- if(submissionNote===null)return;
+ const modal=document.createElement('div');
+ modal.id='taskSubmissionModal';
 
- const submissionUrl=prompt(
-  'ضع رابط العمل إن وجد (Google Drive / Canva / ملف...):'
- );
+ modal.style.cssText=`
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:99999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+ `;
 
- if(submissionUrl===null)return;
+ modal.innerHTML=`
+  <div style="
+   width:min(620px,100%);
+   max-height:90vh;
+   overflow:auto;
+   background:#fff;
+   color:#222;
+   border-radius:18px;
+   padding:22px;
+   box-shadow:0 20px 60px rgba(0,0,0,.25);
+   direction:rtl
+  ">
+   <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:16px
+   ">
+    <h3 style="margin:0">📤 تسليم العمل</h3>
 
- if(!submissionNote.trim() && !submissionUrl.trim()){
-  alert('أضف ملاحظة أو رابطًا للتسليم على الأقل');
+    <button type="button"
+     onclick="closeTaskSubmissionModal()"
+     style="width:auto">
+     ✕
+    </button>
+   </div>
+
+   <p class="muted">
+    أرسل العمل بإحدى الطرق التالية أو استخدم أكثر من طريقة.
+   </p>
+
+   <label style="display:block;margin-top:14px">
+    <b>📝 العمل المنجز / التقرير</b>
+    <textarea
+     id="taskSubmissionNote"
+     rows="8"
+     maxlength="5000"
+     placeholder="اكتب التقرير أو العمل الذي أنجزته هنا..."
+     style="width:100%;margin-top:7px"
+    ></textarea>
+   </label>
+
+   <label style="display:block;margin-top:14px">
+    <b>🔗 رابط العمل — اختياري</b>
+    <input
+     id="taskSubmissionUrl"
+     type="url"
+     maxlength="1000"
+     placeholder="https://..."
+     style="width:100%;margin-top:7px"
+    >
+   </label>
+
+   <label style="display:block;margin-top:14px">
+    <b>📎 رفع ملف — اختياري</b>
+    <input
+     id="taskSubmissionFile"
+     type="file"
+     accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.webp"
+     style="width:100%;margin-top:7px"
+    >
+   </label>
+
+   <div class="muted" style="margin-top:7px">
+    PDF، Word، Excel، PowerPoint، TXT أو صورة — بحد أقصى 8 MB.
+   </div>
+
+   <div id="taskSubmissionError"
+    style="
+     display:none;
+     margin-top:12px;
+     padding:10px;
+     border-radius:10px;
+     background:#fff0f0;
+     color:#a40000
+    ">
+   </div>
+
+   <div style="
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:20px
+   ">
+    <button type="button"
+     id="sendTaskSubmissionBtn">
+     📤 إرسال للمراجعة
+    </button>
+
+    <button type="button"
+     onclick="closeTaskSubmissionModal()">
+     إلغاء
+    </button>
+   </div>
+  </div>
+ `;
+
+ document.body.appendChild(modal);
+
+ modal.addEventListener('click',e=>{
+  if(e.target===modal)
+   closeTaskSubmissionModal();
+ });
+
+ document.getElementById(
+  'sendTaskSubmissionBtn'
+ ).onclick=async()=>{
+  const note=document.getElementById(
+   'taskSubmissionNote'
+  ).value.trim();
+
+  const url=document.getElementById(
+   'taskSubmissionUrl'
+  ).value.trim();
+
+  const fileInput=document.getElementById(
+   'taskSubmissionFile'
+  );
+
+  const file=fileInput.files[0]||null;
+
+  const errorEl=document.getElementById(
+   'taskSubmissionError'
+  );
+
+  if(!note && !url && !file){
+   errorEl.textContent=
+    'اكتب العمل أو أضف رابطًا أو ارفع ملفًا على الأقل.';
+   errorEl.style.display='block';
+   return;
+  }
+
+  if(file && file.size>8*1024*1024){
+   errorEl.textContent=
+    'حجم الملف أكبر من 8 MB.';
+   errorEl.style.display='block';
+   return;
+  }
+
+  const confirmed=confirm(
+   'هل تريد إرسال هذا العمل للإدارة للمراجعة؟'
+  );
+
+  if(!confirmed)return;
+
+  const btn=document.getElementById(
+   'sendTaskSubmissionBtn'
+  );
+
+  btn.disabled=true;
+  btn.textContent='جارٍ رفع العمل...';
+
+  try{
+   let fileData='';
+
+   if(file)
+    fileData=await fileToBase64(file);
+
+   const response=await fetch(
+    `/api/volunteer/tasks/${id}/status`,
+    {
+     method:'PUT',
+     headers:{
+      'Content-Type':'application/json'
+     },
+     body:JSON.stringify({
+      status:'submitted',
+      submission_note:note,
+      submission_url:url,
+      submission_file_name:file
+       ? file.name
+       : '',
+      submission_file_type:file
+       ? file.type
+       : '',
+      submission_file_data:fileData
+     })
+    }
+   );
+
+   const data=await response.json();
+
+   if(!response.ok)
+    throw new Error(
+     data.error||'تعذر تسليم العمل'
+    );
+
+   closeTaskSubmissionModal();
+   await loadTasks();
+
+   alert(
+    '✅ تم رفع العمل بنجاح وهو الآن قيد التقييم'
+   );
+
+  }catch(error){
+   errorEl.textContent=
+    error.message||'تعذر تسليم العمل';
+   errorEl.style.display='block';
+
+   btn.disabled=false;
+   btn.textContent='📤 إرسال للمراجعة';
+  }
+ };
+}
+
+function viewMySubmission(id){
+ const task=(window.currentVolunteerTasks||[])
+  .find(t=>Number(t.id)===Number(id));
+
+ if(!task){
+  alert('تعذر العثور على التسليم');
   return;
  }
 
- const confirmed=confirm(
-  'هل تريد تسليم المهمة الآن للإدارة للمراجعة؟'
- );
+ const modal=document.createElement('div');
 
- if(!confirmed)return;
+ modal.style.cssText=`
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:99999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+ `;
 
- try{
-  const response=await fetch(`/api/volunteer/tasks/${id}/status`,{
-   method:'PUT',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({
-    status:'submitted',
-    submission_note:submissionNote.trim(),
-    submission_url:submissionUrl.trim()
-   })
-  });
+ const accepted=task.status==='completed';
 
-  const data=await response.json();
+ modal.innerHTML=`
+  <div style="
+   width:min(650px,100%);
+   max-height:90vh;
+   overflow:auto;
+   background:#fff;
+   color:#222;
+   border-radius:18px;
+   padding:22px;
+   direction:rtl
+  ">
+   <h3>
+    ${accepted
+     ? '✅ العمل المقبول'
+     : '📥 تسليمي'}
+   </h3>
 
-  if(!response.ok)
-   throw new Error(data.error||'تعذر تسليم المهمة');
+   <p>
+    <b>المهمة:</b>
+    ${escapeHtml(task.title||'')}
+   </p>
 
-  await loadTasks();
+   ${task.submitted_at
+    ? `<p>
+        <b>وقت التسليم:</b>
+        ${escapeHtml(task.submitted_at)}
+       </p>`
+    : ''}
 
- }catch(error){
-  alert(error.message||'تعذر تسليم المهمة');
- }
+   ${task.submission_note
+    ? `<div style="
+        margin-top:15px;
+        padding:14px;
+        border:1px solid #ddd;
+        border-radius:12px
+       ">
+        <b>📝 العمل المكتوب:</b>
+        <div style="
+         white-space:pre-wrap;
+         margin-top:10px
+        ">${escapeHtml(task.submission_note)}</div>
+       </div>`
+    : ''}
+
+   ${task.submission_url
+    ? `<div style="margin-top:15px">
+        <a
+         href="${escapeHtml(task.submission_url)}"
+         target="_blank"
+         rel="noopener noreferrer">
+         🔗 فتح رابط العمل
+        </a>
+       </div>`
+    : ''}
+
+   ${task.submission_file_name
+    ? `<div style="margin-top:15px">
+        <b>📎 الملف:</b>
+        ${escapeHtml(task.submission_file_name)}
+        <br>
+        <a
+         href="/api/tasks/${task.id}/submission-file"
+         target="_blank">
+         👁️ فتح الملف
+        </a>
+       </div>`
+    : ''}
+
+   <div style="margin-top:20px">
+    <button type="button"
+     onclick="this.closest('[style*=fixed]').remove()">
+     إغلاق
+    </button>
+   </div>
+  </div>
+ `;
+
+ document.body.appendChild(modal);
+
+ modal.addEventListener('click',e=>{
+  if(e.target===modal)
+   modal.remove();
+ });
 }
+
 
 async function updateTaskStatus(id,status){
  try{

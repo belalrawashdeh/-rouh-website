@@ -576,6 +576,8 @@ async function tasks(){
  const volunteers=vr.items||[];
  const items=tr.items||[];
 
+ window.currentAdminTasks=items;
+
  const statusLabel=status=>{
   if(status==='new')return '🆕 جديدة';
   if(status==='in_progress')return '⏳ قيد التنفيذ';
@@ -594,67 +596,98 @@ async function tasks(){
   )
  ].sort((a,b)=>a.localeCompare(b,'ar'));
 
- const rows=items.length ? items.map(t=>`
+ const currentItems=items.filter(
+  t=>!['completed','not_completed'].includes(t.status)
+ );
+
+ const archiveItems=items.filter(
+  t=>['completed','not_completed'].includes(t.status)
+ );
+
+ const taskRow=(t,isArchive=false)=>`
   <tr>
    <td>${esc(t.volunteer_name||'—')}</td>
+
    <td>${esc(t.department||'—')}</td>
+
    <td>
-    <b>${esc(t.title)}</b>
+    <b>${esc(t.title||'')}</b>
+
     ${t.description
-     ? `<div class="muted" style="margin-top:5px">${esc(t.description)}</div>`
+     ? `<div class="muted" style="margin-top:5px">
+         ${esc(t.description)}
+        </div>`
      : ''}
    </td>
+
    <td>${t.due_date?esc(t.due_date):'—'}</td>
+
    <td>
-    ${statusLabel(t.status)}
+    <div style="margin-bottom:8px">
+     ${statusLabel(t.status)}
+    </div>
 
-    ${t.status==='submitted' ? `
-     <div style="margin-top:8px">
-
-      ${t.submission_note
-       ? `<div class="muted" style="margin-bottom:6px">
-           <b>ملاحظة التسليم:</b>
-           ${esc(t.submission_note)}
-          </div>`
-       : ''}
-
-      ${t.submission_url
-       ? `<div style="margin-bottom:8px">
-           <a href="${esc(t.submission_url)}"
-              target="_blank"
-              rel="noopener noreferrer">
-            🔗 فتح رابط التسليم
-           </a>
-          </div>`
-       : ''}
-
-      <button class="btn"
-       onclick="reviewVolunteerTask(${t.id},'completed')">
-       ✅ اعتماد الإنجاز
-      </button>
-
-      <button class="btn light"
-       onclick="reviewVolunteerTask(${t.id},'revision_requested')">
-       ↩️ طلب تعديل
-      </button>
-
-     </div>
-    ` : ''}
+    ${t.status==='submitted'
+     ? `
+       <button class="btn"
+        onclick="openTaskSubmissionReview(${t.id})">
+        👁️ مراجعة التسليم
+       </button>
+      `
+     : ''}
 
     ${t.status==='revision_requested' && t.revision_note
-     ? `<div class="muted" style="margin-top:6px">
-         ملاحظة التعديل: ${esc(t.revision_note)}
-        </div>`
+     ? `
+       <div class="muted"
+        style="margin-top:7px">
+        <b>ملاحظة التعديل:</b>
+        ${esc(t.revision_note)}
+       </div>
+      `
+     : ''}
+
+    ${t.status==='completed'
+     ? `
+       <button class="btn light"
+        onclick="openTaskSubmissionReview(${t.id},true)">
+        👁️ عرض العمل
+       </button>
+      `
+     : ''}
+
+    ${t.status==='not_completed'
+     ? `
+       <div class="muted">
+        تم أرشفة المهمة كغير مكتملة.
+       </div>
+      `
      : ''}
    </td>
 
    <td>${esc(t.created_by_name||'—')}</td>
   </tr>
- `).join('') : `
-  <tr>
-   <td colspan="6" class="muted">لا توجد مهام حتى الآن.</td>
-  </tr>
  `;
+
+ const currentRows=currentItems.length
+  ? currentItems.map(t=>taskRow(t,false)).join('')
+  : `
+    <tr>
+     <td colspan="6" class="muted">
+      لا توجد مهام حالية.
+     </td>
+    </tr>
+   `;
+
+ const archiveRows=archiveItems.length
+  ? archiveItems.map(t=>taskRow(t,true)).join('')
+  : `
+    <tr>
+     <td colspan="6" class="muted">
+      لا توجد مهام في الأرشيف حتى الآن.
+     </td>
+    </tr>
+   `;
+
 
  content.innerHTML=`
   <div class="panel">
@@ -723,7 +756,32 @@ async function tasks(){
        <th>أُسندت بواسطة</th>
       </tr>
      </thead>
-     <tbody>${rows}</tbody>
+     <tbody>${currentRows}</tbody>
+    </table>
+   </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+   <h2>📁 أرشيف المهام</h2>
+
+   <p class="muted">
+    الأعمال المقبولة والمهام المنتهية تبقى محفوظة هنا ويمكن الرجوع إليها في أي وقت.
+   </p>
+
+   <div style="overflow:auto">
+    <table>
+     <thead>
+      <tr>
+       <th>المتطوع</th>
+       <th>القسم</th>
+       <th>المهمة</th>
+       <th>التسليم</th>
+       <th>الحالة</th>
+       <th>أُسندت بواسطة</th>
+      </tr>
+     </thead>
+
+     <tbody>${archiveRows}</tbody>
     </table>
    </div>
   </div>
@@ -1202,6 +1260,275 @@ async function volunteers(){
 
 
 
+
+function closeAdminTaskReview(){
+ const modal=document.getElementById(
+  'adminTaskReviewModal'
+ );
+
+ if(modal)modal.remove();
+}
+
+function formatTaskFileSize(size){
+ const n=Number(size||0);
+
+ if(!n)return '';
+
+ if(n<1024)
+  return `${n} B`;
+
+ if(n<1024*1024)
+  return `${(n/1024).toFixed(1)} KB`;
+
+ return `${(n/(1024*1024)).toFixed(1)} MB`;
+}
+
+function openTaskSubmissionReview(id,readOnly=false){
+ closeAdminTaskReview();
+
+ const task=(window.currentAdminTasks||[])
+  .find(t=>Number(t.id)===Number(id));
+
+ if(!task){
+  alert('تعذر العثور على المهمة');
+  return;
+ }
+
+ const canReview=
+  task.status==='submitted' &&
+  !readOnly;
+
+ const modal=document.createElement('div');
+
+ modal.id='adminTaskReviewModal';
+
+ modal.style.cssText=`
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.58);
+  z-index:99999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+ `;
+
+ modal.innerHTML=`
+  <div style="
+   width:min(760px,100%);
+   max-height:92vh;
+   overflow:auto;
+   background:#fff;
+   color:#222;
+   border-radius:18px;
+   padding:24px;
+   direction:rtl;
+   box-shadow:0 20px 70px rgba(0,0,0,.28)
+  ">
+
+   <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    margin-bottom:18px
+   ">
+    <div>
+     <h2 style="margin:0 0 5px">
+      ${task.status==='completed'
+       ? '✅ العمل المقبول'
+       : '👁️ مراجعة التسليم'}
+     </h2>
+
+     <div class="muted">
+      ${esc(task.volunteer_name||'')}
+     </div>
+    </div>
+
+    <button class="btn light"
+     onclick="closeAdminTaskReview()">
+     ✕
+    </button>
+   </div>
+
+   <div style="
+    padding:14px;
+    border:1px solid #ddd;
+    border-radius:12px;
+    margin-bottom:14px
+   ">
+    <div>
+     <b>📋 المهمة:</b>
+     ${esc(task.title||'')}
+    </div>
+
+    ${task.description
+     ? `
+       <div style="margin-top:8px">
+        <b>تفاصيل المهمة:</b><br>
+        ${esc(task.description)}
+       </div>
+      `
+     : ''}
+
+    ${task.submitted_at
+     ? `
+       <div style="margin-top:8px">
+        <b>وقت التسليم:</b>
+        ${esc(task.submitted_at)}
+       </div>
+      `
+     : ''}
+   </div>
+
+   ${task.submission_note
+    ? `
+      <div style="
+       padding:15px;
+       border:1px solid #ddd;
+       border-radius:12px;
+       margin-bottom:14px
+      ">
+       <b>📝 العمل المكتوب / التقرير</b>
+
+       <div style="
+        white-space:pre-wrap;
+        margin-top:10px;
+        line-height:1.8
+       ">${esc(task.submission_note)}</div>
+      </div>
+     `
+    : ''}
+
+   ${task.submission_url
+    ? `
+      <div style="
+       padding:15px;
+       border:1px solid #ddd;
+       border-radius:12px;
+       margin-bottom:14px
+      ">
+       <b>🔗 رابط العمل</b>
+
+       <div style="margin-top:10px">
+        <a
+         href="${esc(task.submission_url)}"
+         target="_blank"
+         rel="noopener noreferrer">
+         فتح رابط العمل ↗
+        </a>
+       </div>
+      </div>
+     `
+    : ''}
+
+   ${task.submission_file_name
+    ? `
+      <div style="
+       padding:15px;
+       border:1px solid #ddd;
+       border-radius:12px;
+       margin-bottom:14px
+      ">
+       <b>📎 الملف المرفق</b>
+
+       <div style="margin-top:8px">
+        ${esc(task.submission_file_name)}
+       </div>
+
+       ${task.submission_file_size
+        ? `
+          <div class="muted"
+           style="margin-top:4px">
+           ${formatTaskFileSize(
+            task.submission_file_size
+           )}
+          </div>
+         `
+        : ''}
+
+       <div style="margin-top:10px">
+        <a class="btn light"
+         href="/api/tasks/${task.id}/submission-file"
+         target="_blank">
+         👁️ فتح الملف
+        </a>
+       </div>
+      </div>
+     `
+    : ''}
+
+   ${
+    !task.submission_note &&
+    !task.submission_url &&
+    !task.submission_file_name
+     ? `
+       <div class="notice">
+        لا توجد تفاصيل تسليم محفوظة لهذه المهمة.
+       </div>
+      `
+     : ''
+   }
+
+   ${task.status==='completed'
+    ? `
+      <div style="
+       margin-top:16px;
+       padding:13px;
+       border:1px solid #ddd;
+       border-radius:12px
+      ">
+       ✅ تم اعتماد هذا العمل وهو محفوظ في أرشيف المهام.
+      </div>
+     `
+    : ''}
+
+   ${canReview
+    ? `
+      <div style="
+       margin-top:20px;
+       padding-top:18px;
+       border-top:1px solid #ddd;
+       display:flex;
+       gap:10px;
+       flex-wrap:wrap
+      ">
+       <button class="btn green"
+        onclick="reviewTaskFromModal(${task.id},'completed')">
+        ✅ اعتماد الإنجاز
+       </button>
+
+       <button class="btn light"
+        onclick="reviewTaskFromModal(${task.id},'revision_requested')">
+        ↩️ طلب تعديل
+       </button>
+      </div>
+     `
+    : ''}
+
+  </div>
+ `;
+
+ document.body.appendChild(modal);
+
+ modal.addEventListener('click',e=>{
+  if(e.target===modal)
+   closeAdminTaskReview();
+ });
+}
+
+async function reviewTaskFromModal(id,action){
+ const ok=await reviewVolunteerTask(
+  id,
+  action
+ );
+
+ if(ok){
+  closeAdminTaskReview();
+ }
+}
+
+
 async function reviewVolunteerTask(id,action){
  try{
   let revisionNote='';
@@ -1240,8 +1567,11 @@ async function reviewVolunteerTask(id,action){
 
   await tasks();
 
+  return true;
+
  }catch(e){
   alert(e.message||'تعذر مراجعة المهمة');
+  return false;
  }
 }
 
