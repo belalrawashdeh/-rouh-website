@@ -390,6 +390,11 @@ async function trash(){
        — ${esc(v.username||'-')}
        — ${esc(v.department||'-')}
 
+       <button class="btn light small"
+        onclick="restoreVolunteerAccount(${v.id})">
+        ↩️ استعادة
+       </button>
+
        <button class="btn danger small"
         onclick="permanentlyDeleteVolunteerAccount(${v.id})">
         🗑️ إزالة نهائيًا
@@ -2696,3 +2701,18 @@ async function aiAssistant(){
   }
  });
 }
+
+window.restoreVolunteerAccount=async id=>{
+ if(!confirm('هل تريد استعادة حساب هذا المتطوع؟')) return;
+
+ try{
+  const r=await api('/api/admin/volunteer-accounts/'+id+'/restore',{
+   method:'POST'
+  });
+
+  flash(r.message || 'تم استرجاع حساب المتطوع');
+  loadTab('trash');
+ }catch(e){
+  flash(e.message,true);
+ }
+};
