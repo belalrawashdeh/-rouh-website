@@ -4191,13 +4191,26 @@ CREATE TABLE IF NOT EXISTS volunteer_tasks (
   PRAGMA table_info(volunteer_tasks)
  `).all().map(c=>c.name);
 
+ // File-submission columns are additive.
+ // Add them in place so existing task workflow/submission data is preserved.
+ const taskFileColumns=[
+  ['submission_file_name', "TEXT NOT NULL DEFAULT ''"],
+  ['submission_file_path', "TEXT NOT NULL DEFAULT ''"],
+  ['submission_file_type', "TEXT NOT NULL DEFAULT ''"],
+  ['submission_file_size', "INTEGER NOT NULL DEFAULT 0"]
+ ];
+
+ for(const [column,definition] of taskFileColumns){
+  if(!taskColumns.includes(column)){
+   console.log(`Adding volunteer_tasks.${column}...`);
+   db.exec(`ALTER TABLE volunteer_tasks ADD COLUMN ${column} ${definition}`);
+   taskColumns.push(column);
+  }
+ }
+
  const needsTaskMigration=
   !taskColumns.includes('submission_note') ||
   !taskColumns.includes('submission_url') ||
-  !taskColumns.includes('submission_file_name') ||
-  !taskColumns.includes('submission_file_path') ||
-  !taskColumns.includes('submission_file_type') ||
-  !taskColumns.includes('submission_file_size') ||
   !taskColumns.includes('revision_note') ||
   !taskColumns.includes('submitted_at') ||
   !taskColumns.includes('started_at') ||
