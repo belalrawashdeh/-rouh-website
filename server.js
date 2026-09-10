@@ -1191,14 +1191,21 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
     const b=await body(req);
     const status=String(b.status||'');
 
-    if(!['in_progress','completed'].includes(status))
+    if(!['in_progress','completed','not_completed'].includes(status))
      return send(res,400,{error:'حالة المهمة غير صحيحة'});
 
     if(task.status==='completed')
      return send(res,400,{error:'المهمة مكتملة بالفعل'});
 
-    if(task.status==='new' && status==='completed')
-     return send(res,400,{error:'ابدأ المهمة أولًا قبل إكمالها'});
+    if(task.status==='not_completed')
+     return send(res,400,{error:'تم تسجيل المهمة مسبقًا على أنها لم يتم إنهاؤها'});
+
+    if(task.status==='new' && status!=='in_progress')
+     return send(res,400,{error:'يجب بدء تنفيذ المهمة أولًا'});
+
+    if(task.status==='in_progress' &&
+       !['completed','not_completed'].includes(status))
+     return send(res,400,{error:'انتقال حالة المهمة غير مسموح'});
 
     db.prepare(`
      UPDATE volunteer_tasks
@@ -1870,6 +1877,7 @@ ${message}`;
       SUM(CASE WHEN status='new' THEN 1 ELSE 0 END) new_tasks,
       SUM(CASE WHEN status='in_progress' THEN 1 ELSE 0 END) in_progress,
       SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) completed,
+      SUM(CASE WHEN status='not_completed' THEN 1 ELSE 0 END) not_completed,
       MAX(updated_at) last_activity
      FROM volunteer_tasks
      WHERE volunteer_id=?
@@ -1883,6 +1891,7 @@ ${message}`;
      new:Number(stats.new_tasks||0),
      in_progress:Number(stats.in_progress||0),
      completed,
+     not_completed:Number(stats.not_completed||0),
      completion_rate:total
       ? Math.round((completed/total)*100)
       : 0,

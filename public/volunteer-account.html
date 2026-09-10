@@ -1023,10 +1023,21 @@ async function loadTasks(){
    }
    else if(task.status==='in_progress'){
     status='⏳ قيد التنفيذ';
-    action=`<button type="button"
-     onclick="updateTaskStatus(${task.id},'completed')">
-     تم الإنجاز ✅
-    </button>`;
+    action=`
+     <button type="button"
+      onclick="updateTaskStatus(${task.id},'completed')">
+      تم الإنجاز ✅
+     </button>
+
+     <button type="button"
+      onclick="updateTaskStatus(${task.id},'not_completed')">
+      لم يتم إنهاؤها ❌
+     </button>
+    `;
+   }
+   else if(task.status==='not_completed'){
+    status='❌ لم يتم إنهاؤها';
+    action='<div class="muted">تم تسجيل أن المهمة لم يتم إنهاؤها.</div>';
    }
    else{
     status='✅ مكتملة';
@@ -1065,6 +1076,14 @@ async function loadTasks(){
 
 async function updateTaskStatus(id,status){
  try{
+  if(status==='not_completed'){
+   const confirmed=confirm(
+    'هل أنت متأكد من أن المهمة لم يتم إنهاؤها؟\nسيتم تسجيل هذه الحالة لدى الإدارة.'
+   );
+
+   if(!confirmed)return;
+  }
+
   const response=await fetch(`/api/volunteer/tasks/${id}/status`,{
    method:'PUT',
    headers:{'Content-Type':'application/json'},

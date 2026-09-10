@@ -580,6 +580,7 @@ async function tasks(){
   if(status==='new')return '🆕 جديدة';
   if(status==='in_progress')return '⏳ قيد التنفيذ';
   if(status==='completed')return '✅ مكتملة';
+  if(status==='not_completed')return '❌ لم يتم إنهاؤها';
   return status||'—';
  };
 
@@ -1167,6 +1168,7 @@ async function viewVolunteerProfile(id){
    new:0,
    in_progress:0,
    completed:0,
+   not_completed:0,
    completion_rate:0,
    last_activity:null
   };
@@ -1236,6 +1238,11 @@ async function viewVolunteerProfile(id){
       <div class="profileStat">
        <strong>${st.completed}</strong>
        <span>مكتملة</span>
+      </div>
+
+      <div class="profileStat">
+       <strong>${st.not_completed||0}</strong>
+       <span>لم يتم إنهاؤها</span>
       </div>
 
      </div>
