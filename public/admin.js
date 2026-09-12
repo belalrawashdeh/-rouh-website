@@ -5536,7 +5536,9 @@ async function updateVolunteer(id,status){
 }
 
 async function complaints(){
+
  const d=await api('/api/admin/complaints');
+ const items=d.items||[];
 
  const statusLabel={
   new:'جديدة',
@@ -5545,66 +5547,770 @@ async function complaints(){
   closed:'مغلقة'
  };
 
- content.innerHTML=d.items.length?d.items.map(x=>`
-  <div class="panel">
+ const stats={
+  total:items.length,
+  new:items.filter(x=>x.status==='new').length,
+  reviewing:items.filter(x=>x.status==='reviewing').length,
+  resolved:items.filter(x=>
+   x.status==='handled' ||
+   x.status==='closed'
+  ).length
+ };
 
-   <div class="topbar">
+
+ content.innerHTML=`
+
+  <div class="complaintsCenter">
+
+
+   <section class="complaintsHero">
+
     <div>
-     <h3>شكوى #${x.id}</h3>
-     <div class="muted">${esc(x.created_at)}</div>
+
+     <span class="complaintsHeroCode">
+      ROUH / CASE MANAGEMENT
+     </span>
+
+     <h2>
+      مركز الشكاوى
+     </h2>
+
+     <p>
+      مساحة مخصصة لمراجعة الشكاوى،
+      متابعة حالتها، وتوثيق إجراءات
+      الإدارة حتى إغلاق الحالة.
+     </p>
+
+
+     <div class="complaintsHeroStatus">
+
+      <span>
+       <i></i>
+       CASE SYSTEM ACTIVE
+      </span>
+
+      <span>
+       ${items.length} حالة مسجلة
+      </span>
+
+     </div>
+
     </div>
 
-    <span class="badge">
-     ${esc(statusLabel[x.status]||x.status)}
-    </span>
-   </div>
 
-   <div class="formGrid">
+    <div class="complaintsHeroMark">
 
-    <div class="field">
-     <label>الاسم</label>
-     <input value="${esc(x.name)}" disabled>
+     <div>!</div>
+
+     <small>
+      CASES
+     </small>
+
     </div>
 
-    <div class="field">
-     <label>رقم الهاتف</label>
-     <input value="${esc(x.phone)}" disabled>
+   </section>
+
+
+   <section class="complaintsStats">
+
+    <article>
+
+     <span>TOTAL CASES</span>
+
+     <strong>${stats.total}</strong>
+
+     <small>إجمالي الشكاوى</small>
+
+    </article>
+
+
+    <article class="new">
+
+     <span>NEW CASES</span>
+
+     <strong>${stats.new}</strong>
+
+     <small>بانتظار المراجعة</small>
+
+    </article>
+
+
+    <article class="reviewing">
+
+     <span>IN REVIEW</span>
+
+     <strong>${stats.reviewing}</strong>
+
+     <small>قيد المراجعة</small>
+
+    </article>
+
+
+    <article class="resolved">
+
+     <span>RESOLVED</span>
+
+     <strong>${stats.resolved}</strong>
+
+     <small>تمت معالجتها أو إغلاقها</small>
+
+    </article>
+
+   </section>
+
+
+   <section class="complaintsWorkspace">
+
+
+    <div class="complaintsWorkspaceHead">
+
+     <div>
+
+      <span>
+       CASE REGISTRY
+      </span>
+
+      <h3>
+       سجل الشكاوى
+      </h3>
+
+      <p>
+       اختر أي حالة لعرض التفاصيل
+       ومتابعة إجراء الإدارة.
+      </p>
+
+     </div>
+
+
+     <div class="complaintsTools">
+
+      <label class="complaintsSearch">
+
+       <span>⌕</span>
+
+       <input
+        id="complaintsSearchInput"
+        type="search"
+        placeholder="بحث بالاسم أو رقم الحالة..."
+        autocomplete="off">
+
+      </label>
+
+
+      <select id="complaintsStatusFilter">
+
+       <option value="all">
+        جميع الحالات
+       </option>
+
+       ${Object.entries(statusLabel)
+        .map(([k,v])=>`
+         <option value="${k}">
+          ${v}
+         </option>
+        `).join('')}
+
+      </select>
+
+     </div>
+
     </div>
 
-    <div class="field">
-     <label>البريد الإلكتروني</label>
-     <input value="${esc(x.email)}" disabled>
+
+    <div class="complaintsList">
+
+     ${
+      items.length
+       ? items.map((x,index)=>{
+
+          const state=
+           statusLabel[x.status]
+            ? x.status
+            : 'new';
+
+          const encoded=
+           encodeURIComponent(
+            JSON.stringify(x)
+           );
+
+          const searchText=[
+           x.id||'',
+           x.name||'',
+           x.phone||'',
+           x.email||'',
+           x.complaint||'',
+           statusLabel[x.status]||''
+          ].join(' ').toLowerCase();
+
+          return `
+
+           <article
+            class="complaintCase"
+            data-complaint-status="${state}"
+            data-complaint-search="${esc(searchText)}"
+            style="--case-index:${index}">
+
+
+            <div class="complaintCaseNumber">
+
+             <span>
+              CASE
+             </span>
+
+             <strong>
+              #${String(
+               x.id||index+1
+              ).padStart(3,'0')}
+             </strong>
+
+            </div>
+
+
+            <div class="complaintCasePerson">
+
+             <div class="complaintCaseAvatar">
+
+              ${esc(
+               String(
+                x.name||'R'
+               )
+               .trim()
+               .charAt(0)
+               .toUpperCase()
+              )}
+
+             </div>
+
+
+             <div>
+
+              <strong>
+               ${esc(
+                x.name||
+                'غير معروف'
+               )}
+              </strong>
+
+              <small>
+               ${esc(
+                x.phone||
+                x.email||
+                'لا توجد وسيلة تواصل'
+               )}
+              </small>
+
+             </div>
+
+            </div>
+
+
+            <div class="complaintCaseSummary">
+
+             <span>
+              COMPLAINT
+             </span>
+
+             <p>
+              ${esc(
+               x.complaint||
+               'لا يوجد وصف للشكوى.'
+              )}
+             </p>
+
+            </div>
+
+
+            <div class="complaintCaseDate">
+
+             <span>
+              SUBMITTED
+             </span>
+
+             <strong>
+              ${esc(
+               x.created_at||
+               '-'
+              )}
+             </strong>
+
+            </div>
+
+
+            <div>
+
+             <span class="
+              complaintStatus
+              ${state}
+             ">
+
+              <i></i>
+
+              ${esc(
+               statusLabel[x.status]||
+               x.status
+              )}
+
+             </span>
+
+            </div>
+
+
+            <button
+             type="button"
+             class="complaintOpen"
+             onclick="
+              openComplaintDrawer(
+               '${encoded}'
+              )
+             ">
+
+             مراجعة
+             <span>←</span>
+
+            </button>
+
+
+           </article>
+
+          `;
+
+         }).join('')
+       : `
+
+        <div class="complaintsEmpty">
+
+         <div>✓</div>
+
+         <h3>
+          لا توجد شكاوى
+         </h3>
+
+         <p>
+          لا توجد حالات مسجلة
+          في الوقت الحالي.
+         </p>
+
+        </div>
+
+       `
+     }
+
     </div>
 
-    <div class="field">
-     <label>الحالة</label>
-     <select id="complaintStatus${x.id}">
-      ${Object.entries(statusLabel).map(([k,v])=>`
-       <option value="${k}" ${x.status===k?'selected':''}>${v}</option>
-      `).join('')}
-     </select>
-    </div>
 
-    <div class="field full">
-     <label>الشكوى</label>
-     <textarea disabled>${esc(x.complaint)}</textarea>
-    </div>
+    ${
+     items.length
+      ? `
+       <div
+        id="complaintsNoResults"
+        class="complaintsNoResults"
+        hidden>
 
-    <div class="field full">
-     <label>ملاحظات الإدارة</label>
-     <textarea id="complaintNotes${x.id}">${esc(x.admin_notes||'')}</textarea>
-    </div>
+        لا توجد شكاوى مطابقة للبحث.
 
-    <button class="btn green full" onclick="saveComplaint(${x.id})">
-     حفظ التحديث
-    </button>
+       </div>
+      `
+      : ''
+    }
 
-   </div>
+
+   </section>
+
+
   </div>
- `).join(''):
- '<div class="panel"><p class="muted">لا توجد شكاوى مرسلة حتى الآن.</p></div>';
+
+
+  <div
+   id="complaintDrawerBackdrop"
+   class="complaintDrawerBackdrop"
+   onclick="closeComplaintDrawer()">
+  </div>
+
+
+  <aside
+   id="complaintDrawer"
+   class="complaintDrawer">
+
+   <div id="complaintDrawerContent"></div>
+
+  </aside>
+
+ `;
+
+
+ const search=
+  document.getElementById(
+   'complaintsSearchInput'
+  );
+
+ const filter=
+  document.getElementById(
+   'complaintsStatusFilter'
+  );
+
+
+ const applyFilters=()=>{
+
+  const query=
+   (search?.value||'')
+    .trim()
+    .toLowerCase();
+
+  const status=
+   filter?.value||'all';
+
+  let visible=0;
+
+
+  document
+   .querySelectorAll(
+    '.complaintCase'
+   )
+   .forEach(card=>{
+
+    const searchMatch=
+     !query ||
+     (
+      card.dataset.complaintSearch||''
+     ).includes(query);
+
+    const statusMatch=
+     status==='all' ||
+     card.dataset.complaintStatus===status;
+
+    const show=
+     searchMatch &&
+     statusMatch;
+
+    card.hidden=!show;
+
+    if(show) visible++;
+
+   });
+
+
+  const noResults=
+   document.getElementById(
+    'complaintsNoResults'
+   );
+
+  if(noResults){
+   noResults.hidden=
+    visible!==0;
+  }
+
+ };
+
+
+ search?.addEventListener(
+  'input',
+  applyFilters
+ );
+
+ filter?.addEventListener(
+  'change',
+  applyFilters
+ );
+
 }
 
+
+window.openComplaintDrawer=(encoded)=>{
+
+ let x;
+
+ try{
+
+  x=JSON.parse(
+   decodeURIComponent(encoded)
+  );
+
+ }catch{
+
+  return;
+
+ }
+
+
+ const statusLabel={
+  new:'جديدة',
+  reviewing:'قيد المراجعة',
+  handled:'تمت المعالجة',
+  closed:'مغلقة'
+ };
+
+
+ const drawer=
+  document.getElementById(
+   'complaintDrawer'
+  );
+
+ const backdrop=
+  document.getElementById(
+   'complaintDrawerBackdrop'
+  );
+
+ const body=
+  document.getElementById(
+   'complaintDrawerContent'
+  );
+
+
+ if(
+  !drawer ||
+  !backdrop ||
+  !body
+ ) return;
+
+
+ body.innerHTML=`
+
+  <div class="complaintDrawerHeader">
+
+   <div>
+
+    <span>
+     CASE REVIEW /
+     ${String(
+      x.id||''
+     ).padStart(3,'0')}
+    </span>
+
+    <h2>
+     مراجعة الشكوى
+    </h2>
+
+   </div>
+
+
+   <button
+    type="button"
+    onclick="closeComplaintDrawer()">
+
+    ×
+
+   </button>
+
+  </div>
+
+
+  <div class="complaintDrawerBody">
+
+
+   <section class="complaintIdentity">
+
+    <div class="complaintIdentityAvatar">
+
+     ${esc(
+      String(
+       x.name||'R'
+      )
+      .trim()
+      .charAt(0)
+      .toUpperCase()
+     )}
+
+    </div>
+
+
+    <div>
+
+     <span>
+      SUBMITTED BY
+     </span>
+
+     <strong>
+      ${esc(
+       x.name||
+       'غير معروف'
+      )}
+     </strong>
+
+     <small>
+      تم إرسال الشكوى
+      ${esc(x.created_at||'')}
+     </small>
+
+    </div>
+
+   </section>
+
+
+   <section class="complaintContact">
+
+    <div>
+
+     <span>
+      PHONE
+     </span>
+
+     <strong>
+      ${esc(
+       x.phone||
+       'غير متوفر'
+      )}
+     </strong>
+
+    </div>
+
+
+    <div>
+
+     <span>
+      EMAIL
+     </span>
+
+     <strong>
+      ${esc(
+       x.email||
+       'غير متوفر'
+      )}
+     </strong>
+
+    </div>
+
+   </section>
+
+
+   <section class="complaintText">
+
+    <span>
+     COMPLAINT DETAILS
+    </span>
+
+    <h3>
+     تفاصيل الشكوى
+    </h3>
+
+    <p>
+     ${esc(
+      x.complaint||
+      'لا يوجد وصف.'
+     )}
+    </p>
+
+   </section>
+
+
+   <section class="complaintManagement">
+
+    <div class="complaintManagementHead">
+
+     <span>
+      CASE MANAGEMENT
+     </span>
+
+     <h3>
+      متابعة الحالة
+     </h3>
+
+     <p>
+      حدّث حالة الشكوى وسجل
+      ملاحظات الإدارة.
+     </p>
+
+    </div>
+
+
+    <label>
+
+     <span>
+      حالة الشكوى
+     </span>
+
+     <select
+      id="complaintStatus${x.id}">
+
+      ${Object.entries(statusLabel)
+       .map(([k,v])=>`
+
+        <option
+         value="${k}"
+         ${x.status===k
+          ? 'selected'
+          : ''}>
+
+         ${v}
+
+        </option>
+
+       `).join('')}
+
+     </select>
+
+    </label>
+
+
+    <label>
+
+     <span>
+      ملاحظات الإدارة
+     </span>
+
+     <textarea
+      id="complaintNotes${x.id}"
+      rows="6"
+      placeholder="سجّل الإجراء أو الملاحظات الخاصة بالحالة..."
+     >${esc(
+      x.admin_notes||
+      ''
+     )}</textarea>
+
+    </label>
+
+
+    <button
+     type="button"
+     class="complaintSave"
+     onclick="
+      saveComplaint(${x.id})
+     ">
+
+     <span>✓</span>
+
+     حفظ تحديث الحالة
+
+    </button>
+
+   </section>
+
+
+  </div>
+
+ `;
+
+
+ backdrop.classList.add('open');
+ drawer.classList.add('open');
+
+ document.body.classList.add(
+  'complaintDrawerOpen'
+ );
+
+};
+
+
+window.closeComplaintDrawer=()=>{
+
+ document
+  .getElementById(
+   'complaintDrawer'
+  )
+  ?.classList.remove('open');
+
+
+ document
+  .getElementById(
+   'complaintDrawerBackdrop'
+  )
+  ?.classList.remove('open');
+
+
+ document.body.classList.remove(
+  'complaintDrawerOpen'
+ );
+
+};
 async function saveComplaint(id){
  try{
   const status=document.getElementById('complaintStatus'+id).value;
@@ -5616,6 +6322,7 @@ async function saveComplaint(id){
   });
 
   flash('تم تحديث حالة الشكوى');
+  closeComplaintDrawer();
   complaints();
 
  }catch(e){
