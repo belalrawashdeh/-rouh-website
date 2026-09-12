@@ -625,7 +625,12 @@ window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userFor
 </div>${u.id?`<div class="field"><label>الحالة</label><select name="active"><option value="1" ${u.active?'selected':''}>فعال</option><option value="0" ${!u.active?'selected':''}>موقوف</option></select></div>`:''}<button class="btn green full">حفظ</button></form></div>`;$('#userForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());if(u.id)o.active=o.active==='1';try{await api('/api/admin/users'+(u.id?'/'+u.id:''),{method:u.id?'PUT':'POST',body:JSON.stringify(o)});flash('تم الحفظ');loadTab('users')}catch(ex){flash(ex.message,true)}}}
 
 async function deletionRequests(){
- const d=await api('/api/admin/deletion-requests');
+
+ const d=await api(
+  '/api/admin/deletion-requests'
+ );
+
+ const items=d.items||[];
 
  const names={
   department_content:'محتوى القسم',
@@ -641,46 +646,506 @@ async function deletionRequests(){
   rejected:'مرفوض'
  };
 
- content.innerHTML=`
-  <div class="panel">
-   <h3>طلبات حذف بانتظار موافقة المالك</h3>
-   <table class="table">
-    <thead>
-     <tr>
-      <th>المسؤول</th>
-      <th>القسم</th>
-      <th>نوع العنصر</th>
-      <th>العنصر</th>
-      <th>الحالة</th>
-      <th>الوقت</th>
-      <th>الإجراء</th>
-     </tr>
-    </thead>
-    <tbody>
-     ${d.items.map(r=>`
-      <tr>
-       <td>${esc(r.requester_name||'-')}</td>
-       <td>${esc(r.requester_department||'-')}</td>
-       <td>${esc(names[r.entity_type]||r.entity_type)}</td>
-       <td>${esc(r.item_title||('#'+r.entity_id))}</td>
-       <td>${esc(statusNames[r.status]||r.status)}</td>
-       <td>${esc(r.created_at)}</td>
-       <td>
-        ${r.status==='pending'?`
-         <div class="rowActions">
-          <button class="btn green small" onclick="decideDeletionRequest(${r.id},'approve')">موافقة على الحذف</button>
-          <button class="btn danger small" onclick="decideDeletionRequest(${r.id},'reject')">رفض الحذف</button>
-         </div>
-        `:`<span class="muted">${esc(r.decided_by_name||'تم اتخاذ القرار')}</span>`}
-       </td>
-      </tr>
-     `).join('')||'<tr><td colspan="7">لا توجد طلبات حذف.</td></tr>'}
-    </tbody>
-   </table>
-  </div>
- `;
-}
+ const entityIcons={
+  department_content:'▦',
+  events:'◇',
+  achievements:'★',
+  faq:'?',
+  volunteer_application:'○'
+ };
 
+ const stats={
+  total:items.length,
+  pending:items.filter(
+   r=>r.status==='pending'
+  ).length,
+  approved:items.filter(
+   r=>r.status==='approved'
+  ).length,
+  rejected:items.filter(
+   r=>r.status==='rejected'
+  ).length
+ };
+
+ const ordered=[
+  ...items.filter(r=>r.status==='pending'),
+  ...items.filter(r=>r.status!=='pending')
+ ];
+
+
+ content.innerHTML=`
+
+  <div class="approvalCenter">
+
+
+   <section class="approvalHero">
+
+    <div class="approvalHeroContent">
+
+     <span class="approvalHeroCode">
+      ROUH / GOVERNANCE
+     </span>
+
+     <h2>
+      مركز طلبات الموافقة
+     </h2>
+
+     <p>
+      راجع طلبات الحذف قبل تنفيذها،
+      واحمِ محتوى المبادرة من الإجراءات
+      غير المقصودة.
+     </p>
+
+
+     <div class="approvalHeroSecurity">
+
+      <span>
+       <i></i>
+       OWNER APPROVAL REQUIRED
+      </span>
+
+      <small>
+       لا يتم تنفيذ الحذف قبل اتخاذ القرار
+      </small>
+
+     </div>
+
+    </div>
+
+
+    <div class="approvalShield">
+
+     <div>
+      <span>✓</span>
+     </div>
+
+     <small>
+      CONTROL
+     </small>
+
+    </div>
+
+   </section>
+
+
+   <div class="approvalStats">
+
+    <div class="approvalStat">
+
+     <span>ALL REQUESTS</span>
+
+     <strong>
+      ${stats.total}
+     </strong>
+
+     <small>
+      إجمالي الطلبات
+     </small>
+
+    </div>
+
+
+    <div class="approvalStat pending">
+
+     <span>PENDING</span>
+
+     <strong>
+      ${stats.pending}
+     </strong>
+
+     <small>
+      تحتاج قرارك
+     </small>
+
+    </div>
+
+
+    <div class="approvalStat approved">
+
+     <span>APPROVED</span>
+
+     <strong>
+      ${stats.approved}
+     </strong>
+
+     <small>
+      تمت الموافقة
+     </small>
+
+    </div>
+
+
+    <div class="approvalStat rejected">
+
+     <span>REJECTED</span>
+
+     <strong>
+      ${stats.rejected}
+     </strong>
+
+     <small>
+      تم رفضها
+     </small>
+
+    </div>
+
+   </div>
+
+
+   <section class="approvalControlBar">
+
+    <div>
+
+     <span>
+      REQUEST QUEUE
+     </span>
+
+     <strong>
+      طلبات الحذف
+     </strong>
+
+     <small id="approvalVisibleCount">
+      ${items.length} طلب
+     </small>
+
+    </div>
+
+
+    <div class="approvalFilters">
+
+     <button
+      class="approvalFilter active"
+      type="button"
+      data-approval-filter="all">
+      الكل
+     </button>
+
+     <button
+      class="approvalFilter"
+      type="button"
+      data-approval-filter="pending">
+      معلقة
+      <b>${stats.pending}</b>
+     </button>
+
+     <button
+      class="approvalFilter"
+      type="button"
+      data-approval-filter="approved">
+      مقبولة
+     </button>
+
+     <button
+      class="approvalFilter"
+      type="button"
+      data-approval-filter="rejected">
+      مرفوضة
+     </button>
+
+    </div>
+
+   </section>
+
+
+   <section class="approvalQueue">
+
+    ${
+     ordered.length
+      ? ordered.map((r,index)=>{
+
+       const status=
+        r.status||'pending';
+
+       const requesterInitial=
+        (r.requester_name||'ر')
+         .trim()
+         .charAt(0)
+         .toUpperCase();
+
+       return `
+
+        <article
+         class="approvalRequestCard ${status}"
+         data-approval-status="${esc(status)}"
+         style="--approval-index:${index}"
+        >
+
+
+         <div class="approvalRequestMarker">
+
+          <span>
+           ${entityIcons[r.entity_type]||'•'}
+          </span>
+
+         </div>
+
+
+         <div class="approvalRequestMain">
+
+
+          <div class="approvalRequestTop">
+
+           <div>
+
+            <span class="approvalRequestCode">
+             DELETE REQUEST /
+             #${r.id}
+            </span>
+
+            <h3>
+             ${esc(
+              r.item_title ||
+              ('#'+r.entity_id)
+             )}
+            </h3>
+
+           </div>
+
+
+           <span class="approvalStatus ${status}">
+
+            <i></i>
+
+            ${esc(
+             statusNames[status] ||
+             status
+            )}
+
+           </span>
+
+          </div>
+
+
+          <div class="approvalRequestMeta">
+
+
+           <div class="approvalRequester">
+
+            <span class="approvalRequesterAvatar">
+             ${esc(requesterInitial)}
+            </span>
+
+            <div>
+             <small>
+              مقدم الطلب
+             </small>
+
+             <strong>
+              ${esc(
+               r.requester_name ||
+               'غير محدد'
+              )}
+             </strong>
+            </div>
+
+           </div>
+
+
+           <div class="approvalMetaItem">
+
+            <small>
+             القسم
+            </small>
+
+            <strong>
+             ${esc(
+              r.requester_department ||
+              'غير محدد'
+             )}
+            </strong>
+
+           </div>
+
+
+           <div class="approvalMetaItem">
+
+            <small>
+             نوع العنصر
+            </small>
+
+            <strong>
+             ${esc(
+              names[r.entity_type] ||
+              r.entity_type
+             )}
+            </strong>
+
+           </div>
+
+
+           <div class="approvalMetaItem">
+
+            <small>
+             وقت الطلب
+            </small>
+
+            <strong>
+             ${esc(r.created_at||'—')}
+            </strong>
+
+           </div>
+
+
+          </div>
+
+
+          ${
+           status==='pending'
+            ? `
+
+             <div class="approvalWarning">
+
+              <span>!</span>
+
+              <p>
+               الموافقة ستسمح بتنفيذ حذف
+               <strong>
+                ${esc(
+                 names[r.entity_type] ||
+                 'العنصر'
+                )}
+               </strong>
+               من النظام.
+              </p>
+
+             </div>
+
+            `
+            : `
+
+             <div class="approvalDecisionInfo">
+
+              <span>
+               ${
+                status==='approved'
+                 ? '✓'
+                 : '×'
+               }
+              </span>
+
+              <div>
+
+               <small>
+                DECISION RECORDED
+               </small>
+
+               <strong>
+                ${esc(
+                 r.decided_by_name ||
+                 'تم اتخاذ القرار'
+                )}
+               </strong>
+
+              </div>
+
+             </div>
+
+            `
+          }
+
+
+         </div>
+
+
+         <div class="approvalRequestActions">
+
+          ${
+           status==='pending'
+            ? `
+
+             <button
+              class="approvalDecisionButton reject"
+              type="button"
+              onclick="
+               decideDeletionRequest(
+                ${r.id},
+                'reject'
+               )
+              "
+             >
+              <span>رفض الطلب</span>
+              <i>×</i>
+             </button>
+
+
+             <button
+              class="approvalDecisionButton approve"
+              type="button"
+              onclick="
+               decideDeletionRequest(
+                ${r.id},
+                'approve'
+               )
+              "
+             >
+              <span>الموافقة على الحذف</span>
+              <i>✓</i>
+             </button>
+
+            `
+            : `
+
+             <div class="approvalRequestClosed">
+              CLOSED
+             </div>
+
+            `
+          }
+
+         </div>
+
+
+        </article>
+
+       `;
+
+      }).join('')
+
+      : `
+
+       <div class="approvalEmpty">
+
+        <div>✓</div>
+
+        <span>
+         ALL CLEAR
+        </span>
+
+        <strong>
+         لا توجد طلبات حذف
+        </strong>
+
+        <p>
+         لا توجد طلبات موافقة مسجلة
+         في النظام حاليًا.
+        </p>
+
+       </div>
+
+      `
+    }
+
+   </section>
+
+
+   <div
+    id="approvalFilterEmpty"
+    class="approvalFilterEmpty"
+    hidden>
+
+    لا توجد طلبات ضمن هذه الحالة.
+
+   </div>
+
+
+  </div>
+
+ `;
+
+
+ initApprovalCenterV2();
+
+}
 window.decideDeletionRequest=async(id,action)=>{
  const message=action==='approve'
   ? 'هل تريد الموافقة على حذف هذا العنصر؟'
@@ -743,13 +1208,59 @@ async function tasks(){
   t=>['completed','not_completed'].includes(t.status)
  );
 
- const taskRow=(t,isArchive=false)=>`
-  <tr>
-   <td>${esc(t.volunteer_name||'—')}</td>
+ const taskStats={
+  total:items.length,
+  new:items.filter(t=>t.status==='new').length,
+  progress:items.filter(t=>
+   t.status==='in_progress' ||
+   t.status==='revision_requested'
+  ).length,
+  submitted:items.filter(t=>t.status==='submitted').length,
+  completed:items.filter(t=>t.status==='completed').length
+ };
 
-   <td>${esc(t.department||'—')}</td>
+ const taskStateClass=status=>{
+  if(status==='new')return 'new';
+  if(status==='in_progress')return 'progress';
+  if(status==='submitted')return 'submitted';
+  if(status==='revision_requested')return 'revision';
+  if(status==='completed')return 'completed';
+  if(status==='not_completed')return 'failed';
+  return 'default';
+ };
+
+ const taskRow=(t,isArchive=false)=>`
+  <tr
+   class="taskV2Row"
+   data-task-status="${esc(t.status||'')}"
+  >
 
    <td>
+    <div class="taskVolunteerIdentity">
+
+     <span class="taskVolunteerAvatar">
+      ${esc(
+       (t.volunteer_name||'ر')
+        .trim()
+        .charAt(0)
+        .toUpperCase()
+      )}
+     </span>
+
+     <strong>
+      ${esc(t.volunteer_name||'—')}
+     </strong>
+
+    </div>
+   </td>
+
+   <td>
+    <span class="taskDepartmentBadge">
+     ${esc(t.department||'—')}
+    </span>
+   </td>
+
+   <td class="taskTitleCell">
     <b>${esc(t.title||'')}</b>
 
     ${t.description
@@ -759,10 +1270,17 @@ async function tasks(){
      : ''}
    </td>
 
-   <td>${t.due_date?esc(t.due_date):'—'}</td>
+   <td>
+    <span class="taskDueDate">
+     <small>موعد التسليم</small>
+     <b>${t.due_date?esc(t.due_date):'غير محدد'}</b>
+    </span>
+   </td>
 
    <td>
-    <div style="margin-bottom:8px">
+
+    <div class="taskStatusBadge ${taskStateClass(t.status)}">
+     <i></i>
      ${statusLabel(t.status)}
     </div>
 
@@ -803,7 +1321,12 @@ async function tasks(){
      : ''}
    </td>
 
-   <td>${esc(t.created_by_name||'—')}</td>
+   <td>
+    <span class="taskAssignedBy">
+     ${esc(t.created_by_name||'—')}
+    </span>
+   </td>
+
   </tr>
  `;
 
@@ -829,102 +1352,392 @@ async function tasks(){
 
 
  content.innerHTML=`
-  <div class="panel">
-   <h2>📋 إسناد مهمة</h2>
-   <p class="muted">اختر القسم أولًا، ثم اختر المتطوع.</p>
 
-   ${volunteers.length ? `
-   <form id="taskForm">
-    <div class="formGrid">
+  <div class="tasksV2">
 
-     <label class="field">
-      <span>القسم</span>
-      <select id="taskDepartment" required>
-       <option value="">اختر القسم</option>
-       ${departments.map(d=>
-        `<option value="${esc(d)}">${esc(d)}</option>`
-       ).join('')}
-      </select>
-     </label>
 
-     <label class="field">
-      <span>المتطوع</span>
-      <select id="taskVolunteer" required disabled>
-       <option value="">اختر القسم أولًا</option>
-      </select>
-     </label>
+   <div class="tasksHero">
 
-     <label class="field">
-      <span>عنوان المهمة</span>
-      <input id="taskTitle" maxlength="200" required
-       placeholder="مثال: تجهيز تقرير الفعالية">
-     </label>
+    <div class="tasksHeroContent">
 
-     <label class="field">
-      <span>تاريخ التسليم</span>
-      <input id="taskDueDate" type="date">
-     </label>
+     <span class="tasksHeroCode">
+      TEAM OPERATIONS / TASKS
+     </span>
 
-     <label class="field" style="grid-column:1/-1">
-      <span>تفاصيل المهمة</span>
-      <textarea id="taskDescription" rows="4"
-       placeholder="اكتب تفاصيل المهمة المطلوبة..."></textarea>
-     </label>
+     <h2>مركز إدارة المهام</h2>
+
+     <p>
+      تابع عمل الفريق من لحظة إسناد المهمة
+      وحتى مراجعة التسليم واعتماد الإنجاز.
+     </p>
 
     </div>
 
-    <button class="btn green" type="submit">إسناد المهمة</button>
-   </form>
-   ` : `
-    <div class="notice">لا يوجد متطوعون متاحون لإسناد مهمة حاليًا.</div>
-   `}
-  </div>
 
-  <div class="panel" style="margin-top:18px">
-   <h2>المهام الحالية</h2>
+    <div class="taskWorkflow">
 
-   <div style="overflow:auto">
-    <table>
-     <thead>
-      <tr>
-       <th>المتطوع</th>
-       <th>القسم</th>
-       <th>المهمة</th>
-       <th>التسليم</th>
-       <th>الحالة</th>
-       <th>أُسندت بواسطة</th>
-      </tr>
-     </thead>
-     <tbody>${currentRows}</tbody>
-    </table>
+     <div class="taskWorkflowStep">
+      <i>01</i>
+      <span>NEW</span>
+     </div>
+
+     <b>←</b>
+
+     <div class="taskWorkflowStep">
+      <i>02</i>
+      <span>IN PROGRESS</span>
+     </div>
+
+     <b>←</b>
+
+     <div class="taskWorkflowStep important">
+      <i>03</i>
+      <span>SUBMITTED</span>
+     </div>
+
+     <b>←</b>
+
+     <div class="taskWorkflowStep completed">
+      <i>04</i>
+      <span>COMPLETED</span>
+     </div>
+
+    </div>
+
    </div>
-  </div>
 
-  <div class="panel" style="margin-top:18px">
-   <h2>📁 أرشيف المهام</h2>
 
-   <p class="muted">
-    الأعمال المقبولة والمهام المنتهية تبقى محفوظة هنا ويمكن الرجوع إليها في أي وقت.
-   </p>
+   <div class="taskStatsGrid">
 
-   <div style="overflow:auto">
-    <table>
-     <thead>
-      <tr>
-       <th>المتطوع</th>
-       <th>القسم</th>
-       <th>المهمة</th>
-       <th>التسليم</th>
-       <th>الحالة</th>
-       <th>أُسندت بواسطة</th>
-      </tr>
-     </thead>
+    <div class="taskStatCard">
+     <span>ALL TASKS</span>
+     <strong>${taskStats.total}</strong>
+     <small>إجمالي المهام</small>
+    </div>
 
-     <tbody>${archiveRows}</tbody>
-    </table>
+    <div class="taskStatCard new">
+     <span>NEW</span>
+     <strong>${taskStats.new}</strong>
+     <small>مهام جديدة</small>
+    </div>
+
+    <div class="taskStatCard progress">
+     <span>IN PROGRESS</span>
+     <strong>${taskStats.progress}</strong>
+     <small>قيد التنفيذ</small>
+    </div>
+
+    <div class="taskStatCard submitted">
+     <span>REVIEW</span>
+     <strong>${taskStats.submitted}</strong>
+     <small>بانتظار المراجعة</small>
+    </div>
+
+    <div class="taskStatCard completed">
+     <span>DONE</span>
+     <strong>${taskStats.completed}</strong>
+     <small>مكتملة</small>
+    </div>
+
    </div>
+
+
+   <div class="taskCreatePanel">
+
+    <button
+     id="taskCreateToggle"
+     class="taskCreateHeader"
+     type="button"
+    >
+
+     <div class="taskCreateHeaderIcon">
+      +
+     </div>
+
+     <div>
+      <span>CREATE NEW TASK</span>
+      <strong>إسناد مهمة جديدة</strong>
+      <small>
+       اختر القسم والمتطوع ثم حدد تفاصيل المهمة
+      </small>
+     </div>
+
+     <i id="taskCreateChevron">
+     ⌄
+     </i>
+
+    </button>
+
+
+    <div id="taskCreateBody"
+         class="taskCreateBody">
+
+     ${
+      volunteers.length
+       ? `
+
+       <form id="taskForm">
+
+        <div class="taskFormGrid">
+
+
+         <label class="taskV2Field">
+
+          <span>
+           01 / القسم
+          </span>
+
+          <select
+           id="taskDepartment"
+           required
+          >
+
+           <option value="">
+            اختر القسم
+           </option>
+
+           ${departments.map(d=>
+            `<option value="${esc(d)}">
+              ${esc(d)}
+             </option>`
+           ).join('')}
+
+          </select>
+
+         </label>
+
+
+         <label class="taskV2Field">
+
+          <span>
+           02 / المتطوع
+          </span>
+
+          <select
+           id="taskVolunteer"
+           required
+           disabled
+          >
+
+           <option value="">
+            اختر القسم أولًا
+           </option>
+
+          </select>
+
+         </label>
+
+
+         <label class="taskV2Field">
+
+          <span>
+           03 / عنوان المهمة
+          </span>
+
+          <input
+           id="taskTitle"
+           maxlength="200"
+           required
+           placeholder="مثال: تجهيز تقرير الفعالية"
+          >
+
+         </label>
+
+
+         <label class="taskV2Field">
+
+          <span>
+           04 / موعد التسليم
+          </span>
+
+          <input
+           id="taskDueDate"
+           type="date"
+          >
+
+         </label>
+
+
+         <label class="taskV2Field full">
+
+          <span>
+           05 / تفاصيل المهمة
+          </span>
+
+          <textarea
+           id="taskDescription"
+           rows="4"
+           placeholder="اكتب تفاصيل المهمة المطلوبة..."
+          ></textarea>
+
+         </label>
+
+
+        </div>
+
+
+        <div class="taskFormFooter">
+
+         <div>
+          <span class="taskFormSecureDot"></span>
+          سيتم إرسال المهمة مباشرة إلى حساب المتطوع
+         </div>
+
+         <button
+          class="btn green taskAssignButton"
+          type="submit"
+         >
+          <span>إسناد المهمة</span>
+          <i>←</i>
+         </button>
+
+        </div>
+
+       </form>
+
+       `
+       : `
+
+        <div class="taskEmptyNotice">
+         لا يوجد متطوعون متاحون لإسناد مهمة حاليًا.
+        </div>
+
+       `
+     }
+
+    </div>
+
+   </div>
+
+
+   <div class="taskListPanel">
+
+    <div class="taskListHeader">
+
+     <div>
+      <span>ACTIVE WORK</span>
+      <h3>المهام الحالية</h3>
+      <p>
+       المهام التي يعمل عليها الفريق أو تنتظر المراجعة.
+      </p>
+     </div>
+
+     <div class="taskListCounter">
+      ${currentItems.length}
+      <small>مهمة</small>
+     </div>
+
+    </div>
+
+
+    <div class="taskTableWrap">
+
+     <table class="taskV2Table">
+
+      <thead>
+       <tr>
+        <th>المتطوع</th>
+        <th>القسم</th>
+        <th>المهمة</th>
+        <th>التسليم</th>
+        <th>الحالة</th>
+        <th>أُسندت بواسطة</th>
+       </tr>
+      </thead>
+
+      <tbody>
+       ${currentRows}
+      </tbody>
+
+     </table>
+
+    </div>
+
+   </div>
+
+
+   <div class="taskArchivePanel">
+
+    <button
+     id="taskArchiveToggle"
+     class="taskArchiveHeader"
+     type="button"
+    >
+
+     <div>
+
+      <span>
+       TASK ARCHIVE
+      </span>
+
+      <h3>
+       أرشيف المهام
+      </h3>
+
+      <p>
+       الأعمال المقبولة والمهام المنتهية محفوظة هنا.
+      </p>
+
+     </div>
+
+
+     <div class="taskArchiveRight">
+
+      <strong>
+       ${archiveItems.length}
+      </strong>
+
+      <small>
+       مهمة مؤرشفة
+      </small>
+
+      <i id="taskArchiveChevron">
+       ⌄
+      </i>
+
+     </div>
+
+    </button>
+
+
+    <div
+     id="taskArchiveBody"
+     class="taskArchiveBody"
+    >
+
+     <div class="taskTableWrap">
+
+      <table class="taskV2Table">
+
+       <thead>
+        <tr>
+         <th>المتطوع</th>
+         <th>القسم</th>
+         <th>المهمة</th>
+         <th>التسليم</th>
+         <th>الحالة</th>
+         <th>أُسندت بواسطة</th>
+        </tr>
+       </thead>
+
+       <tbody>
+        ${archiveRows}
+       </tbody>
+
+      </table>
+
+     </div>
+
+    </div>
+
+   </div>
+
+
   </div>
+
  `;
+
+ initTasksV2();
 
  const departmentSelect=document.getElementById('taskDepartment');
  const volunteerSelect=document.getElementById('taskVolunteer');
@@ -1142,28 +1955,149 @@ async function volunteers(){
   return;
  }
 
+ const volunteerStats={
+  total:items.length,
+  review:items.filter(v=>
+   v.status==='pending' &&
+   !v.contacted_at &&
+   !v.department_approval
+  ).length,
+  department:items.filter(v=>
+   v.department_approval==='pending'
+  ).length,
+  accepted:items.filter(v=>
+   v.status==='accepted' &&
+   v.department_approval==='accepted'
+  ).length
+ };
+
  content.innerHTML=`
-  <div class="panel">
-   <h3>طلبات المتطوعين</h3>
+  <div class="volunteersV2">
 
-   <p class="muted">
-    HR يراجع الطلب ويوجهه للقسم المناسب، وبعدها مسؤول القسم
-    يقرر قبوله أو رفضه. بعد موافقة القسم، يقوم HR بإرسال رسالة القبول.
-   </p>
+   <div class="volunteerSectionHero">
 
-   <div class="volunteerTableWrap">
+    <div class="volunteerHeroText">
+     <span class="volunteerHeroCode">
+      VOLUNTEER MANAGEMENT
+     </span>
+
+     <h2>إدارة رحلة المتطوع</h2>
+
+     <p>
+      تابع الطلب من لحظة وصوله، مرورًا بالتواصل
+      وموافقة القسم، وحتى انضمام المتطوع للفريق.
+     </p>
+    </div>
+
+    <div class="volunteerHeroFlow">
+     <span>طلب جديد</span>
+     <i>←</i>
+     <span>HR</span>
+     <i>←</i>
+     <span>القسم</span>
+     <i>←</i>
+     <span>فريق روح</span>
+    </div>
+
+   </div>
+
+
+   <div class="volunteerStatsGrid">
+
+    <div class="volunteerStatCard">
+     <span class="statMiniIcon">◎</span>
+     <div>
+      <small>إجمالي الطلبات</small>
+      <strong>${volunteerStats.total}</strong>
+     </div>
+    </div>
+
+    <div class="volunteerStatCard review">
+     <span class="statMiniIcon">◷</span>
+     <div>
+      <small>بانتظار المراجعة</small>
+      <strong>${volunteerStats.review}</strong>
+     </div>
+    </div>
+
+    <div class="volunteerStatCard department">
+     <span class="statMiniIcon">◇</span>
+     <div>
+      <small>بانتظار القسم</small>
+      <strong>${volunteerStats.department}</strong>
+     </div>
+    </div>
+
+    <div class="volunteerStatCard accepted">
+     <span class="statMiniIcon">✓</span>
+     <div>
+      <small>مقبولون</small>
+      <strong>${volunteerStats.accepted}</strong>
+     </div>
+    </div>
+
+   </div>
+
+
+   <div class="panel volunteerManagementPanel">
+
+    <div class="volunteerToolbar">
+
+     <div class="volunteerSearchBox">
+      <span>⌕</span>
+
+      <input
+       id="volunteerSearch"
+       type="search"
+       placeholder="ابحث بالاسم، الهاتف، البريد أو التخصص..."
+       autocomplete="off"
+      >
+     </div>
+
+     <select id="volunteerStatusFilter"
+             class="volunteerFilterSelect">
+
+      <option value="all">
+       جميع الحالات
+      </option>
+
+      <option value="review">
+       قيد المراجعة
+      </option>
+
+      <option value="contacted">
+       تم التواصل
+      </option>
+
+      <option value="department">
+       بانتظار القسم
+      </option>
+
+      <option value="accepted">
+       مقبول
+      </option>
+
+     </select>
+
+     <div class="volunteerResultCount">
+      <strong id="volunteerVisibleCount">
+       ${items.length}
+      </strong>
+      <span>طلب</span>
+     </div>
+
+    </div>
+
+    <div class="volunteerTableWrap">
     <table class="volunteerTable">
      <thead>
       <tr>
-       <th>الاسم</th>
-       <th>البريد</th>
-       <th>الهاتف</th>
-       <th>التخصص</th>
-       <th>المستوى</th>
-       <th>المدينة</th>
+       <th>المتطوع</th>
+       <th>معلومات التواصل</th>
+       <th>الدراسة</th>
        <th>الحالة</th>
        <th>القسم</th>
-       <th>الإجراء</th>
+       <th class="volunteerActionsHeading">الإجراءات</th>
       </tr>
      </thead>
 
@@ -1350,41 +2284,207 @@ async function volunteers(){
         `;
        }
 
+       let rowState='review';
+
+       if(v.department_approval==='pending')
+        rowState='department';
+
+       else if(
+        v.status==='accepted' &&
+        v.department_approval==='accepted'
+       )
+        rowState='accepted';
+
+       else if(
+        v.contacted_at ||
+        v.status==='contacted'
+       )
+        rowState='contacted';
+
+       const searchText=[
+        v.name,
+        v.email,
+        v.phone,
+        v.major,
+        v.level,
+        v.city,
+        v.department,
+        stateText
+       ].filter(Boolean).join(' ').toLowerCase();
+
        return `
-        <tr>
-         <td>
-          ${esc(v.name||'')}
+        <tr
+         data-volunteer-state="${rowState}"
+         data-volunteer-search="${esc(searchText)}"
+        >
+         <td class="volunteerNameCell">
+
+          <button
+           type="button"
+           class="volunteerNameButton"
+           title="عرض تفاصيل الطلب"
+           onclick="openVolunteerDrawer(
+            '${encodeURIComponent(JSON.stringify(v))}'
+           )">
+
+           <span class="volunteerMiniAvatar">
+            ${esc(
+             (v.name||'ر')
+              .trim()
+              .charAt(0)
+              .toUpperCase()
+            )}
+           </span>
+
+           <span class="volunteerIdentityText">
+
+            <strong>
+             ${esc(v.name||'')}
+            </strong>
+
+            <small>
+             عرض تفاصيل الطلب
+            </small>
+
+           </span>
+
+          </button>
+
           ${
            v.status==='accepted' &&
            v.department_approval==='accepted' &&
            !v.volunteer_id &&
            !v.is_admin_user
-            ? '<br><span class="accountWarning">⚠️ لم ينشئ حسابًا</span>'
+            ? `
+             <span class="accountWarning">
+              ⚠ لم ينشئ حسابًا
+             </span>
+            `
             : ''
           }
-         </td>
-         <td>${esc(v.email||'')}</td>
-         <td>${esc(v.phone||'')}</td>
-         <td>${esc(v.major||'-')}</td>
-         <td>${esc(v.level||'-')}</td>
-         <td>${esc(v.city||'-')}</td>
 
-         <td>
-          <b>${esc(stateText)}</b>
          </td>
 
+
          <td>
+
+          <div class="volunteerContactCell">
+
+           <strong>
+            ${esc(v.phone||'—')}
+           </strong>
+
+           <span title="${esc(v.email||'')}">
+            ${esc(v.email||'لا يوجد بريد')}
+           </span>
+
+           ${
+            v.city
+             ? `<small>${esc(v.city)}</small>`
+             : ''
+           }
+
+          </div>
+
+         </td>
+
+
+         <td>
+
+          <div class="volunteerStudyCell">
+
+           <strong>
+            ${esc(v.major||'غير محدد')}
+           </strong>
+
+           <span>
+            ${
+             v.level
+              ? `المستوى ${esc(v.level)}`
+              : 'المستوى غير محدد'
+            }
+           </span>
+
+          </div>
+
+         </td>
+
+
+         <td>
+
+          <span
+           class="volunteerStatusBadge ${rowState}">
+           <i></i>
+           ${esc(stateText)}
+          </span>
+
+         </td>
+
+
+         <td>
+
           ${
            v.department
-            ? `<b>${esc(v.department)}</b>`
-            : '<span class="muted">لم يحدد بعد</span>'
+            ? `
+             <span class="volunteerDepartmentBadge">
+              ${esc(v.department)}
+             </span>
+            `
+            : `
+             <span class="volunteerDepartmentEmpty">
+              لم يحدد بعد
+             </span>
+            `
           }
+
          </td>
 
-         <td>
-          <div class="rowActions">
-           ${actions}
+
+         <td class="volunteerActionsCell">
+
+          <div class="volunteerActionMenuWrap">
+
+           <button
+            type="button"
+            class="volunteerActionTrigger"
+            aria-label="إجراءات المتطوع"
+            onclick="toggleVolunteerActionMenu(
+             event,
+             this
+            )">
+            <span>•••</span>
+           </button>
+
+
+           <div class="volunteerActionMenu">
+
+            <div class="volunteerActionMenuHead">
+
+             <span>
+              ACTIONS
+             </span>
+
+             <strong>
+              ${esc(v.name||'المتطوع')}
+             </strong>
+
+            </div>
+
+
+            <div class="volunteerActionMenuBody">
+
+             ${actions || `
+              <span class="volunteerNoActions">
+               لا توجد إجراءات متاحة
+              </span>
+             `}
+
+            </div>
+
+           </div>
+
           </div>
+
          </td>
         </tr>
        `;
@@ -1393,7 +2493,10 @@ async function volunteers(){
     </table>
    </div>
   </div>
+ </div>
  `;
+
+ initVolunteerTableV2();
 }
 
 
@@ -1401,11 +2504,20 @@ async function volunteers(){
 
 
 function closeAdminTaskReview(){
+
  const modal=document.getElementById(
   'adminTaskReviewModal'
  );
 
- if(modal)modal.remove();
+ if(!modal)return;
+
+ modal.classList.add('closing');
+ modal.classList.remove('open');
+
+ setTimeout(()=>{
+  modal.remove();
+ },260);
+
 }
 
 function formatTaskFileSize(size){
@@ -1423,6 +2535,7 @@ function formatTaskFileSize(size){
 }
 
 function openTaskSubmissionReview(id,readOnly=false){
+
  closeAdminTaskReview();
 
  const task=(window.currentAdminTasks||[])
@@ -1437,225 +2550,469 @@ function openTaskSubmissionReview(id,readOnly=false){
   task.status==='submitted' &&
   !readOnly;
 
+ const isCompleted=
+  task.status==='completed';
+
+ const hasSubmission=
+  task.submission_note ||
+  task.submission_url ||
+  task.submission_file_name;
+
+ const statusName=
+  isCompleted
+   ? 'COMPLETED'
+   : canReview
+     ? 'AWAITING REVIEW'
+     : String(task.status||'TASK')
+        .replaceAll('_',' ')
+        .toUpperCase();
+
  const modal=document.createElement('div');
 
  modal.id='adminTaskReviewModal';
-
- modal.style.cssText=`
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.58);
-  z-index:99999;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:18px;
- `;
+ modal.className='taskReviewOverlay';
 
  modal.innerHTML=`
-  <div style="
-   width:min(760px,100%);
-   max-height:92vh;
-   overflow:auto;
-   background:#fff;
-   color:#222;
-   border-radius:18px;
-   padding:24px;
-   direction:rtl;
-   box-shadow:0 20px 70px rgba(0,0,0,.28)
-  ">
 
-   <div style="
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:14px;
-    margin-bottom:18px
-   ">
-    <div>
-     <h2 style="margin:0 0 5px">
-      ${task.status==='completed'
-       ? '✅ العمل المقبول'
-       : '👁️ مراجعة التسليم'}
-     </h2>
+  <div class="taskReviewWindow">
 
-     <div class="muted">
-      ${esc(task.volunteer_name||'')}
+   <div class="taskReviewHeader">
+
+    <div class="taskReviewHeading">
+
+     <div class="taskReviewIcon">
+      ${isCompleted ? '✓' : '↗'}
      </div>
+
+     <div>
+
+      <span class="taskReviewCode">
+       ROUH / TASK REVIEW
+      </span>
+
+      <h2>
+       ${
+        isCompleted
+         ? 'العمل المعتمد'
+         : 'مراجعة تسليم المهمة'
+       }
+      </h2>
+
+      <p>
+       ${esc(task.volunteer_name||'')}
+       ${task.department
+        ? ` · ${esc(task.department)}`
+        : ''}
+      </p>
+
+     </div>
+
     </div>
 
-    <button class="btn light"
-     onclick="closeAdminTaskReview()">
-     ✕
-    </button>
-   </div>
+    <div class="taskReviewHeaderActions">
 
-   <div style="
-    padding:14px;
-    border:1px solid #ddd;
-    border-radius:12px;
-    margin-bottom:14px
-   ">
-    <div>
-     <b>📋 المهمة:</b>
-     ${esc(task.title||'')}
+     <span class="taskReviewStatus ${
+      isCompleted
+       ? 'completed'
+       : 'review'
+     }">
+      <i></i>
+      ${statusName}
+     </span>
+
+     <button
+      class="taskReviewClose"
+      type="button"
+      onclick="closeAdminTaskReview()"
+      aria-label="إغلاق">
+      ×
+     </button>
+
     </div>
 
-    ${task.description
-     ? `
-       <div style="margin-top:8px">
-        <b>تفاصيل المهمة:</b><br>
-        ${esc(task.description)}
-       </div>
-      `
-     : ''}
-
-    ${task.submitted_at
-     ? `
-       <div style="margin-top:8px">
-        <b>وقت التسليم:</b>
-        ${esc(task.submitted_at)}
-       </div>
-      `
-     : ''}
    </div>
 
-   ${task.submission_note
-    ? `
-      <div style="
-       padding:15px;
-       border:1px solid #ddd;
-       border-radius:12px;
-       margin-bottom:14px
-      ">
-       <b>📝 العمل المكتوب / التقرير</b>
 
-       <div style="
-        white-space:pre-wrap;
-        margin-top:10px;
-        line-height:1.8
-       ">${esc(task.submission_note)}</div>
+   <div class="taskReviewProgress">
+
+    <div class="reviewProgressStep done">
+     <i>✓</i>
+     <span>إسناد المهمة</span>
+    </div>
+
+    <b></b>
+
+    <div class="reviewProgressStep done">
+     <i>✓</i>
+     <span>تنفيذ المتطوع</span>
+    </div>
+
+    <b></b>
+
+    <div class="reviewProgressStep done">
+     <i>✓</i>
+     <span>تم التسليم</span>
+    </div>
+
+    <b></b>
+
+    <div class="reviewProgressStep ${
+     isCompleted ? 'done' : 'current'
+    }">
+     <i>${isCompleted ? '✓' : '4'}</i>
+     <span>
+      ${isCompleted ? 'تم الاعتماد' : 'المراجعة'}
+     </span>
+    </div>
+
+   </div>
+
+
+   <div class="taskReviewBody">
+
+
+    <section class="taskReviewSection taskBriefSection">
+
+     <div class="reviewSectionHead">
+      <div>
+       <span>01 / TASK BRIEF</span>
+       <h3>تفاصيل المهمة</h3>
       </div>
-     `
-    : ''}
 
-   ${task.submission_url
-    ? `
-      <div style="
-       padding:15px;
-       border:1px solid #ddd;
-       border-radius:12px;
-       margin-bottom:14px
-      ">
-       <b>🔗 رابط العمل</b>
+      ${
+       task.due_date
+        ? `
+         <div class="reviewDueDate">
+          <small>موعد التسليم</small>
+          <strong>
+           ${esc(task.due_date)}
+          </strong>
+         </div>
+        `
+        : ''
+      }
+     </div>
 
-       <div style="margin-top:10px">
+
+     <div class="reviewTaskTitle">
+      ${esc(task.title||'')}
+     </div>
+
+
+     ${
+      task.description
+       ? `
+        <div class="reviewTaskDescription">
+         ${esc(task.description)}
+        </div>
+       `
+       : `
+        <div class="reviewTaskDescription empty">
+         لا توجد تفاصيل إضافية للمهمة.
+        </div>
+       `
+     }
+
+
+     ${
+      task.submitted_at
+       ? `
+        <div class="reviewSubmittedTime">
+         <span></span>
+         تم التسليم:
+         <strong>
+          ${esc(task.submitted_at)}
+         </strong>
+        </div>
+       `
+       : ''
+     }
+
+    </section>
+
+
+    <section class="taskReviewSection">
+
+     <div class="reviewSectionHead">
+
+      <div>
+       <span>02 / SUBMISSION</span>
+       <h3>تسليم المتطوع</h3>
+      </div>
+
+      ${
+       hasSubmission
+        ? `
+         <span class="submissionAvailable">
+          <i></i>
+          تم استلام العمل
+         </span>
+        `
+        : ''
+      }
+
+     </div>
+
+
+     ${
+      task.submission_note
+       ? `
+        <div class="submissionBlock">
+
+         <div class="submissionBlockIcon">
+          Aa
+         </div>
+
+         <div class="submissionBlockContent">
+
+          <span>التقرير / العمل المكتوب</span>
+
+          <div class="submissionText">
+           ${esc(task.submission_note)}
+          </div>
+
+         </div>
+
+        </div>
+       `
+       : ''
+     }
+
+
+     ${
+      task.submission_url
+       ? `
         <a
+         class="submissionBlock submissionLink"
          href="${esc(task.submission_url)}"
          target="_blank"
-         rel="noopener noreferrer">
-         فتح رابط العمل ↗
+         rel="noopener noreferrer"
+        >
+
+         <div class="submissionBlockIcon">
+          ↗
+         </div>
+
+         <div class="submissionBlockContent">
+
+          <span>رابط العمل</span>
+
+          <strong>
+           فتح رابط التسليم
+          </strong>
+
+         </div>
+
+         <i class="submissionArrow">
+          ←
+         </i>
+
         </a>
-       </div>
-      </div>
-     `
-    : ''}
+       `
+       : ''
+     }
 
-   ${task.submission_file_name
-    ? `
-      <div style="
-       padding:15px;
-       border:1px solid #ddd;
-       border-radius:12px;
-       margin-bottom:14px
-      ">
-       <b>📎 الملف المرفق</b>
 
-       <div style="margin-top:8px">
-        ${esc(task.submission_file_name)}
-       </div>
-
-       ${task.submission_file_size
-        ? `
-          <div class="muted"
-           style="margin-top:4px">
-           ${formatTaskFileSize(
-            task.submission_file_size
-           )}
-          </div>
-         `
-        : ''}
-
-       <div style="margin-top:10px">
-        <a class="btn light"
+     ${
+      task.submission_file_name
+       ? `
+        <a
+         class="submissionBlock submissionLink"
          href="/api/tasks/${task.id}/submission-file"
-         target="_blank">
-         👁️ فتح الملف
-        </a>
-       </div>
-      </div>
-     `
-    : ''}
+         target="_blank"
+        >
 
-   ${
-    !task.submission_note &&
-    !task.submission_url &&
-    !task.submission_file_name
-     ? `
-       <div class="notice">
-        لا توجد تفاصيل تسليم محفوظة لهذه المهمة.
+         <div class="submissionBlockIcon file">
+          ↓
+         </div>
+
+         <div class="submissionBlockContent">
+
+          <span>الملف المرفق</span>
+
+          <strong>
+           ${esc(task.submission_file_name)}
+          </strong>
+
+          ${
+           task.submission_file_size
+            ? `
+             <small>
+              ${formatTaskFileSize(
+               task.submission_file_size
+              )}
+             </small>
+            `
+            : ''
+          }
+
+         </div>
+
+         <i class="submissionArrow">
+          فتح
+         </i>
+
+        </a>
+       `
+       : ''
+     }
+
+
+     ${
+      !hasSubmission
+       ? `
+        <div class="reviewEmptySubmission">
+
+         <div>○</div>
+
+         <strong>
+          لا توجد تفاصيل تسليم
+         </strong>
+
+         <span>
+          لم يتم العثور على تقرير، رابط أو ملف
+          محفوظ لهذه المهمة.
+         </span>
+
+        </div>
+       `
+       : ''
+     }
+
+    </section>
+
+
+    ${
+     isCompleted
+      ? `
+       <div class="taskApprovedBanner">
+
+        <div class="approvedCheck">
+         ✓
+        </div>
+
+        <div>
+         <span>APPROVED WORK</span>
+         <strong>
+          تم اعتماد هذا الإنجاز
+         </strong>
+         <p>
+          العمل محفوظ في أرشيف المهام
+          ويمكن الرجوع إليه في أي وقت.
+         </p>
+        </div>
+
        </div>
       `
-     : ''
-   }
+      : ''
+    }
 
-   ${task.status==='completed'
-    ? `
-      <div style="
-       margin-top:16px;
-       padding:13px;
-       border:1px solid #ddd;
-       border-radius:12px
-      ">
-       ✅ تم اعتماد هذا العمل وهو محفوظ في أرشيف المهام.
-      </div>
-     `
-    : ''}
 
-   ${canReview
-    ? `
-      <div style="
-       margin-top:20px;
-       padding-top:18px;
-       border-top:1px solid #ddd;
-       display:flex;
-       gap:10px;
-       flex-wrap:wrap
-      ">
-       <button class="btn green"
-        onclick="reviewTaskFromModal(${task.id},'completed')">
-        ✅ اعتماد الإنجاز
-       </button>
+   </div>
 
-       <button class="btn light"
-        onclick="reviewTaskFromModal(${task.id},'revision_requested')">
-        ↩️ طلب تعديل
-       </button>
-      </div>
-     `
-    : ''}
+
+   <div class="taskReviewFooter">
+
+    <div class="reviewFooterSecurity">
+     <i></i>
+
+     ${
+      canReview
+       ? 'راجع العمل قبل اتخاذ القرار النهائي'
+       : isCompleted
+         ? 'وضع العرض فقط — المهمة معتمدة'
+         : 'تفاصيل المهمة'
+     }
+
+    </div>
+
+
+    <div class="reviewFooterActions">
+
+     <button
+      class="btn light"
+      type="button"
+      onclick="closeAdminTaskReview()">
+      إغلاق
+     </button>
+
+
+     ${
+      canReview
+       ? `
+
+        <button
+         class="btn light reviewRevisionButton"
+         type="button"
+         onclick="reviewTaskFromModal(
+          ${task.id},
+          'revision_requested'
+         )">
+         ↩ طلب تعديل
+        </button>
+
+        <button
+         class="btn green reviewApproveButton"
+         type="button"
+         onclick="reviewTaskFromModal(
+          ${task.id},
+          'completed'
+         )">
+         <span>اعتماد الإنجاز</span>
+         <i>✓</i>
+        </button>
+
+       `
+       : ''
+     }
+
+    </div>
+
+   </div>
+
 
   </div>
  `;
 
+
  document.body.appendChild(modal);
 
- modal.addEventListener('click',e=>{
-  if(e.target===modal)
-   closeAdminTaskReview();
- });
-}
 
+ requestAnimationFrame(()=>{
+  modal.classList.add('open');
+ });
+
+
+ modal.addEventListener('click',e=>{
+
+  if(e.target===modal){
+   closeAdminTaskReview();
+  }
+
+ });
+
+
+ const escapeHandler=e=>{
+
+  if(e.key==='Escape'){
+
+   closeAdminTaskReview();
+
+   document.removeEventListener(
+    'keydown',
+    escapeHandler
+   );
+
+  }
+
+ };
+
+ document.addEventListener(
+  'keydown',
+  escapeHandler
+ );
+
+}
 async function reviewTaskFromModal(id,action){
  const ok=await reviewVolunteerTask(
   id,
@@ -2818,12 +4175,17 @@ async function saveIdea(id){
 
 
 async function departmentWork(){
+
  const isOwner=me.role==='owner';
  const isDeputy=me.system_role==='deputy_owner';
+
  const isHR=
   me.role==='admin' &&
   me.department==='إدارة الموارد البشرية (HR)';
- const canViewAll=isOwner || isDeputy || isHR;
+
+ const canViewAll=
+  isOwner || isDeputy || isHR;
+
 
  const departments=[
   'الميداني',
@@ -2836,15 +4198,29 @@ async function departmentWork(){
   'التيسير'
  ];
 
+
  let department=canViewAll
-  ? (selectedDepartment==='all' ? '' : selectedDepartment)
+  ? (
+     selectedDepartment==='all'
+      ? ''
+      : selectedDepartment
+    )
   : me.department;
 
+
  const query=department
-  ? '?department='+encodeURIComponent(department)
+  ? '?department='+
+    encodeURIComponent(department)
   : '';
 
- const d=await api('/api/admin/department-content'+query);
+
+ const d=await api(
+  '/api/admin/department-content'+query
+ );
+
+
+ const items=d.items||[];
+
 
  const canEditDepartment=
   isOwner ||
@@ -2852,116 +4228,501 @@ async function departmentWork(){
   (!isHR && department===me.department) ||
   (isHR && department===me.department);
 
- const departmentSelect=canViewAll
-  ? `
-   <div class="field">
-    <label>القسم</label>
-    <select id="departmentContentFilter">
-     <option value="">كل الأقسام</option>
-     ${departments.map(x=>`
-      <option value="${esc(x)}"
-       ${department===x?'selected':''}>
-       ${esc(x)}
-      </option>
-     `).join('')}
-    </select>
-   </div>
-  `
-  : `
-   <div class="notice">
-    القسم: <strong>${esc(me.department||'غير محدد')}</strong>
-   </div>
-  `;
+
+ const workspaceName=
+  department ||
+  (
+   canViewAll
+    ? 'جميع الأقسام'
+    : me.department || 'القسم'
+  );
+
+
+ const linkedItems=
+  items.filter(x=>x.link_url).length;
+
+
+ const describedItems=
+  items.filter(x=>
+   String(x.description||'').trim()
+  ).length;
+
+
+ const creators=
+  new Set(
+   items
+    .map(x=>x.created_by_name)
+    .filter(Boolean)
+  ).size;
+
 
  content.innerHTML=`
-  <div class="panel">
-   <h3>📂 محتوى القسم</h3>
 
-   ${departmentSelect}
+  <div class="departmentWorkspace">
 
-   ${
-    canEditDepartment
-     ? `<div class="rowActions">
-         <button class="btn green"
-          onclick="departmentContentForm('${esc(department||'')}')">
-          + إضافة محتوى
-         </button>
-        </div>`
-     : '<div class="notice">👁️ عرض محتوى القسم فقط</div>'
-   }
-  </div>
 
-  <div class="panel">
-   ${
-    d.items.length
-     ? d.items.map(x=>`
-      <div class="faq">
-       <b>${esc(x.title)}</b>
+   <section class="departmentWorkspaceHero">
 
-       <p class="muted">
-        🏢 ${esc(x.department)}
-       </p>
+    <div class="departmentHeroMain">
+
+     <span class="departmentHeroCode">
+      ROUH / DEPARTMENT WORKSPACE
+     </span>
+
+     <h2>
+      ${esc(workspaceName)}
+     </h2>
+
+     <p>
+      مساحة موحدة لتنظيم أعمال القسم،
+      الملفات، الروابط والمحتوى الداخلي.
+     </p>
+
+
+     <div class="departmentHeroAccess">
+
+      <span>
+       <i></i>
 
        ${
-        x.description
-         ? `<p>${esc(x.description)}</p>`
-         : ''
+        canEditDepartment
+         ? 'صلاحية الإدارة والتعديل'
+         : 'صلاحية العرض'
        }
 
-       ${
-        x.link_url
-         ? `<p>
-             🔗 <a href="${esc(x.link_url)}"
-              target="_blank" rel="noopener">
-              فتح المرفق / الرابط
+      </span>
+
+      <span>
+       ${items.length} عنصر
+      </span>
+
+     </div>
+
+    </div>
+
+
+    <div class="departmentHeroMark">
+
+     <div class="departmentMarkRing">
+      <span>R</span>
+     </div>
+
+     <small>
+      DEPARTMENT
+     </small>
+
+    </div>
+
+   </section>
+
+
+   <div class="departmentStats">
+
+    <div class="departmentStat">
+
+     <div class="departmentStatIcon">
+      ▦
+     </div>
+
+     <div>
+      <span>CONTENT</span>
+      <strong>${items.length}</strong>
+      <small>إجمالي المحتوى</small>
+     </div>
+
+    </div>
+
+
+    <div class="departmentStat">
+
+     <div class="departmentStatIcon link">
+      ↗
+     </div>
+
+     <div>
+      <span>ATTACHMENTS</span>
+      <strong>${linkedItems}</strong>
+      <small>روابط ومرفقات</small>
+     </div>
+
+    </div>
+
+
+    <div class="departmentStat">
+
+     <div class="departmentStatIcon documented">
+      ≡
+     </div>
+
+     <div>
+      <span>DOCUMENTED</span>
+      <strong>${describedItems}</strong>
+      <small>محتوى موثق</small>
+     </div>
+
+    </div>
+
+
+    <div class="departmentStat">
+
+     <div class="departmentStatIcon team">
+      ◇
+     </div>
+
+     <div>
+      <span>CONTRIBUTORS</span>
+      <strong>${creators}</strong>
+      <small>مساهمون</small>
+     </div>
+
+    </div>
+
+   </div>
+
+
+   <section class="departmentControlPanel">
+
+    <div class="departmentControlInfo">
+
+     <span>WORKSPACE CONTROL</span>
+
+     <strong>
+      إدارة محتوى القسم
+     </strong>
+
+     <small>
+      اختر مساحة العمل واعرض المحتوى الخاص بها
+     </small>
+
+    </div>
+
+
+    <div class="departmentControlActions">
+
+     ${
+      canViewAll
+       ? `
+        <label class="departmentSelectWrap">
+
+         <small>
+          القسم
+         </small>
+
+         <select id="departmentContentFilter">
+
+          <option value="">
+           كل الأقسام
+          </option>
+
+          ${departments.map(x=>`
+           <option
+            value="${esc(x)}"
+            ${department===x?'selected':''}
+           >
+            ${esc(x)}
+           </option>
+          `).join('')}
+
+         </select>
+
+        </label>
+       `
+       : `
+        <div class="departmentLocked">
+
+         <span>القسم الحالي</span>
+
+         <strong>
+          ${esc(me.department||'غير محدد')}
+         </strong>
+
+        </div>
+       `
+     }
+
+
+     ${
+      canEditDepartment
+       ? `
+        <button
+         class="btn green departmentAddButton"
+         type="button"
+         onclick="departmentContentForm(
+          '${esc(department||'')}'
+         )"
+        >
+         <span>+</span>
+         إضافة محتوى
+        </button>
+       `
+       : `
+        <span class="departmentViewOnly">
+         ◉ عرض فقط
+        </span>
+       `
+     }
+
+    </div>
+
+   </section>
+
+
+   <section class="departmentContentSection">
+
+    <div class="departmentContentHeader">
+
+     <div>
+
+      <span>
+       DEPARTMENT CONTENT
+      </span>
+
+      <h3>
+       محتوى مساحة العمل
+      </h3>
+
+      <p>
+       الأعمال والمراجع والروابط المحفوظة للقسم.
+      </p>
+
+     </div>
+
+
+     <div class="departmentContentCount">
+
+      <strong>
+       ${items.length}
+      </strong>
+
+      <small>
+       عنصر
+      </small>
+
+     </div>
+
+    </div>
+
+
+    ${
+     items.length
+      ? `
+
+       <div class="departmentContentGrid">
+
+        ${items.map((x,index)=>`
+
+         <article
+          class="departmentContentCard"
+          style="--department-card-index:${index}"
+         >
+
+
+          <div class="departmentCardTop">
+
+           <div class="departmentCardNumber">
+            ${String(index+1).padStart(2,'0')}
+           </div>
+
+
+           <span class="departmentCardDepartment">
+            ${esc(x.department||'القسم')}
+           </span>
+
+          </div>
+
+
+          <div class="departmentCardBody">
+
+           <h4>
+            ${esc(x.title)}
+           </h4>
+
+
+           ${
+            x.description
+             ? `
+              <p>
+               ${esc(x.description)}
+              </p>
+             `
+             : `
+              <p class="departmentNoDescription">
+               لا يوجد وصف إضافي لهذا المحتوى.
+              </p>
+             `
+           }
+
+          </div>
+
+
+          ${
+           x.link_url
+            ? `
+             <a
+              class="departmentAttachment"
+              href="${esc(x.link_url)}"
+              target="_blank"
+              rel="noopener"
+             >
+
+              <span class="departmentAttachmentIcon">
+               ↗
+              </span>
+
+              <span>
+               <small>ATTACHMENT / LINK</small>
+               <strong>فتح المرفق أو الرابط</strong>
+              </span>
+
+              <i>←</i>
+
              </a>
-            </p>`
-         : ''
-       }
+            `
+            : ''
+          }
 
-       <p class="muted">
-        رفع بواسطة:
-        ${esc(x.created_by_name||'غير محدد')}
-       </p>
 
-       ${
-        isOwner || (!isHR && x.department===me.department) ||
-        (isHR && x.department===me.department)
-         ? `<div class="rowActions">
-             <button class="btn light small"
-              onclick='departmentContentForm(
-               ${JSON.stringify(x).replaceAll("'","&#39;")}
-              )'>
-              تعديل
-             </button>
+          <div class="departmentCardFooter">
 
-             <button class="btn danger small"
-              onclick="deleteDepartmentContent(${x.id})">
-              حذف
-             </button>
-            </div>`
-         : ''
-       }
-      </div>
-     `).join('')
-     : '<p class="muted">لا يوجد محتوى للقسم بعد.</p>'
-   }
+           <div class="departmentCreator">
+
+            <span class="departmentCreatorAvatar">
+             ${esc(
+              (x.created_by_name||'ر')
+               .trim()
+               .charAt(0)
+               .toUpperCase()
+             )}
+            </span>
+
+            <span>
+             <small>رفع بواسطة</small>
+             <strong>
+              ${esc(x.created_by_name||'غير محدد')}
+             </strong>
+            </span>
+
+           </div>
+
+
+           ${
+            isOwner ||
+            (!isHR && x.department===me.department) ||
+            (isHR && x.department===me.department)
+             ? `
+              <div class="departmentCardActions">
+
+               <button
+                class="departmentCardButton"
+                type="button"
+                onclick='departmentContentForm(
+                 ${JSON.stringify(x).replaceAll("'","&#39;")}
+                )'
+               >
+                تعديل
+               </button>
+
+               <button
+                class="departmentCardButton danger"
+                type="button"
+                onclick="deleteDepartmentContent(${x.id})"
+               >
+                حذف
+               </button>
+
+              </div>
+             `
+             : ''
+           }
+
+          </div>
+
+
+         </article>
+
+        `).join('')}
+
+       </div>
+
+      `
+      : `
+
+       <div class="departmentEmptyState">
+
+        <div class="departmentEmptyIcon">
+         +
+        </div>
+
+        <span>
+         EMPTY WORKSPACE
+        </span>
+
+        <strong>
+         لا يوجد محتوى للقسم بعد
+        </strong>
+
+        <p>
+         ${
+          canEditDepartment
+           ? 'ابدأ بإضافة أول عمل أو ملف إلى مساحة القسم.'
+           : 'لم تتم إضافة محتوى إلى هذه المساحة حتى الآن.'
+         }
+        </p>
+
+        ${
+         canEditDepartment
+          ? `
+           <button
+            class="btn green"
+            onclick="departmentContentForm(
+             '${esc(department||'')}'
+            )"
+           >
+            إضافة أول محتوى
+           </button>
+          `
+          : ''
+        }
+
+       </div>
+
+      `
+    }
+
+   </section>
+
+
   </div>
+
  `;
 
- const filter=$('#departmentContentFilter');
+
+ const filter=
+  $('#departmentContentFilter');
+
 
  if(filter){
-  filter.onchange=async e=>{
-   selectedDepartment=e.target.value || 'all';
-   await departmentWork();
-  };
- }
-}
 
+  filter.onchange=async e=>{
+
+   selectedDepartment=
+    e.target.value || 'all';
+
+   await departmentWork();
+
+  };
+
+ }
+
+}
 window.departmentContentForm=item=>{
+
+ closeDepartmentContentEditor();
+
  const editing=
-  typeof item==='object' && item && item.id;
+  typeof item==='object' &&
+  item &&
+  item.id;
 
  const departments=[
   'الميداني',
@@ -2990,83 +4751,320 @@ window.departmentContentForm=item=>{
         )
     );
 
- content.innerHTML=`
-  <div class="panel">
-   <h3>
-    ${editing?'تعديل':'إضافة'} محتوى للقسم
-   </h3>
 
-   <form id="departmentContentForm"
-    class="formGrid">
+ const wrapper=
+  document.createElement('div');
 
-    ${
-     me.role==='owner'
-      ? `
-       <div class="field">
-        <label>القسم</label>
-        <select name="department" required>
-         <option value="">اختر القسم</option>
-         ${departments.map(x=>`
-          <option value="${esc(x)}"
-           ${department===x?'selected':''}>
-           ${esc(x)}
+ wrapper.id='departmentContentEditor';
+ wrapper.className='departmentEditorOverlay';
+
+
+ wrapper.innerHTML=`
+
+  <div
+   class="departmentEditorBackdrop"
+   onclick="closeDepartmentContentEditor()">
+  </div>
+
+
+  <aside class="departmentEditorDrawer">
+
+
+   <header class="departmentEditorHeader">
+
+    <div>
+
+     <span class="departmentEditorCode">
+      ROUH / CONTENT EDITOR
+     </span>
+
+     <h2>
+      ${editing
+       ? 'تعديل محتوى القسم'
+       : 'إضافة محتوى جديد'}
+     </h2>
+
+     <p>
+      ${
+       editing
+        ? 'حدّث بيانات المحتوى المحفوظ في مساحة القسم.'
+        : 'أضف عملاً، مرجعاً أو رابطاً إلى مساحة القسم.'
+      }
+     </p>
+
+    </div>
+
+
+    <button
+     type="button"
+     class="departmentEditorClose"
+     onclick="closeDepartmentContentEditor()"
+     aria-label="إغلاق">
+     ×
+    </button>
+
+   </header>
+
+
+   <div class="departmentEditorContext">
+
+    <div class="departmentEditorContextIcon">
+     ${editing ? '✎' : '+'}
+    </div>
+
+    <div>
+     <span>
+      ${editing ? 'EDITING CONTENT' : 'NEW CONTENT'}
+     </span>
+
+     <strong>
+      ${esc(
+       department ||
+       'اختر القسم'
+      )}
+     </strong>
+    </div>
+
+   </div>
+
+
+   <form
+    id="departmentContentForm"
+    class="departmentEditorForm">
+
+
+    <section class="departmentEditorSection">
+
+     <div class="departmentEditorSectionTitle">
+
+      <span>01</span>
+
+      <div>
+       <strong>القسم</strong>
+       <small>
+        مساحة العمل التي سيظهر فيها المحتوى
+       </small>
+      </div>
+
+     </div>
+
+
+     ${
+      me.role==='owner'
+       ? `
+        <label class="departmentEditorField">
+
+         <span>القسم</span>
+
+         <select
+          name="department"
+          required>
+
+          <option value="">
+           اختر القسم
           </option>
-         `).join('')}
-        </select>
-       </div>
-      `
-      : `
-       <input type="hidden"
-        name="department"
-        value="${esc(me.department||'')}">
-      `
-    }
 
-    <div class="field full">
-     <label>العنوان</label>
-     <input name="title"
-      value="${esc(editing?item.title:'')}"
-      required>
-    </div>
+          ${departments.map(x=>`
+           <option
+            value="${esc(x)}"
+            ${department===x?'selected':''}
+           >
+            ${esc(x)}
+           </option>
+          `).join('')}
 
-    <div class="field full">
-     <label>الوصف</label>
-     <textarea name="description">${
-      esc(editing?item.description:'')
-     }</textarea>
-    </div>
+         </select>
 
-    <div class="field full">
-     <label>رابط ملف أو عمل</label>
-     <input name="link_url"
-      placeholder="https://..."
-      value="${esc(editing?item.link_url:'')}">
-    </div>
+        </label>
+       `
+       : `
+        <input
+         type="hidden"
+         name="department"
+         value="${esc(me.department||'')}">
 
-    <div class="full rowActions">
-     <button class="btn green">
-      حفظ
-     </button>
+        <div class="departmentEditorLocked">
 
-     <button class="btn light"
+         <span>القسم الحالي</span>
+
+         <strong>
+          ${esc(me.department||'غير محدد')}
+         </strong>
+
+         <i>محدد حسب صلاحية الحساب</i>
+
+        </div>
+       `
+     }
+
+    </section>
+
+
+    <section class="departmentEditorSection">
+
+     <div class="departmentEditorSectionTitle">
+
+      <span>02</span>
+
+      <div>
+       <strong>بيانات المحتوى</strong>
+       <small>
+        العنوان والوصف الداخلي للعمل
+       </small>
+      </div>
+
+     </div>
+
+
+     <label class="departmentEditorField">
+
+      <span>
+       العنوان
+       <b>مطلوب</b>
+      </span>
+
+      <input
+       name="title"
+       placeholder="مثال: خطة عمل الفريق للشهر القادم"
+       value="${esc(editing?item.title:'')}"
+       required>
+
+     </label>
+
+
+     <label class="departmentEditorField">
+
+      <span>الوصف</span>
+
+      <textarea
+       name="description"
+       rows="6"
+       placeholder="اكتب وصفاً مختصراً للمحتوى أو العمل...">${esc(editing?item.description:'')}</textarea>
+
+      <small class="departmentFieldHint">
+       يمكنك ترك الوصف فارغاً إذا كان العنوان كافياً.
+      </small>
+
+     </label>
+
+    </section>
+
+
+    <section class="departmentEditorSection">
+
+     <div class="departmentEditorSectionTitle">
+
+      <span>03</span>
+
+      <div>
+       <strong>المرفق</strong>
+       <small>
+        رابط ملف، مستند أو عمل خارجي
+       </small>
+      </div>
+
+     </div>
+
+
+     <label class="departmentEditorField">
+
+      <span>رابط الملف أو العمل</span>
+
+      <div class="departmentUrlInput">
+
+       <i>↗</i>
+
+       <input
+        name="link_url"
+        type="url"
+        placeholder="https://..."
+        value="${esc(editing?item.link_url:'')}">
+
+      </div>
+
+      <small class="departmentFieldHint">
+       اختياري — استخدم رابطاً يبدأ بـ https://
+      </small>
+
+     </label>
+
+    </section>
+
+
+    <div class="departmentEditorFooter">
+
+     <button
       type="button"
-      onclick="departmentWork()">
+      class="btn light"
+      onclick="closeDepartmentContentEditor()">
       إلغاء
      </button>
+
+     <button
+      class="btn green departmentEditorSave"
+      type="submit">
+
+      <span>
+       ${editing ? 'حفظ التعديلات' : 'إضافة المحتوى'}
+      </span>
+
+      <i>✓</i>
+
+     </button>
+
     </div>
 
+
    </form>
-  </div>
+
+  </aside>
  `;
 
- $('#departmentContentForm').onsubmit=async e=>{
+
+ document.body.appendChild(wrapper);
+
+
+ requestAnimationFrame(()=>{
+  wrapper.classList.add('open');
+ });
+
+
+ const form=
+  wrapper.querySelector(
+   '#departmentContentForm'
+  );
+
+
+ form.onsubmit=async e=>{
+
   e.preventDefault();
+
+
+  const submitButton=
+   form.querySelector(
+    '.departmentEditorSave'
+   );
+
+
+  const oldHTML=
+   submitButton.innerHTML;
+
+
+  submitButton.disabled=true;
+
+  submitButton.innerHTML=`
+   <span>جاري الحفظ...</span>
+   <i class="departmentSavingDot"></i>
+  `;
+
 
   const o=Object.fromEntries(
    new FormData(e.target).entries()
   );
 
+
   try{
+
    await api(
     '/api/admin/department-content'+
     (editing?'/'+item.id:''),
@@ -3076,15 +5074,80 @@ window.departmentContentForm=item=>{
     }
    );
 
-   flash('تم حفظ محتوى القسم');
-   await departmentWork();
+
+   closeDepartmentContentEditor();
+
+   flash(
+    editing
+     ? 'تم تحديث محتوى القسم'
+     : 'تم إضافة محتوى القسم'
+   );
+
+
+   setTimeout(()=>{
+    departmentWork();
+   },180);
+
 
   }catch(ex){
+
+   submitButton.disabled=false;
+   submitButton.innerHTML=oldHTML;
+
    flash(ex.message,true);
+
   }
+
  };
+
+
+ const escapeHandler=e=>{
+
+  if(
+   e.key==='Escape' &&
+   document.getElementById(
+    'departmentContentEditor'
+   )
+  ){
+
+   closeDepartmentContentEditor();
+
+   document.removeEventListener(
+    'keydown',
+    escapeHandler
+   );
+
+  }
+
+ };
+
+
+ document.addEventListener(
+  'keydown',
+  escapeHandler
+ );
+
 };
 
+
+
+window.closeDepartmentContentEditor=()=>{
+
+ const wrapper=
+  document.getElementById(
+   'departmentContentEditor'
+  );
+
+ if(!wrapper)return;
+
+ wrapper.classList.add('closing');
+ wrapper.classList.remove('open');
+
+ setTimeout(()=>{
+  wrapper.remove();
+ },260);
+
+};
 window.deleteDepartmentContent=async id=>{
  if(!confirm('حذف هذا المحتوى من القسم؟'))
   return;
@@ -3374,3 +5437,942 @@ window.permanentlyDeleteVolunteerApplication=async id=>{
   flash(e.message,true);
  }
 };
+
+
+/* ==================================================
+   VOLUNTEERS V2
+   ================================================== */
+
+function initVolunteerTableV2(){
+
+ const search=document.getElementById(
+  'volunteerSearch'
+ );
+
+ const filter=document.getElementById(
+  'volunteerStatusFilter'
+ );
+
+ const count=document.getElementById(
+  'volunteerVisibleCount'
+ );
+
+ if(!search || !filter)return;
+
+
+ function applyVolunteerFilters(){
+
+  const query=
+   search.value
+    .trim()
+    .toLowerCase();
+
+  const state=filter.value;
+
+  const rows=[
+   ...document.querySelectorAll(
+    '.volunteerTable tbody tr'
+   )
+  ];
+
+  let visible=0;
+
+  rows.forEach(row=>{
+
+   const text=
+    row.dataset.volunteerSearch || '';
+
+   const rowState=
+    row.dataset.volunteerState || '';
+
+   const matchesSearch=
+    !query ||
+    text.includes(query);
+
+   const matchesState=
+    state==='all' ||
+    rowState===state;
+
+   const show=
+    matchesSearch &&
+    matchesState;
+
+   row.classList.toggle(
+    'volunteerRowHidden',
+    !show
+   );
+
+   if(show)visible++;
+
+  });
+
+  if(count)
+   count.textContent=visible;
+
+ }
+
+
+ search.addEventListener(
+  'input',
+  applyVolunteerFilters
+ );
+
+ filter.addEventListener(
+  'change',
+  applyVolunteerFilters
+ );
+
+}
+
+
+/* ==================================================
+   VOLUNTEERS V2
+   ================================================== */
+
+function initVolunteerTableV2(){
+
+ const search=document.getElementById(
+  'volunteerSearch'
+ );
+
+ const filter=document.getElementById(
+  'volunteerStatusFilter'
+ );
+
+ const count=document.getElementById(
+  'volunteerVisibleCount'
+ );
+
+ if(!search || !filter)return;
+
+
+ function applyVolunteerFilters(){
+
+  const query=
+   search.value
+    .trim()
+    .toLowerCase();
+
+  const state=filter.value;
+
+  const rows=[
+   ...document.querySelectorAll(
+    '.volunteerTable tbody tr'
+   )
+  ];
+
+  let visible=0;
+
+  rows.forEach(row=>{
+
+   const text=
+    row.dataset.volunteerSearch || '';
+
+   const rowState=
+    row.dataset.volunteerState || '';
+
+   const matchesSearch=
+    !query ||
+    text.includes(query);
+
+   const matchesState=
+    state==='all' ||
+    rowState===state;
+
+   const show=
+    matchesSearch &&
+    matchesState;
+
+   row.classList.toggle(
+    'volunteerRowHidden',
+    !show
+   );
+
+   if(show)visible++;
+
+  });
+
+  if(count)
+   count.textContent=visible;
+
+ }
+
+
+ search.addEventListener(
+  'input',
+  applyVolunteerFilters
+ );
+
+ filter.addEventListener(
+  'change',
+  applyVolunteerFilters
+ );
+
+}
+
+
+/* ==================================================
+   VOLUNTEER APPLICATION DRAWER
+   ================================================== */
+
+function closeVolunteerDrawer(){
+
+ const drawer=document.getElementById(
+  'volunteerApplicationDrawer'
+ );
+
+ if(!drawer)return;
+
+ drawer.classList.add('closing');
+
+ setTimeout(()=>{
+  drawer.remove();
+ },260);
+
+}
+
+
+function openVolunteerDrawer(encoded){
+
+ let v;
+
+ try{
+  v=JSON.parse(
+   decodeURIComponent(encoded)
+  );
+ }catch(e){
+  return;
+ }
+
+
+ closeVolunteerDrawer();
+
+
+ const statusText={
+  pending:'قيد المراجعة',
+  contacted:'تم التواصل معه',
+  accepted:'مقبول',
+  rejected:'مرفوض'
+ };
+
+
+ let state=
+  statusText[v.status] ||
+  v.status ||
+  'غير محدد';
+
+
+ let stateClass='review';
+
+
+ if(
+  v.status==='pending' &&
+  v.contacted_at &&
+  !v.department_approval
+ ){
+  state='تم التواصل معه';
+  stateClass='contacted';
+ }
+
+
+ if(v.department_approval==='pending'){
+  state='بانتظار موافقة القسم';
+  stateClass='department';
+ }
+
+
+ if(v.department_approval==='accepted'){
+  state='مقبول من القسم';
+  stateClass='accepted';
+ }
+
+
+ if(v.department_approval==='rejected'){
+  state='مرفوض من القسم';
+  stateClass='rejected';
+ }
+
+
+ const accountState=
+  v.volunteer_id && !v.volunteer_deleted_at
+   ? (
+      v.volunteer_active
+       ? 'حساب فعال'
+       : 'حساب معطل'
+     )
+   : 'لم ينشئ حسابًا';
+
+
+ const accountClass=
+  v.volunteer_id &&
+  !v.volunteer_deleted_at &&
+  v.volunteer_active
+   ? 'active'
+   : 'inactive';
+
+
+ const wrapper=
+  document.createElement('div');
+
+ wrapper.id='volunteerApplicationDrawer';
+
+ wrapper.className=
+  'volunteerDrawerOverlay';
+
+
+ wrapper.innerHTML=`
+
+  <div class="volunteerDrawerBackdrop"
+       onclick="closeVolunteerDrawer()">
+  </div>
+
+
+  <aside class="volunteerDrawer">
+
+   <div class="volunteerDrawerTop">
+
+    <div>
+
+     <span class="drawerCode">
+      VOLUNTEER PROFILE
+     </span>
+
+     <h2>
+      ${esc(v.name || 'متطوع')}
+     </h2>
+
+     <p>
+      طلب الانضمام إلى فريق مبادرة روح
+     </p>
+
+    </div>
+
+
+    <button
+     class="drawerClose"
+     type="button"
+     onclick="closeVolunteerDrawer()"
+     aria-label="إغلاق">
+     ×
+    </button>
+
+   </div>
+
+
+   <div class="drawerIdentity">
+
+    <div class="drawerAvatar">
+     ${esc(
+       (v.name || 'ر')
+        .trim()
+        .charAt(0)
+        .toUpperCase()
+     )}
+    </div>
+
+    <div>
+
+     <strong>
+      ${esc(v.name || '-')}
+     </strong>
+
+     <span>
+      ${esc(v.major || 'التخصص غير محدد')}
+     </span>
+
+    </div>
+
+   </div>
+
+
+   <div class="drawerStatusRow">
+
+    <span class="volunteerStatusBadge ${stateClass}">
+     <i></i>
+     ${esc(state)}
+    </span>
+
+    <span class="drawerAccountState ${accountClass}">
+     ${esc(accountState)}
+    </span>
+
+   </div>
+
+
+   <div class="drawerSection">
+
+    <div class="drawerSectionTitle">
+     <span>01</span>
+     معلومات التواصل
+    </div>
+
+
+    <div class="drawerInfoGrid">
+
+     <div class="drawerInfoCard">
+      <small>البريد الإلكتروني</small>
+      <strong>
+       ${esc(v.email || '-')}
+      </strong>
+     </div>
+
+
+     <div class="drawerInfoCard">
+      <small>رقم الهاتف</small>
+      <strong dir="ltr">
+       ${esc(v.phone || '-')}
+      </strong>
+     </div>
+
+    </div>
+
+   </div>
+
+
+   <div class="drawerSection">
+
+    <div class="drawerSectionTitle">
+     <span>02</span>
+     المعلومات الأكاديمية
+    </div>
+
+
+    <div class="drawerInfoGrid three">
+
+     <div class="drawerInfoCard">
+      <small>التخصص</small>
+      <strong>
+       ${esc(v.major || '-')}
+      </strong>
+     </div>
+
+
+     <div class="drawerInfoCard">
+      <small>المستوى</small>
+      <strong>
+       ${esc(v.level || '-')}
+      </strong>
+     </div>
+
+
+     <div class="drawerInfoCard">
+      <small>المدينة</small>
+      <strong>
+       ${esc(v.city || '-')}
+      </strong>
+     </div>
+
+    </div>
+
+   </div>
+
+
+   <div class="drawerSection">
+
+    <div class="drawerSectionTitle">
+     <span>03</span>
+     رحلة الانضمام
+    </div>
+
+
+    <div class="drawerJourney">
+
+     <div class="journeyStep done">
+      <i>✓</i>
+      <div>
+       <strong>تم استلام الطلب</strong>
+       <span>وصل الطلب إلى إدارة روح</span>
+      </div>
+     </div>
+
+
+     <div class="journeyStep ${
+       v.contacted_at ||
+       v.status==='contacted' ||
+       v.status==='accepted'
+        ? 'done'
+        : 'current'
+     }">
+
+      <i>
+       ${
+        v.contacted_at ||
+        v.status==='contacted' ||
+        v.status==='accepted'
+         ? '✓'
+         : '2'
+       }
+      </i>
+
+      <div>
+       <strong>التواصل مع المتطوع</strong>
+       <span>
+        ${
+         v.contacted_at
+          ? 'تم تسجيل التواصل'
+          : 'بانتظار التواصل'
+        }
+       </span>
+      </div>
+
+     </div>
+
+
+     <div class="journeyStep ${
+       v.department_approval==='accepted'
+        ? 'done'
+        : v.department_approval==='pending'
+          ? 'current'
+          : ''
+     }">
+
+      <i>
+       ${
+        v.department_approval==='accepted'
+         ? '✓'
+         : '3'
+       }
+      </i>
+
+      <div>
+       <strong>موافقة القسم</strong>
+
+       <span>
+        ${
+         v.department
+          ? esc(v.department)
+          : 'لم يتم تحديد القسم'
+        }
+       </span>
+      </div>
+
+     </div>
+
+
+     <div class="journeyStep ${
+       v.status==='accepted' &&
+       v.department_approval==='accepted'
+        ? 'done'
+        : ''
+     }">
+
+      <i>
+       ${
+        v.status==='accepted' &&
+        v.department_approval==='accepted'
+         ? '✓'
+         : '4'
+       }
+      </i>
+
+      <div>
+       <strong>الانضمام للفريق</strong>
+
+       <span>
+        ${
+         v.volunteer_id
+          ? 'تم إنشاء حساب المتطوع'
+          : 'بانتظار إكمال الانضمام'
+        }
+       </span>
+      </div>
+
+     </div>
+
+    </div>
+
+   </div>
+
+
+   <div class="drawerSection">
+
+    <div class="drawerSectionTitle">
+     <span>04</span>
+     القسم
+    </div>
+
+
+    <div class="drawerDepartment">
+
+     <span>القسم الحالي</span>
+
+     <strong>
+      ${
+       v.department
+        ? esc(v.department)
+        : 'لم يحدد بعد'
+      }
+     </strong>
+
+    </div>
+
+   </div>
+
+
+   <div class="drawerFooter">
+
+    <button
+     class="btn light"
+     type="button"
+     onclick="closeVolunteerDrawer()">
+     إغلاق
+    </button>
+
+    ${
+     v.volunteer_id &&
+     !v.volunteer_deleted_at
+      ? `
+       <button
+        class="btn green"
+        type="button"
+        onclick="
+         closeVolunteerDrawer();
+         viewVolunteerProfile(${Number(v.volunteer_id)})
+        ">
+        عرض الحساب الكامل
+       </button>
+      `
+      : ''
+    }
+
+   </div>
+
+  </aside>
+ `;
+
+
+ document.body.appendChild(wrapper);
+
+
+ requestAnimationFrame(()=>{
+  wrapper.classList.add('open');
+ });
+
+
+ const escHandler=e=>{
+
+  if(e.key==='Escape'){
+
+   closeVolunteerDrawer();
+
+   document.removeEventListener(
+    'keydown',
+    escHandler
+   );
+
+  }
+
+ };
+
+ document.addEventListener(
+  'keydown',
+  escHandler
+ );
+
+}
+
+
+window.openVolunteerDrawer=
+ openVolunteerDrawer;
+
+window.closeVolunteerDrawer=
+ closeVolunteerDrawer;
+
+
+/* ==================================================
+   TASKS V2 INTERACTIONS
+   ================================================== */
+
+function initTasksV2(){
+
+ const createToggle=
+  document.getElementById(
+   'taskCreateToggle'
+  );
+
+ const createBody=
+  document.getElementById(
+   'taskCreateBody'
+  );
+
+ const createChevron=
+  document.getElementById(
+   'taskCreateChevron'
+  );
+
+
+ if(
+  createToggle &&
+  createBody
+ ){
+
+  createToggle.onclick=()=>{
+
+   const open=
+    createBody.classList.toggle(
+     'open'
+    );
+
+   createToggle.classList.toggle(
+    'open',
+    open
+   );
+
+   if(createChevron)
+    createChevron.textContent=
+     open ? '⌃' : '⌄';
+
+  };
+
+ }
+
+
+ const archiveToggle=
+  document.getElementById(
+   'taskArchiveToggle'
+  );
+
+ const archiveBody=
+  document.getElementById(
+   'taskArchiveBody'
+  );
+
+ const archiveChevron=
+  document.getElementById(
+   'taskArchiveChevron'
+  );
+
+
+ if(
+  archiveToggle &&
+  archiveBody
+ ){
+
+  archiveToggle.onclick=()=>{
+
+   const open=
+    archiveBody.classList.toggle(
+     'open'
+    );
+
+   archiveToggle.classList.toggle(
+    'open',
+    open
+   );
+
+   if(archiveChevron)
+    archiveChevron.textContent=
+     open ? '⌃' : '⌄';
+
+  };
+
+ }
+
+}
+
+
+function initApprovalCenterV2(){
+
+ const buttons=[
+  ...document.querySelectorAll(
+   '[data-approval-filter]'
+  )
+ ];
+
+ const cards=[
+  ...document.querySelectorAll(
+   '.approvalRequestCard'
+  )
+ ];
+
+ const counter=
+  document.getElementById(
+   'approvalVisibleCount'
+  );
+
+ const empty=
+  document.getElementById(
+   'approvalFilterEmpty'
+  );
+
+
+ buttons.forEach(button=>{
+
+  button.addEventListener('click',()=>{
+
+   buttons.forEach(x=>
+    x.classList.remove('active')
+   );
+
+   button.classList.add('active');
+
+
+   const filter=
+    button.dataset.approvalFilter;
+
+
+   let visible=0;
+
+
+   cards.forEach(card=>{
+
+    const show=
+     filter==='all' ||
+     card.dataset.approvalStatus===
+     filter;
+
+    card.hidden=!show;
+
+    if(show)visible++;
+
+   });
+
+
+   if(counter){
+    counter.textContent=
+     `${visible} طلب`;
+   }
+
+
+   if(empty){
+    empty.hidden=
+     visible!==0;
+   }
+
+  });
+
+ });
+
+}
+
+
+/* ==================================================
+   VOLUNTEER ACTION MENU V3
+   ================================================== */
+
+window.toggleVolunteerActionMenu=(event,button)=>{
+
+ event.stopPropagation();
+
+ const menu=
+  button
+   .closest('.volunteerActionMenuWrap')
+   ?.querySelector('.volunteerActionMenu');
+
+ if(!menu)return;
+
+
+ const alreadyOpen=
+  menu.classList.contains('open');
+
+
+ closeVolunteerActionMenus();
+
+
+ if(alreadyOpen)return;
+
+
+ menu.classList.add('open');
+
+
+ const rect=
+  button.getBoundingClientRect();
+
+
+ const menuWidth=270;
+
+ let left=
+  rect.right-menuWidth;
+
+
+ if(left<12)
+  left=12;
+
+
+ if(left+menuWidth>
+    window.innerWidth-12){
+
+  left=
+   window.innerWidth-
+   menuWidth-
+   12;
+
+ }
+
+
+ menu.style.position='fixed';
+ menu.style.top=
+  `${rect.bottom+7}px`;
+
+ menu.style.left=
+  `${left}px`;
+
+ menu.style.right='auto';
+
+
+ requestAnimationFrame(()=>{
+
+  const menuRect=
+   menu.getBoundingClientRect();
+
+
+  if(
+   menuRect.bottom>
+   window.innerHeight-12
+  ){
+
+   menu.style.top=
+    `${Math.max(
+     12,
+     rect.top-
+     menuRect.height-
+     7
+    )}px`;
+
+  }
+
+ });
+
+};
+
+
+window.closeVolunteerActionMenus=()=>{
+
+ document
+  .querySelectorAll(
+   '.volunteerActionMenu.open'
+  )
+  .forEach(menu=>
+   menu.classList.remove('open')
+  );
+
+};
+
+
+document.addEventListener('click',e=>{
+
+ if(
+  !e.target.closest(
+   '.volunteerActionMenu'
+  ) &&
+  !e.target.closest(
+   '.volunteerActionTrigger'
+  )
+ ){
+  closeVolunteerActionMenus();
+ }
+
+});
+
+
+window.addEventListener(
+ 'resize',
+ closeVolunteerActionMenus
+);
+
+
+window.addEventListener(
+ 'scroll',
+ closeVolunteerActionMenus,
+ true
+);
