@@ -5625,7 +5625,10 @@ async function saveComplaint(id){
 
 
 async function ideas(){
+
  const d=await api('/api/admin/ideas');
+ const items=d.items||[];
+
  const statusLabel={
   new:'جديدة',
   reviewing:'قيد الدراسة',
@@ -5634,65 +5637,814 @@ async function ideas(){
   implemented:'تم تنفيذها'
  };
 
- content.innerHTML=d.items.length?d.items.map(x=>`
-  <div class="panel">
-   <div class="topbar">
-    <div>
-     <h3>${esc(x.title)}</h3>
-     <div class="muted">${esc(x.created_at)}</div>
-    </div>
-    <span class="badge">${esc(statusLabel[x.status]||x.status)}</span>
-   </div>
+ const statusCode={
+  new:'NEW',
+  reviewing:'REVIEW',
+  accepted:'ACCEPTED',
+  rejected:'REJECTED',
+  implemented:'IMPLEMENTED'
+ };
 
-   <div class="formGrid">
-    <div class="field">
-     <label>الاسم</label>
-     <input value="${esc(x.name)}" disabled>
+ const stats={
+  total:items.length,
+  new:items.filter(x=>x.status==='new').length,
+  reviewing:items.filter(x=>x.status==='reviewing').length,
+  accepted:items.filter(x=>
+   x.status==='accepted' ||
+   x.status==='implemented'
+  ).length
+ };
+
+
+ content.innerHTML=`
+
+  <div class="ideasCenter">
+
+
+   <section class="ideasHero">
+
+    <div class="ideasHeroContent">
+
+     <span class="ideasHeroCode">
+      ROUH / INNOVATION HUB
+     </span>
+
+     <h2>
+      مركز الأفكار
+     </h2>
+
+     <p>
+      راجع أفكار المجتمع، قيّم أثرها،
+      وتابع رحلة الفكرة من الاقتراح
+      حتى التنفيذ.
+     </p>
+
+
+     <div class="ideasHeroState">
+
+      <span>
+       <i></i>
+       IDEAS PIPELINE ACTIVE
+      </span>
+
+      <span>
+       ${items.length} فكرة مسجلة
+      </span>
+
+     </div>
+
     </div>
 
-    <div class="field">
-     <label>وسيلة التواصل</label>
-     <input value="${esc(x.contact)}" disabled>
+
+    <div class="ideasHeroMark">
+
+     <div>
+      ✦
+     </div>
+
+     <span>
+      INNOVATION
+     </span>
+
     </div>
 
-    <div class="field">
-     <label>المجال</label>
-     <input value="${esc(x.category||'غير محدد')}" disabled>
+   </section>
+
+
+   <section class="ideasStats">
+
+    <article>
+
+     <span>TOTAL IDEAS</span>
+
+     <strong>
+      ${stats.total}
+     </strong>
+
+     <small>
+      إجمالي الأفكار
+     </small>
+
+    </article>
+
+
+    <article class="new">
+
+     <span>NEW</span>
+
+     <strong>
+      ${stats.new}
+     </strong>
+
+     <small>
+      أفكار جديدة
+     </small>
+
+    </article>
+
+
+    <article class="reviewing">
+
+     <span>IN REVIEW</span>
+
+     <strong>
+      ${stats.reviewing}
+     </strong>
+
+     <small>
+      قيد الدراسة
+     </small>
+
+    </article>
+
+
+    <article class="accepted">
+
+     <span>PROGRESS</span>
+
+     <strong>
+      ${stats.accepted}
+     </strong>
+
+     <small>
+      مقبولة أو منفذة
+     </small>
+
+    </article>
+
+   </section>
+
+
+   <section class="ideasInbox">
+
+    <div class="ideasInboxHead">
+
+     <div>
+
+      <span>
+       IDEA INBOX
+      </span>
+
+      <h3>
+       صندوق الأفكار
+      </h3>
+
+      <p>
+       افتح أي فكرة لمراجعة تفاصيلها
+       وتحديث حالتها.
+      </p>
+
+     </div>
+
+
+     <div class="ideasTools">
+
+      <label class="ideasSearch">
+
+       <span>⌕</span>
+
+       <input
+        id="ideasSearchInput"
+        type="search"
+        placeholder="ابحث عن فكرة..."
+        autocomplete="off">
+
+      </label>
+
+
+      <select id="ideasStatusFilter">
+
+       <option value="all">
+        جميع الحالات
+       </option>
+
+       ${Object.entries(statusLabel)
+        .map(([k,v])=>`
+         <option value="${k}">
+          ${v}
+         </option>
+        `).join('')}
+
+      </select>
+
+     </div>
+
     </div>
 
-    <div class="field">
-     <label>الحالة</label>
-     <select id="ideaStatus${x.id}">
-      ${Object.entries(statusLabel).map(([k,v])=>`<option value="${k}" ${x.status===k?'selected':''}>${v}</option>`).join('')}
-     </select>
+
+    <div class="ideasGrid">
+
+     ${
+      items.length
+       ? items.map((x,index)=>{
+
+          const state=
+           statusLabel[x.status]
+            ? x.status
+            : 'new';
+
+          const searchText=[
+           x.title||'',
+           x.name||'',
+           x.contact||'',
+           x.category||'',
+           x.description||'',
+           statusLabel[x.status]||''
+          ].join(' ').toLowerCase();
+
+          const encoded=
+           encodeURIComponent(
+            JSON.stringify(x)
+           );
+
+          return `
+
+           <article
+            class="ideaCard"
+            data-idea-status="${state}"
+            data-idea-search="${esc(searchText)}"
+            style="--idea-index:${index}">
+
+
+            <div class="ideaCardTop">
+
+             <span class="
+              ideaStatus
+              ${state}
+             ">
+
+              <i></i>
+
+              ${
+               esc(
+                statusLabel[x.status]||
+                x.status
+               )
+              }
+
+             </span>
+
+
+             <span class="ideaNumber">
+              IDEA /
+              ${String(
+               x.id||index+1
+              ).padStart(3,'0')}
+             </span>
+
+            </div>
+
+
+            <div class="ideaCategory">
+             ${esc(
+              x.category||
+              'غير محدد'
+             )}
+            </div>
+
+
+            <h3>
+             ${esc(
+              x.title||
+              'فكرة بدون عنوان'
+             )}
+            </h3>
+
+
+            <p>
+             ${esc(
+              x.description||
+              'لا يوجد وصف للفكرة.'
+             )}
+            </p>
+
+
+            <div class="ideaAuthor">
+
+             <span>
+              ${esc(
+               String(
+                x.name||
+                'R'
+               )
+               .trim()
+               .charAt(0)
+               .toUpperCase()
+              )}
+             </span>
+
+             <div>
+
+              <strong>
+               ${esc(
+                x.name||
+                'غير معروف'
+               )}
+              </strong>
+
+              <small>
+               ${esc(
+                x.created_at||
+                ''
+               )}
+              </small>
+
+             </div>
+
+            </div>
+
+
+            <button
+             type="button"
+             class="ideaOpenButton"
+             onclick="
+              openIdeaDrawer(
+               '${encoded}'
+              )
+             ">
+
+             <span>
+              مراجعة الفكرة
+             </span>
+
+             <b>
+              ←
+             </b>
+
+            </button>
+
+
+           </article>
+
+          `;
+
+         }).join('')
+       : `
+
+        <div class="ideasEmpty">
+
+         <div>✦</div>
+
+         <h3>
+          لا توجد أفكار مرسلة
+         </h3>
+
+         <p>
+          ستظهر الأفكار الجديدة هنا
+          عند إرسالها.
+         </p>
+
+        </div>
+
+       `
+     }
+
     </div>
 
-    <div class="field full">
-     <label>وصف الفكرة</label>
-     <textarea disabled>${esc(x.description)}</textarea>
-    </div>
 
-    <div class="field full">
-     <label>المشكلة التي تحاول الفكرة حلها</label>
-     <textarea disabled>${esc(x.problem||'')}</textarea>
-    </div>
+    ${
+     items.length
+      ? `
+       <div
+        id="ideasNoResults"
+        class="ideasNoResults"
+        hidden>
 
-    <div class="field full">
-     <label>الأثر المتوقع</label>
-     <textarea disabled>${esc(x.expected_impact||'')}</textarea>
-    </div>
+        لا توجد أفكار مطابقة للبحث.
 
-    <div class="field full">
-     <label>ملاحظات الإدارة</label>
-     <textarea id="ideaNotes${x.id}">${esc(x.admin_notes||'')}</textarea>
-    </div>
+       </div>
+      `
+      : ''
+    }
 
-    <button class="btn green full" onclick="saveIdea(${x.id})">حفظ التحديث</button>
-   </div>
+   </section>
+
+
   </div>
- `).join(''):'<div class="panel"><p class="muted">لا توجد أفكار مرسلة حتى الآن.</p></div>';
+
+
+  <div
+   id="ideaDrawerBackdrop"
+   class="ideaDrawerBackdrop"
+   onclick="closeIdeaDrawer()">
+  </div>
+
+
+  <aside
+   id="ideaDrawer"
+   class="ideaDrawer">
+
+   <div id="ideaDrawerContent"></div>
+
+  </aside>
+
+ `;
+
+
+ const search=
+  document.getElementById(
+   'ideasSearchInput'
+  );
+
+ const filter=
+  document.getElementById(
+   'ideasStatusFilter'
+  );
+
+
+ const applyFilters=()=>{
+
+  const query=
+   (search?.value||'')
+    .trim()
+    .toLowerCase();
+
+  const status=
+   filter?.value||'all';
+
+  let visible=0;
+
+
+  document
+   .querySelectorAll('.ideaCard')
+   .forEach(card=>{
+
+    const searchMatch=
+     !query ||
+     (
+      card.dataset.ideaSearch||''
+     ).includes(query);
+
+    const statusMatch=
+     status==='all' ||
+     card.dataset.ideaStatus===status;
+
+    const show=
+     searchMatch &&
+     statusMatch;
+
+    card.hidden=!show;
+
+    if(show) visible++;
+
+   });
+
+
+  const noResults=
+   document.getElementById(
+    'ideasNoResults'
+   );
+
+  if(noResults){
+   noResults.hidden=
+    visible!==0;
+  }
+
+ };
+
+
+ search?.addEventListener(
+  'input',
+  applyFilters
+ );
+
+ filter?.addEventListener(
+  'change',
+  applyFilters
+ );
+
 }
 
+
+window.openIdeaDrawer=(encoded)=>{
+
+ let x;
+
+ try{
+  x=JSON.parse(
+   decodeURIComponent(encoded)
+  );
+ }catch{
+  return;
+ }
+
+
+ const statusLabel={
+  new:'جديدة',
+  reviewing:'قيد الدراسة',
+  accepted:'مقبولة',
+  rejected:'مرفوضة',
+  implemented:'تم تنفيذها'
+ };
+
+
+ const drawer=
+  document.getElementById(
+   'ideaDrawer'
+  );
+
+ const backdrop=
+  document.getElementById(
+   'ideaDrawerBackdrop'
+  );
+
+ const body=
+  document.getElementById(
+   'ideaDrawerContent'
+  );
+
+
+ if(
+  !drawer ||
+  !backdrop ||
+  !body
+ ) return;
+
+
+ body.innerHTML=`
+
+  <div class="ideaDrawerHeader">
+
+   <div>
+
+    <span>
+     IDEA REVIEW /
+     ${String(x.id||'').padStart(3,'0')}
+    </span>
+
+    <h2>
+     ${esc(
+      x.title||
+      'فكرة بدون عنوان'
+     )}
+    </h2>
+
+   </div>
+
+
+   <button
+    type="button"
+    onclick="closeIdeaDrawer()">
+
+    ×
+
+   </button>
+
+  </div>
+
+
+  <div class="ideaDrawerBody">
+
+
+   <section class="ideaDrawerIdentity">
+
+    <div class="ideaDrawerAvatar">
+
+     ${esc(
+      String(
+       x.name||
+       'R'
+      )
+      .trim()
+      .charAt(0)
+      .toUpperCase()
+     )}
+
+    </div>
+
+
+    <div>
+
+     <span>
+      SUBMITTED BY
+     </span>
+
+     <strong>
+      ${esc(
+       x.name||
+       'غير معروف'
+      )}
+     </strong>
+
+     <small>
+      ${esc(
+       x.contact||
+       'لا توجد وسيلة تواصل'
+      )}
+     </small>
+
+    </div>
+
+   </section>
+
+
+   <div class="ideaDrawerMeta">
+
+    <div>
+
+     <span>
+      CATEGORY
+     </span>
+
+     <strong>
+      ${esc(
+       x.category||
+       'غير محدد'
+      )}
+     </strong>
+
+    </div>
+
+
+    <div>
+
+     <span>
+      SUBMITTED
+     </span>
+
+     <strong>
+      ${esc(
+       x.created_at||
+       '-'
+      )}
+     </strong>
+
+    </div>
+
+   </div>
+
+
+   <section class="ideaDetailBlock">
+
+    <span>
+     IDEA DESCRIPTION
+    </span>
+
+    <h3>
+     وصف الفكرة
+    </h3>
+
+    <p>
+     ${esc(
+      x.description||
+      'لا يوجد وصف.'
+     )}
+    </p>
+
+   </section>
+
+
+   <section class="ideaDetailBlock">
+
+    <span>
+     PROBLEM
+    </span>
+
+    <h3>
+     المشكلة التي تحاول حلها
+    </h3>
+
+    <p>
+     ${esc(
+      x.problem||
+      'لم يتم تحديد المشكلة.'
+     )}
+    </p>
+
+   </section>
+
+
+   <section class="ideaDetailBlock">
+
+    <span>
+     EXPECTED IMPACT
+    </span>
+
+    <h3>
+     الأثر المتوقع
+    </h3>
+
+    <p>
+     ${esc(
+      x.expected_impact||
+      'لم يتم تحديد الأثر المتوقع.'
+     )}
+    </p>
+
+   </section>
+
+
+   <section class="ideaReviewControl">
+
+    <div class="ideaReviewHead">
+
+     <span>
+      MANAGEMENT REVIEW
+     </span>
+
+     <h3>
+      قرار الإدارة
+     </h3>
+
+    </div>
+
+
+    <label>
+
+     <span>
+      حالة الفكرة
+     </span>
+
+     <select
+      id="ideaStatus${x.id}">
+
+      ${Object.entries(statusLabel)
+       .map(([k,v])=>`
+
+        <option
+         value="${k}"
+         ${x.status===k
+          ? 'selected'
+          : ''}>
+
+         ${v}
+
+        </option>
+
+       `).join('')}
+
+     </select>
+
+    </label>
+
+
+    <label>
+
+     <span>
+      ملاحظات الإدارة
+     </span>
+
+     <textarea
+      id="ideaNotes${x.id}"
+      rows="5"
+      placeholder="أضف ملاحظات حول الفكرة..."
+     >${esc(
+      x.admin_notes||
+      ''
+     )}</textarea>
+
+    </label>
+
+
+    <button
+     type="button"
+     class="ideaSaveButton"
+     onclick="
+      saveIdea(${x.id})
+     ">
+
+     <span>✓</span>
+     حفظ التحديث
+
+    </button>
+
+   </section>
+
+
+  </div>
+
+ `;
+
+
+ backdrop.classList.add('open');
+ drawer.classList.add('open');
+
+ document.body.classList.add(
+  'ideaDrawerOpen'
+ );
+
+};
+
+
+window.closeIdeaDrawer=()=>{
+
+ document
+  .getElementById(
+   'ideaDrawer'
+  )
+  ?.classList.remove('open');
+
+ document
+  .getElementById(
+   'ideaDrawerBackdrop'
+  )
+  ?.classList.remove('open');
+
+ document.body.classList.remove(
+  'ideaDrawerOpen'
+ );
+
+};
 async function saveIdea(id){
  try{
   const status=document.getElementById('ideaStatus'+id).value;
@@ -5704,6 +6456,7 @@ async function saveIdea(id){
   });
 
   flash('تم تحديث حالة الفكرة');
+  closeIdeaDrawer();
   ideas();
  }catch(e){
   flash(e.message,true);
