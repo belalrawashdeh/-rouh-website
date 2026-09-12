@@ -314,166 +314,598 @@ $('#logoutBtn').onclick=async()=>{await api('/api/logout',{method:'POST'});me=nu
 $('#menu').onclick=e=>{if(e.target.dataset.tab)loadTab(e.target.dataset.tab)};
 async function loadTab(tab){current=tab;document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));const titles={dashboard:'لوحة التحكم',events:'الفعاليات',achievements:'الإنجازات',ideas:'الأفكار',complaints:'الشكاوى',volunteers:'طلبات المتطوعين',tasks:'المهام',ai:'مساعد روح','department-work':'محتوى القسم','rejected-volunteers':'سجل المرفوضين',content:'محتوى الموقع',faqs:'الأسئلة الشائعة',trash:'سلة المحذوفات',approvals:'طلبات الموافقة',users:'المسؤولون والصلاحيات',audit:'سجل التعديلات'};$('#pageTitle').textContent=titles[tab];content.innerHTML='<div class="panel">جارٍ التحميل…</div>';try{if(tab==='dashboard')return dashboard();if(tab==='events')return listEntities('events');if(tab==='achievements')return listEntities('achievements');if(tab==='ideas')return ideas();if(tab==='complaints')return complaints();if(tab==='volunteers')return volunteers();if(tab==='tasks')return tasks();if(tab==='ai')return aiAssistant();if(tab==='department-work')return departmentWork();if(tab==='rejected-volunteers')return rejectedVolunteers();if(tab==='content')return editContent();if(tab==='faqs')return faqs();if(tab==='trash')return trash();if(tab==='approvals')return deletionRequests();if(tab==='users')return users();if(tab==='audit')return audit()}catch(e){content.innerHTML=`<div class="notice error">${esc(e.message)}</div>`}}
 async function dashboard(){
+
  const d=await api('/api/admin/dashboard');
 
- if(d.dashboardType==='deputy'){
-  content.innerHTML=`
-   <div class="panel">
-    <h3>الريس</h3>
-    <p class="muted">نظرة شاملة على إدارة المبادرة.</p>
-   </div>
+ const type=d.dashboardType;
+ const counts=d.counts||{};
 
-   <div class="grid grid4">
-    <div class="panel">
-     <b>الفعاليات</b>
-     <h2>${d.counts.events}</h2>
-    </div>
+ const roleInfo={
+  owner:{
+   code:'OWNER COMMAND',
+   title:'مركز قيادة روح',
+   subtitle:'نظرة شاملة على المبادرة وإدارة الفريق والمحتوى.',
+   badge:'OWNER',
+   department:'الإدارة العليا'
+  },
 
-    <div class="panel">
-     <b>الإنجازات</b>
-     <h2>${d.counts.achievements}</h2>
-    </div>
+  deputy:{
+   code:'DEPUTY COMMAND',
+   title:'مركز قيادة روح',
+   subtitle:'نظرة شاملة على إدارة المبادرة ومتابعة عمليات الفريق.',
+   badge:'DEPUTY',
+   department:'إدارة المبادرة'
+  },
 
-    <div class="panel">
-     <b>المسؤولون الفعالون</b>
-     <h2>${d.counts.users}</h2>
-    </div>
+  hr:{
+   code:'PEOPLE OPERATIONS',
+   title:'إدارة الموارد البشرية',
+   subtitle:'متابعة رحلة المتطوعين والحسابات وطلبات الفريق.',
+   badge:'HR',
+   department:'إدارة الموارد البشرية'
+  },
 
-    <div class="panel">
-     <b>عدد المنضمين</b>
-     <h2>${d.counts.organizers}</h2>
-    </div>
+  department:{
+   code:'DEPARTMENT OPERATIONS',
+   title:d.department||'لوحة القسم',
+   subtitle:'متابعة فريق القسم ومهامه ومحتواه من مكان واحد.',
+   badge:'DEPARTMENT',
+   department:d.department||'القسم'
+  }
+ };
 
-    <div class="panel">
-     <b>الحسابات الفعّالة</b>
-     <h2>${d.counts.activeAccounts}</h2>
-    </div>
+ const info=
+  roleInfo[type]||
+  roleInfo.department;
 
-    <div class="panel">
-     <b>المحتوى المنشور</b>
-     <h2>${d.counts.published}</h2>
-    </div>
-   </div>`;
-  return;
+
+ let stats=[];
+
+
+ if(type==='owner' || type==='deputy'){
+
+  stats=[
+   {
+    code:'EVENTS',
+    label:'الفعاليات',
+    value:counts.events||0,
+    icon:'◇',
+    tone:'green'
+   },
+   {
+    code:'ACHIEVEMENTS',
+    label:'الإنجازات',
+    value:counts.achievements||0,
+    icon:'★',
+    tone:'gold'
+   },
+   {
+    code:'TEAM',
+    label:type==='owner'
+     ? 'المسؤولون'
+     : 'المسؤولون الفعالون',
+    value:counts.users||0,
+    icon:'◎',
+    tone:'blue'
+   },
+   {
+    code:'VOLUNTEERS',
+    label:'عدد المنضمين',
+    value:counts.organizers||0,
+    icon:'◌',
+    tone:'green'
+   },
+   {
+    code:'ACTIVE',
+    label:'الحسابات الفعّالة',
+    value:counts.activeAccounts||0,
+    icon:'●',
+    tone:'active'
+   },
+   {
+    code:'PUBLISHED',
+    label:'المحتوى المنشور',
+    value:counts.published||0,
+    icon:'▦',
+    tone:'purple'
+   }
+  ];
+
  }
 
- if(d.dashboardType==='owner'){
-  const auditPanel=`
-   <div class="panel">
-    <h3>آخر التعديلات</h3>
-    ${d.audit.map(a=>`
+
+ if(type==='hr'){
+
+  stats=[
+   {
+    code:'APPLICATIONS',
+    label:'طلبات المتطوعين',
+    value:counts.applications||0,
+    icon:'◇',
+    tone:'gold'
+   },
+   {
+    code:'VOLUNTEERS',
+    label:'عدد المنضمين',
+    value:counts.organizers||0,
+    icon:'◎',
+    tone:'green'
+   },
+   {
+    code:'ACTIVE',
+    label:'الحسابات الفعّالة',
+    value:counts.activeAccounts||0,
+    icon:'●',
+    tone:'active'
+   },
+   {
+    code:'COMPLAINTS',
+    label:'الشكاوى الجديدة',
+    value:counts.newComplaints||0,
+    icon:'!',
+    tone:'red'
+   }
+  ];
+
+ }
+
+
+ if(type==='department'){
+
+  stats=[
+   {
+    code:'TEAM MEMBERS',
+    label:'المنضمون للقسم',
+    value:counts.organizers||0,
+    icon:'◎',
+    tone:'green'
+   },
+   {
+    code:'ACTIVE',
+    label:'الحسابات الفعّالة',
+    value:counts.activeAccounts||0,
+    icon:'●',
+    tone:'active'
+   },
+   {
+    code:'CONTENT',
+    label:'محتوى القسم',
+    value:counts.departmentContent||0,
+    icon:'▦',
+    tone:'gold'
+   }
+  ];
+
+ }
+
+
+ const quickActions=[];
+
+
+ if(type==='owner' || type==='deputy'){
+
+  quickActions.push(
+   {
+    tab:'volunteers',
+    code:'PEOPLE',
+    title:'طلبات المتطوعين',
+    desc:'متابعة رحلة الانضمام',
+    icon:'◎'
+   },
+   {
+    tab:'tasks',
+    code:'OPERATIONS',
+    title:'إدارة المهام',
+    desc:'متابعة أعمال الفريق',
+    icon:'✓'
+   },
+   {
+    tab:'events',
+    code:'ACTIVITIES',
+    title:'الفعاليات',
+    desc:'إدارة فعاليات المبادرة',
+    icon:'◇'
+   },
+   {
+    tab:'department-work',
+    code:'DEPARTMENTS',
+    title:'محتوى الأقسام',
+    desc:'متابعة أعمال الأقسام',
+    icon:'▦'
+   }
+  );
+
+ }
+
+
+ if(type==='owner'){
+
+  quickActions.push(
+   {
+    tab:'approvals',
+    code:'GOVERNANCE',
+    title:'طلبات الموافقة',
+    desc:'مراجعة طلبات الحذف',
+    icon:'◈'
+   },
+   {
+    tab:'users',
+    code:'ACCESS',
+    title:'المسؤولون',
+    desc:'إدارة الحسابات والصلاحيات',
+    icon:'⌘'
+   }
+  );
+
+ }
+
+
+ if(type==='hr'){
+
+  quickActions.push(
+   {
+    tab:'volunteers',
+    code:'APPLICATIONS',
+    title:'طلبات المتطوعين',
+    desc:'مراجعة وإدارة الطلبات',
+    icon:'◎'
+   },
+   {
+    tab:'tasks',
+    code:'TASKS',
+    title:'المهام',
+    desc:'متابعة مهام المتطوعين',
+    icon:'✓'
+   },
+   {
+    tab:'complaints',
+    code:'FEEDBACK',
+    title:'الشكاوى',
+    desc:'متابعة الشكاوى الجديدة',
+    icon:'!'
+   },
+   {
+    tab:'rejected-volunteers',
+    code:'ARCHIVE',
+    title:'سجل المرفوضين',
+    desc:'مراجعة الطلبات السابقة',
+    icon:'↺'
+   }
+  );
+
+ }
+
+
+ if(type==='department'){
+
+  quickActions.push(
+   {
+    tab:'tasks',
+    code:'TASKS',
+    title:'المهام',
+    desc:'إدارة ومتابعة مهام القسم',
+    icon:'✓'
+   },
+   {
+    tab:'volunteers',
+    code:'TEAM',
+    title:'المتطوعون',
+    desc:'متابعة أعضاء القسم',
+    icon:'◎'
+   },
+   {
+    tab:'department-work',
+    code:'WORKSPACE',
+    title:'محتوى القسم',
+    desc:'إدارة محتوى القسم',
+    icon:'▦'
+   },
+   {
+    tab:'ai',
+    code:'ASSISTANT',
+    title:'مساعد روح',
+    desc:'مساعدك في إدارة العمل',
+    icon:'✦'
+   }
+  );
+
+ }
+
+
+ const auditItems=
+  type==='owner' &&
+  Array.isArray(d.audit)
+   ? d.audit
+   : [];
+
+
+ content.innerHTML=`
+
+  <div class="executiveDashboard">
+
+
+   <section class="executiveHero">
+
+    <div class="executiveHeroMain">
+
+     <span class="executiveCode">
+      ROUH CONTROL CENTER /
+      ${esc(info.code)}
+     </span>
+
+
+     <h1>
+      ${esc(info.title)}
+     </h1>
+
+
      <p>
-      <b>${esc(a.user_name||'النظام')}</b>
-      — ${esc(a.action)} ${esc(a.entity)}
-      <span class="muted">${esc(a.created_at)}</span>
+      ${esc(info.subtitle)}
      </p>
-    `).join('')||'<p class="muted">لا يوجد سجل بعد.</p>'}
-   </div>`;
 
-  content.innerHTML=`
-   <div class="grid grid4">
-    <div class="panel"><b>الفعاليات</b><h2>${d.counts.events}</h2></div>
-    <div class="panel"><b>الإنجازات</b><h2>${d.counts.achievements}</h2></div>
-    <div class="panel"><b>المسؤولون</b><h2>${d.counts.users}</h2></div>
-    <div class="panel"><b>عدد المنضمين</b><h2>${d.counts.organizers}</h2></div>
-    <div class="panel"><b>الحسابات الفعّالة</b><h2>${d.counts.activeAccounts}</h2></div>
-    <div class="panel"><b>المحتوى المنشور</b><h2>${d.counts.published}</h2></div>
+
+     <div class="executiveIdentity">
+
+      <span class="executiveOnline">
+       <i></i>
+       SYSTEM ONLINE
+      </span>
+
+      <span>
+       ${esc(info.department)}
+      </span>
+
+     </div>
+
+    </div>
+
+
+    <div class="executiveCommand">
+
+     <div class="executiveCommandRing">
+
+      <div>
+       <span>R</span>
+      </div>
+
+     </div>
+
+     <strong>
+      ${esc(info.badge)}
+     </strong>
+
+     <small>
+      AUTHORIZED ACCESS
+     </small>
+
+    </div>
+
+   </section>
+
+
+   <section class="executiveStats">
+
+    ${stats.map((stat,index)=>`
+
+     <article
+      class="executiveStat ${stat.tone}"
+      style="--dash-index:${index}">
+
+      <div class="executiveStatTop">
+
+       <span>
+        ${esc(stat.code)}
+       </span>
+
+       <i>
+        ${stat.icon}
+       </i>
+
+      </div>
+
+      <strong>
+       ${Number(stat.value)||0}
+      </strong>
+
+      <small>
+       ${esc(stat.label)}
+      </small>
+
+     </article>
+
+    `).join('')}
+
+   </section>
+
+
+   <div class="
+    executiveMainGrid
+    ${auditItems.length?'hasAudit':''}
+   ">
+
+
+    <section class="executiveQuickPanel">
+
+     <div class="executiveSectionHead">
+
+      <div>
+
+       <span>
+        QUICK ACCESS
+       </span>
+
+       <h2>
+        مركز العمليات
+       </h2>
+
+       <p>
+        وصول سريع لأهم أدوات الإدارة.
+       </p>
+
+      </div>
+
+      <b>
+       ${quickActions.length}
+      </b>
+
+     </div>
+
+
+     <div class="executiveQuickGrid">
+
+      ${quickActions.map((action,index)=>`
+
+       <button
+        type="button"
+        class="executiveQuickAction"
+        style="--quick-index:${index}"
+        onclick="loadTab('${action.tab}')">
+
+        <span class="executiveQuickIcon">
+         ${action.icon}
+        </span>
+
+        <span class="executiveQuickText">
+
+         <small>
+          ${action.code}
+         </small>
+
+         <strong>
+          ${action.title}
+         </strong>
+
+         <i>
+          ${action.desc}
+         </i>
+
+        </span>
+
+        <b>
+         ←
+        </b>
+
+       </button>
+
+      `).join('')}
+
+     </div>
+
+    </section>
+
+
+    ${
+     auditItems.length
+      ? `
+
+       <section class="executiveActivityPanel">
+
+        <div class="executiveSectionHead">
+
+         <div>
+
+          <span>
+           LIVE ACTIVITY
+          </span>
+
+          <h2>
+           آخر التعديلات
+          </h2>
+
+          <p>
+           أحدث النشاطات المسجلة.
+          </p>
+
+         </div>
+
+         <span class="activityPulse">
+          <i></i>
+          LIVE
+         </span>
+
+        </div>
+
+
+        <div class="executiveTimeline">
+
+         ${auditItems.slice(0,4).map((a,index)=>`
+
+          <div
+           class="executiveActivity"
+           style="--activity-index:${index}">
+
+           <span class="activityDot"></span>
+
+           <div>
+
+            <strong>
+             ${esc(
+              a.user_name||
+              'النظام'
+             )}
+            </strong>
+
+            <p>
+             ${esc(a.action||'')}
+             ${esc(a.entity||'')}
+            </p>
+
+            <small>
+             ${esc(a.created_at||'')}
+            </small>
+
+           </div>
+
+          </div>
+
+         `).join('')}
+
+        </div>
+
+
+        <button
+         class="executiveViewAudit"
+         type="button"
+         onclick="loadTab('audit')">
+
+         فتح سجل التعديلات الكامل
+         <span>←</span>
+
+        </button>
+
+       </section>
+
+      `
+      : ''
+    }
+
+
    </div>
-   ${auditPanel}`;
-  return;
- }
 
- if(d.dashboardType==='hr'){
-  content.innerHTML=`
-   <div class="panel">
-    <h3>إدارة الموارد البشرية (HR)</h3>
-    <p class="muted">نظرة سريعة على إدارة المتطوعين والشكاوى.</p>
-   </div>
 
-   <div class="grid grid4">
-    <div class="panel">
-     <b>طلبات المتطوعين</b>
-     <h2>${d.counts.applications}</h2>
-    </div>
+   <section class="executiveFooterBar">
 
-    <div class="panel">
-     <b>عدد المنضمين</b>
-     <h2>${d.counts.organizers}</h2>
-    </div>
-
-    <div class="panel">
-     <b>الحسابات الفعّالة</b>
-     <h2>${d.counts.activeAccounts}</h2>
-    </div>
-
-    <div class="panel">
-     <b>الشكاوى الجديدة</b>
-     <h2>${d.counts.newComplaints}</h2>
-    </div>
-   </div>`;
-  return;
- }
-
- if(d.dashboardType==='department'){
-  content.innerHTML=`
-   <div class="deptDashboardHero">
     <div>
-     <span class="deptKicker">ROUH DEPARTMENT</span>
-     <h2>🏢 ${esc(d.department||'القسم')}</h2>
-     <p>لوحة التحكم الخاصة بقسمك ومتابعة فريقك.</p>
-    </div>
-    <div class="deptHeroIcon">🌱</div>
-   </div>
 
-   <div class="deptStats">
-    <div class="deptStat">
-     <span>👥</span>
-     <b>${d.counts.organizers}</b>
-     <small>المنضمون للقسم</small>
+     <span class="executiveFooterDot"></span>
+
+     <p>
+      ROUH MANAGEMENT SYSTEM
+     </p>
+
     </div>
 
-    <div class="deptStat">
-     <span>🟢</span>
-     <b>${d.counts.activeAccounts}</b>
-     <small>الحسابات الفعّالة</small>
-    </div>
+    <span>
+     SECURE CONTROL ENVIRONMENT
+    </span>
 
-    <div class="deptStat">
-     <span>📂</span>
-     <b>${d.counts.departmentContent}</b>
-     <small>محتوى القسم</small>
-    </div>
-   </div>
+   </section>
 
-   <div class="deptQuickGrid">
-    <button onclick="loadTab('tasks')">
-     <span>📋</span>
-     <b>المهام</b>
-     <small>إدارة ومتابعة مهام القسم</small>
-    </button>
 
-    <button onclick="loadTab('volunteers')">
-     <span>👥</span>
-     <b>المتطوعون</b>
-     <small>متابعة أعضاء القسم</small>
-    </button>
+  </div>
 
-    <button onclick="loadTab('department-work')">
-     <span>📂</span>
-     <b>محتوى القسم</b>
-     <small>إدارة محتوى القسم</small>
-    </button>
+ `;
 
-    <button onclick="loadTab('ai')">
-     <span>🤖</span>
-     <b>مساعد روح</b>
-     <small>مساعدك في إدارة العمل</small>
-    </button>
-   </div>`;
-  return;
- }
-
- content.innerHTML='<div class="notice error">تعذر تحميل لوحة التحكم.</div>';
 }
 const cfg={events:{title:'فعالية',date:'event_date',fields:[['title','اسم الفعالية'],['summary','وصف مختصر'],['description','الوصف الكامل'],['event_date','التاريخ','date'],['event_time','الوقت','time'],['location','المكان'],['registration_url','رابط التسجيل'],['event_state','الحالة الظاهرة']],image:'cover_image'},achievements:{title:'إنجاز',date:'achievement_date',fields:[['title','عنوان الإنجاز'],['summary','وصف مختصر'],['description','الوصف الكامل'],['achievement_date','التاريخ','date'],['volunteers','عدد المتطوعين','number'],['beneficiaries','عدد المستفيدين','number'],['volunteer_hours','الساعات التطوعية','number']],image:'cover_image'}};
 async function listEntities(type){const d=await api('/api/admin/'+type);content.innerHTML=`<div class="panel"><button class="btn green" onclick="entityForm('${type}')">+ إضافة ${cfg[type].title}</button></div><div class="panel"><table class="table"><thead><tr><th>الصورة</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody>${d.items.map(x=>`<tr><td>${x.cover_image?`<img class="thumb" src="${esc(x.cover_image)}">`:''}</td><td>${esc(x.title)}</td><td>${esc(x.status)}</td><td>${esc(x[cfg[type].date])}</td><td><div class="rowActions"><button class="btn light small" onclick='entityForm("${type}",${JSON.stringify(x).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="removeEntity('${type}',${x.id})">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="5">لا يوجد محتوى بعد.</td></tr>'}</tbody></table></div>`}
