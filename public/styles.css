@@ -17971,3 +17971,821 @@ body.complaintDrawerOpen{
  }
 
 }
+
+
+/* ==================================================
+   ROUH ADMIN TYPOGRAPHY UPGRADE
+   ================================================== */
+
+/* النصوص الصغيرة جدًا */
+#content small{
+ font-size:max(7px, .72rem);
+ line-height:1.55;
+}
+
+/* النصوص والوصف */
+#content p,
+#content .muted{
+ font-size:max(8px, .78rem);
+ line-height:1.7;
+}
+
+/* العناوين الثانوية */
+#content h3{
+ font-size:max(13px, 1rem);
+}
+
+/* الحقول */
+#content input,
+#content textarea,
+#content select,
+#content button{
+ font-size:max(8px, .78rem);
+}
+
+/* الجداول */
+#content table th{
+ font-size:max(7px, .72rem);
+}
+
+#content table td{
+ font-size:max(8px, .78rem);
+}
+
+/* badges / labels */
+#content .badge{
+ font-size:max(7px, .7rem);
+}
+
+
+/* ===== V2 MICRO LABELS ===== */
+
+.contentStudioCode,
+.rejectedHeroCode,
+.ideasHeroCode,
+.approvalHeroCode{
+ font-size:7px;
+}
+
+.contentStudioPanelHead span,
+.contentImpactPanel header>span,
+.rejectedRegistryHead>div>span{
+ font-size:7px;
+}
+
+
+/* Content Studio */
+
+.contentStudioPanelHead p,
+.contentImpactPanel header p{
+ font-size:8px;
+}
+
+.contentStudioField>span{
+ font-size:9px;
+}
+
+.contentStudioTextField strong{
+ font-size:9px;
+}
+
+.contentStudioTextField small{
+ font-size:7px;
+}
+
+.contentStudioField input,
+.contentStudioTextField textarea{
+ font-size:10px;
+}
+
+.contentStudioJsonField strong{
+ font-size:9px;
+}
+
+.contentStudioJsonField>div span{
+ font-size:7px;
+}
+
+.contentStudioJsonField textarea{
+ font-size:9px;
+}
+
+.contentImpactMetric>strong{
+ font-size:8px;
+}
+
+.contentImpactMetricTop small{
+ font-size:6px;
+}
+
+
+/* Rejected archive */
+
+.rejectedTable th{
+ font-size:8px;
+}
+
+.rejectedTable td{
+ font-size:9px;
+}
+
+.rejectedPerson strong,
+.rejectedContact strong,
+.rejectedStudy strong{
+ font-size:9px;
+}
+
+.rejectedPerson small,
+.rejectedContact small,
+.rejectedStudy small{
+ font-size:7px;
+}
+
+.rejectedBadge,
+.rejectedCity{
+ font-size:8px;
+}
+
+
+/* sidebar */
+
+#menu button{
+ font-size:15px;
+}
+
+
+/* page heading */
+
+#pageTitle{
+ font-size:30px;
+}
+
+
+
+/* ==================================================
+   ROUH ADMIN TYPOGRAPHY UPGRADE V2
+   ================================================== */
+
+#content small{
+ font-size:max(9px, .78rem);
+}
+
+#content p,
+#content .muted{
+ font-size:max(10px, .84rem);
+}
+
+#content h3{
+ font-size:max(15px, 1.08rem);
+}
+
+#content input,
+#content textarea,
+#content select,
+#content button{
+ font-size:max(10px, .84rem);
+}
+
+
+/* TABLES */
+
+#content table th{
+ font-size:max(9px, .78rem);
+}
+
+#content table td{
+ font-size:max(10px, .84rem);
+}
+
+
+/* MICRO LABELS */
+
+.contentStudioCode,
+.rejectedHeroCode,
+.ideasHeroCode,
+.approvalHeroCode{
+ font-size:9px;
+}
+
+.contentStudioPanelHead span,
+.contentImpactPanel header>span,
+.rejectedRegistryHead>div>span{
+ font-size:9px;
+}
+
+
+/* CONTENT STUDIO */
+
+.contentStudioPanelHead p,
+.contentImpactPanel header p{
+ font-size:10px;
+}
+
+.contentStudioField>span{
+ font-size:11px;
+}
+
+.contentStudioTextField strong{
+ font-size:11px;
+}
+
+.contentStudioTextField small{
+ font-size:9px;
+}
+
+.contentStudioField input,
+.contentStudioTextField textarea{
+ font-size:12px;
+}
+
+.contentStudioJsonField strong{
+ font-size:11px;
+}
+
+.contentStudioJsonField>div span{
+ font-size:9px;
+}
+
+.contentStudioJsonField textarea{
+ font-size:11px;
+}
+
+.contentImpactMetric>strong{
+ font-size:10px;
+}
+
+.contentImpactMetricTop small{
+ font-size:8px;
+}
+
+
+/* REJECTED ARCHIVE */
+
+.rejectedTable th{
+ font-size:10px;
+}
+
+.rejectedTable td{
+ font-size:11px;
+}
+
+.rejectedPerson strong,
+.rejectedContact strong,
+.rejectedStudy strong{
+ font-size:11px;
+}
+
+.rejectedPerson small,
+.rejectedContact small,
+.rejectedStudy small{
+ font-size:9px;
+}
+
+.rejectedBadge,
+.rejectedCity{
+ font-size:10px;
+}
+
+
+/* NAVIGATION */
+
+#menu button{
+ font-size:16px;
+}
+
+
+/* MAIN PAGE TITLE */
+
+#pageTitle{
+ font-size:32px;
+}
+
+
+
+/* ==========================================================
+   ROUH FAQ KNOWLEDGE CENTER V2
+   ========================================================== */
+
+.faqCenter,
+.faqEditor{
+ display:grid;
+ gap:18px;
+}
+
+.faqHero{
+ position:relative;
+ overflow:hidden;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:25px;
+ padding:28px 30px;
+ border-radius:22px;
+ background:
+  radial-gradient(circle at 15% 20%,rgba(35,181,123,.16),transparent 30%),
+  linear-gradient(135deg,#071c22,#0b2c2d);
+ color:#fff;
+ box-shadow:0 18px 50px rgba(5,30,32,.14);
+}
+
+.faqHero:after{
+ content:"?";
+ position:absolute;
+ left:35px;
+ top:-48px;
+ font-size:190px;
+ line-height:1;
+ font-weight:900;
+ color:rgba(255,255,255,.035);
+ pointer-events:none;
+}
+
+.faqHeroCode,
+.faqEditorHero>div>span,
+.faqSettingsCode{
+ display:block;
+ margin-bottom:8px;
+ font-size:10px;
+ font-weight:900;
+ letter-spacing:2px;
+ color:#61d39e;
+}
+
+.faqHero h2,
+.faqEditorHero h2{
+ margin:0 0 7px;
+ font-size:27px;
+ font-weight:900;
+}
+
+.faqHero p,
+.faqEditorHero p{
+ margin:0;
+ max-width:620px;
+ font-size:12px !important;
+ color:rgba(255,255,255,.65);
+}
+
+.faqAddBtn{
+ position:relative;
+ z-index:2;
+ border:0;
+ border-radius:12px;
+ padding:12px 17px;
+ background:#28b87c;
+ color:#fff;
+ font-weight:900;
+ font-size:12px;
+ cursor:pointer;
+ box-shadow:0 8px 22px rgba(40,184,124,.22);
+}
+
+.faqAddBtn span{
+ margin-left:5px;
+ font-size:16px;
+}
+
+.faqStats{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:12px;
+}
+
+.faqStat{
+ padding:17px 19px;
+ border:1px solid #e4ebe8;
+ border-radius:16px;
+ background:#fff;
+}
+
+.faqStat span{
+ display:block;
+ font-size:9px;
+ font-weight:900;
+ letter-spacing:1.4px;
+ color:#8c9994;
+}
+
+.faqStat strong{
+ display:block;
+ margin:4px 0 1px;
+ font-size:25px;
+ color:#102d2a;
+}
+
+.faqStat small{
+ font-size:10px !important;
+ color:#8b9894;
+}
+
+.faqToolbar{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 180px;
+ gap:10px;
+}
+
+.faqSearch{
+ display:flex;
+ align-items:center;
+ gap:9px;
+ padding:0 13px;
+ border:1px solid #dfe8e4;
+ border-radius:13px;
+ background:#fff;
+}
+
+.faqSearch span{
+ font-size:18px;
+ color:#83938d;
+}
+
+.faqSearch input,
+.faqToolbar select{
+ width:100%;
+ height:44px;
+ border:0;
+ outline:0;
+ background:transparent;
+ font-size:11px !important;
+}
+
+.faqToolbar select{
+ padding:0 12px;
+ border:1px solid #dfe8e4;
+ border-radius:13px;
+ background:#fff;
+}
+
+.faqList{
+ display:grid;
+ gap:10px;
+}
+
+.faqManageCard{
+ position:relative;
+ display:grid;
+ grid-template-columns:52px minmax(0,1fr);
+ gap:0 15px;
+ padding:18px;
+ border:1px solid #e2eae7;
+ border-radius:17px;
+ background:#fff;
+ transition:.18s ease;
+}
+
+.faqManageCard:hover{
+ transform:translateY(-1px);
+ border-color:#cbded6;
+ box-shadow:0 10px 28px rgba(20,54,47,.06);
+}
+
+.faqManageCard[hidden],
+.faqNoResults[hidden]{
+ display:none !important;
+}
+
+.faqCardNumber{
+ grid-row:1 / span 2;
+ width:44px;
+ height:44px;
+ display:grid;
+ place-items:center;
+ border-radius:12px;
+ background:#eef8f3;
+ color:#209768;
+ font-size:11px;
+ font-weight:900;
+}
+
+.faqCardBody{
+ display:flex;
+ align-items:flex-start;
+ justify-content:space-between;
+ gap:20px;
+}
+
+.faqCardTop h3{
+ margin:7px 0 0;
+ font-size:14px !important;
+ color:#17332f;
+}
+
+.faqCardMeta{
+ display:flex;
+ align-items:center;
+ gap:7px;
+}
+
+.faqStatus,
+.faqOrder{
+ display:inline-flex;
+ align-items:center;
+ gap:5px;
+ padding:4px 8px;
+ border-radius:999px;
+ font-size:9px;
+ font-weight:800;
+}
+
+.faqStatus i{
+ width:6px;
+ height:6px;
+ border-radius:50%;
+}
+
+.faqStatus.isVisible{
+ background:#e9f8f1;
+ color:#16865b;
+}
+
+.faqStatus.isVisible i{
+ background:#20b878;
+}
+
+.faqStatus.isHidden{
+ background:#f1f2f2;
+ color:#7d8985;
+}
+
+.faqStatus.isHidden i{
+ background:#9ca5a2;
+}
+
+.faqOrder{
+ background:#f6f8f7;
+ color:#77857f;
+}
+
+.faqManageCard>p{
+ grid-column:2;
+ margin:9px 0 0 !important;
+ max-width:850px;
+ color:#697b75;
+ font-size:11px !important;
+ line-height:1.8 !important;
+}
+
+.faqCardActions{
+ display:flex;
+ gap:6px;
+ flex-shrink:0;
+}
+
+.faqEditBtn,
+.faqDeleteBtn{
+ border-radius:9px;
+ padding:7px 11px;
+ font-size:10px !important;
+ font-weight:800;
+ cursor:pointer;
+}
+
+.faqEditBtn{
+ border:1px solid #d7e4df;
+ background:#f8fbfa;
+ color:#275e50;
+}
+
+.faqDeleteBtn{
+ border:1px solid #f1dddd;
+ background:#fff8f8;
+ color:#a74848;
+}
+
+.faqEmpty,
+.faqNoResults{
+ padding:55px 20px;
+ border:1px dashed #cedbd6;
+ border-radius:18px;
+ background:#fff;
+ text-align:center;
+}
+
+.faqEmpty strong,
+.faqNoResults strong{
+ display:block;
+ font-size:15px;
+ color:#18362f;
+}
+
+.faqEmpty p,
+.faqNoResults p{
+ margin:6px 0 15px !important;
+ color:#84928d;
+}
+
+
+/* FAQ EDITOR */
+
+.faqEditorHero{
+ display:flex;
+ align-items:center;
+ gap:18px;
+ padding:24px 27px;
+ border-radius:20px;
+ background:linear-gradient(135deg,#071d23,#0c302f);
+ color:#fff;
+}
+
+.faqBackBtn{
+ align-self:flex-start;
+ border:1px solid rgba(255,255,255,.13);
+ border-radius:10px;
+ padding:8px 11px;
+ background:rgba(255,255,255,.06);
+ color:#fff;
+ cursor:pointer;
+ font-size:10px !important;
+}
+
+.faqEditorForm{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 290px;
+ gap:15px;
+ align-items:start;
+}
+
+.faqEditorMain{
+ display:grid;
+ gap:13px;
+}
+
+.faqEditorPanel,
+.faqSettingsPanel{
+ padding:20px;
+ border:1px solid #e1e9e6;
+ border-radius:18px;
+ background:#fff;
+}
+
+.faqEditorPanelHead{
+ display:flex;
+ align-items:flex-start;
+ gap:11px;
+ margin-bottom:18px;
+}
+
+.faqEditorPanelHead>span{
+ width:30px;
+ height:30px;
+ display:grid;
+ place-items:center;
+ border-radius:9px;
+ background:#eaf7f1;
+ color:#1d9b69;
+ font-size:9px;
+ font-weight:900;
+}
+
+.faqEditorPanelHead h3,
+.faqSettingsPanel h3{
+ margin:0;
+ font-size:14px !important;
+ color:#17362f;
+}
+
+.faqEditorPanelHead p,
+.faqSettingsPanel>p{
+ margin:3px 0 0 !important;
+ font-size:10px !important;
+ color:#89958f;
+}
+
+.faqEditorField{
+ display:grid;
+ gap:7px;
+ margin-top:15px;
+}
+
+.faqEditorField>span{
+ font-size:10px;
+ font-weight:900;
+ color:#435e56;
+}
+
+.faqEditorField input,
+.faqEditorField textarea,
+.faqEditorField select{
+ width:100%;
+ box-sizing:border-box;
+ border:1px solid #dce6e2;
+ border-radius:11px;
+ padding:11px 12px;
+ outline:0;
+ background:#fbfdfc;
+ color:#1c3932;
+ font-size:11px !important;
+}
+
+.faqEditorField textarea{
+ resize:vertical;
+ min-height:170px;
+ line-height:1.8;
+}
+
+.faqEditorField input:focus,
+.faqEditorField textarea:focus,
+.faqEditorField select:focus{
+ border-color:#60bd95;
+ box-shadow:0 0 0 3px rgba(50,176,121,.08);
+}
+
+.faqEditorField small{
+ font-size:9px !important;
+ color:#8a9792;
+}
+
+.faqSettingsPanel{
+ position:sticky;
+ top:18px;
+}
+
+.faqPublishState{
+ display:flex;
+ align-items:center;
+ gap:7px;
+ margin:20px 0 12px;
+ padding:10px;
+ border-radius:10px;
+ background:#f0f8f4;
+ color:#477164;
+ font-size:10px;
+ font-weight:800;
+}
+
+.faqPublishState i{
+ width:7px;
+ height:7px;
+ border-radius:50%;
+ background:#2bb77d;
+}
+
+.faqSaveBtn,
+.faqCancelBtn{
+ width:100%;
+ border-radius:11px;
+ padding:11px;
+ font-size:11px !important;
+ font-weight:900;
+ cursor:pointer;
+}
+
+.faqSaveBtn{
+ border:0;
+ background:#15966a;
+ color:#fff;
+}
+
+.faqSaveBtn:disabled{
+ opacity:.6;
+ cursor:not-allowed;
+}
+
+.faqCancelBtn{
+ margin-top:7px;
+ border:1px solid #dce5e1;
+ background:#fff;
+ color:#63736d;
+}
+
+
+@media(max-width:850px){
+ .faqHero{
+  align-items:flex-start;
+  flex-direction:column;
+ }
+
+ .faqStats{
+  grid-template-columns:1fr;
+ }
+
+ .faqToolbar,
+ .faqEditorForm{
+  grid-template-columns:1fr;
+ }
+
+ .faqSettingsPanel{
+  position:static;
+ }
+
+ .faqManageCard{
+  grid-template-columns:1fr;
+ }
+
+ .faqCardNumber{
+  display:none;
+ }
+
+ .faqManageCard>p{
+  grid-column:1;
+ }
+
+ .faqCardBody{
+  flex-direction:column;
+ }
+
+ .faqCardActions{
+  width:100%;
+ }
+}
+

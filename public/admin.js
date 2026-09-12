@@ -2692,8 +2692,291 @@ async function editContent(){
  };
 
 }
-async function faqs(){const d=await api('/api/admin/faqs');content.innerHTML=`<div class="panel"><button class="btn green" onclick="faqForm()">+ إضافة سؤال</button></div><div class="panel">${d.items.map(f=>`<div class="faq"><b>${esc(f.question)}</b><p>${esc(f.answer)}</p><div class="rowActions"><button class="btn light small" onclick='faqForm(${JSON.stringify(f).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="deleteFaq(${f.id})">حذف</button></div></div>`).join('')}</div>`}
-window.faqForm=(f={})=>{content.innerHTML=`<div class="panel"><form id="faqForm" class="formGrid"><div class="field full"><label>السؤال</label><input name="question" value="${esc(f.question||'')}" required></div><div class="field full"><label>الإجابة</label><textarea name="answer" required>${esc(f.answer||'')}</textarea></div><div class="field"><label>الترتيب</label><input name="sort_order" type="number" value="${f.sort_order||0}"></div><div class="field"><label>الحالة</label><select name="active"><option value="1">ظاهر</option><option value="0" ${f.active===0?'selected':''}>مخفي</option></select></div><button class="btn green full">حفظ</button></form></div>`;$('#faqForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());o.active=o.active==='1';try{await api('/api/admin/faqs'+(f.id?'/'+f.id:''),{method:f.id?'PUT':'POST',body:JSON.stringify(o)});loadTab('faqs')}catch(ex){flash(ex.message,true)}}}
+async function faqs(){
+ const d=await api('/api/admin/faqs');
+ const items=d.items||[];
+ const visible=items.filter(f=>Number(f.active)===1).length;
+ const hidden=items.length-visible;
+
+ content.innerHTML=`
+ <section class="faqCenter">
+
+  <div class="faqHero">
+   <div>
+    <span class="faqHeroCode">ROUH / KNOWLEDGE BASE</span>
+    <h2>مركز الأسئلة الشائعة</h2>
+    <p>إدارة الأسئلة والإجابات التي تظهر لزوار موقع مبادرة روح.</p>
+   </div>
+
+   <button class="faqAddBtn" onclick="faqForm()">
+    <span>＋</span>
+    إضافة سؤال
+   </button>
+  </div>
+
+  <div class="faqStats">
+   <div class="faqStat">
+    <span>TOTAL</span>
+    <strong>${items.length}</strong>
+    <small>إجمالي الأسئلة</small>
+   </div>
+
+   <div class="faqStat">
+    <span>VISIBLE</span>
+    <strong>${visible}</strong>
+    <small>أسئلة ظاهرة</small>
+   </div>
+
+   <div class="faqStat">
+    <span>HIDDEN</span>
+    <strong>${hidden}</strong>
+    <small>أسئلة مخفية</small>
+   </div>
+  </div>
+
+  <div class="faqToolbar">
+   <div class="faqSearch">
+    <span>⌕</span>
+    <input id="faqSearchInput"
+           placeholder="ابحث في الأسئلة أو الإجابات..."
+           autocomplete="off">
+   </div>
+
+   <select id="faqStatusFilter">
+    <option value="all">كل الحالات</option>
+    <option value="visible">الظاهرة</option>
+    <option value="hidden">المخفية</option>
+   </select>
+  </div>
+
+  <div class="faqList" id="faqList">
+   ${items.length ? items.map((f,index)=>{
+     const encoded=encodeURIComponent(JSON.stringify(f));
+     const active=Number(f.active)===1;
+
+     return `
+      <article class="faqManageCard"
+       data-search="${esc(((f.question||'')+' '+(f.answer||'')).toLowerCase())}"
+       data-active="${active?'visible':'hidden'}">
+
+       <div class="faqCardNumber">
+        ${String(index+1).padStart(2,'0')}
+       </div>
+
+       <div class="faqCardBody">
+        <div class="faqCardTop">
+         <div>
+          <div class="faqCardMeta">
+           <span class="faqStatus ${active?'isVisible':'isHidden'}">
+            <i></i>
+            ${active?'ظاهر':'مخفي'}
+           </span>
+
+           <span class="faqOrder">
+            ترتيب ${Number(f.sort_order)||0}
+           </span>
+          </div>
+
+          <h3>${esc(f.question||'بدون سؤال')}</h3>
+        </div>
+
+        <div class="faqCardActions">
+         <button class="faqEditBtn"
+          onclick="faqForm(JSON.parse(decodeURIComponent('${encoded}')))">
+          تعديل
+         </button>
+
+         <button class="faqDeleteBtn"
+          onclick="deleteFaq(${f.id})">
+          حذف
+         </button>
+        </div>
+       </div>
+
+       <p>${esc(f.answer||'')}</p>
+      </article>
+     `;
+   }).join('') : `
+    <div class="faqEmpty">
+     <strong>لا توجد أسئلة شائعة بعد</strong>
+     <p>ابدأ بإضافة أول سؤال إلى قاعدة المعرفة.</p>
+     <button class="faqAddBtn" onclick="faqForm()">＋ إضافة سؤال</button>
+    </div>
+   `}
+  </div>
+
+  <div class="faqNoResults" id="faqNoResults" hidden>
+   <strong>لا توجد نتائج</strong>
+   <p>جرّب كلمة بحث أو حالة مختلفة.</p>
+  </div>
+
+ </section>`;
+
+ const search=$('#faqSearchInput');
+ const filter=$('#faqStatusFilter');
+
+ const applyFilters=()=>{
+  const q=(search?.value||'').trim().toLowerCase();
+  const status=filter?.value||'all';
+  let shown=0;
+
+  document.querySelectorAll('.faqManageCard').forEach(card=>{
+   const matchesText=!q||(card.dataset.search||'').includes(q);
+   const matchesStatus=status==='all'||card.dataset.active===status;
+   const show=matchesText&&matchesStatus;
+
+   card.hidden=!show;
+   if(show) shown++;
+  });
+
+  const noResults=$('#faqNoResults');
+  if(noResults) noResults.hidden=shown!==0 || !items.length;
+ };
+
+ search?.addEventListener('input',applyFilters);
+ filter?.addEventListener('change',applyFilters);
+}
+
+
+window.faqForm=(f={})=>{
+ const editing=!!f.id;
+
+ content.innerHTML=`
+ <section class="faqEditor">
+
+  <div class="faqEditorHero">
+   <button class="faqBackBtn" type="button" onclick="loadTab('faqs')">
+    ← العودة
+   </button>
+
+   <div>
+    <span>ROUH / KNOWLEDGE EDITOR</span>
+    <h2>${editing?'تعديل السؤال':'إضافة سؤال جديد'}</h2>
+    <p>${editing
+      ?'حدّث السؤال أو الإجابة وإعدادات ظهوره على الموقع.'
+      :'أنشئ سؤالًا جديدًا ليظهر ضمن الأسئلة الشائعة في الموقع.'}</p>
+   </div>
+  </div>
+
+  <form id="faqForm" class="faqEditorForm">
+
+   <div class="faqEditorMain">
+
+    <div class="faqEditorPanel">
+     <div class="faqEditorPanelHead">
+      <span>01</span>
+      <div>
+       <h3>السؤال</h3>
+       <p>اكتب السؤال بالطريقة التي سيراها زائر الموقع.</p>
+      </div>
+     </div>
+
+     <label class="faqEditorField">
+      <span>نص السؤال</span>
+      <input
+       name="question"
+       value="${esc(f.question||'')}"
+       placeholder="مثال: كيف يمكنني الانضمام إلى مبادرة روح؟"
+       required>
+     </label>
+    </div>
+
+    <div class="faqEditorPanel">
+     <div class="faqEditorPanelHead">
+      <span>02</span>
+      <div>
+       <h3>الإجابة</h3>
+       <p>اكتب إجابة واضحة ومباشرة قدر الإمكان.</p>
+      </div>
+     </div>
+
+     <label class="faqEditorField">
+      <span>نص الإجابة</span>
+      <textarea
+       name="answer"
+       rows="8"
+       placeholder="اكتب الإجابة هنا..."
+       required>${esc(f.answer||'')}</textarea>
+     </label>
+    </div>
+
+   </div>
+
+   <aside class="faqEditorSide">
+
+    <div class="faqSettingsPanel">
+     <span class="faqSettingsCode">PUBLISHING</span>
+     <h3>إعدادات النشر</h3>
+     <p>تحكم بظهور السؤال وترتيبه داخل الموقع.</p>
+
+     <label class="faqEditorField">
+      <span>الحالة</span>
+      <select name="active">
+       <option value="1">ظاهر على الموقع</option>
+       <option value="0" ${Number(f.active)===0?'selected':''}>
+        مخفي
+       </option>
+      </select>
+     </label>
+
+     <label class="faqEditorField">
+      <span>الترتيب</span>
+      <input
+       name="sort_order"
+       type="number"
+       value="${Number(f.sort_order)||0}">
+      <small>الأرقام الأقل تظهر أولًا.</small>
+     </label>
+
+     <div class="faqPublishState">
+      <i></i>
+      ${editing?'تعديل سؤال موجود':'سؤال جديد'}
+     </div>
+
+     <button class="faqSaveBtn" type="submit">
+      ${editing?'حفظ التعديلات':'نشر السؤال'}
+     </button>
+
+     <button class="faqCancelBtn"
+      type="button"
+      onclick="loadTab('faqs')">
+      إلغاء
+     </button>
+    </div>
+
+   </aside>
+
+  </form>
+ </section>`;
+
+ $('#faqForm').onsubmit=async e=>{
+  e.preventDefault();
+
+  const btn=e.target.querySelector('.faqSaveBtn');
+  const old=btn.textContent;
+  btn.disabled=true;
+  btn.textContent='جارٍ الحفظ...';
+
+  const o=Object.fromEntries(new FormData(e.target).entries());
+  o.active=o.active==='1';
+
+  try{
+   await api('/api/admin/faqs'+(f.id?'/'+f.id:''),{
+    method:f.id?'PUT':'POST',
+    body:JSON.stringify(o)
+   });
+
+   flash(editing?'تم تحديث السؤال':'تمت إضافة السؤال');
+   loadTab('faqs');
+  }catch(ex){
+   flash(ex.message,true);
+   btn.disabled=false;
+   btn.textContent=old;
+  }
+ };
+}
+
+
 window.deleteFaq=async id=>{if(confirm(me.role==='owner'?'حذف السؤال؟':'إرسال طلب حذف السؤال إلى المالك؟')){try{const r=await api('/api/admin/faqs/'+id,{method:'DELETE'});flash(r.pendingApproval?'تم إرسال طلب الحذف للمالك':'تم نقل السؤال إلى سلة المحذوفات');loadTab('faqs')}catch(e){flash(e.message,true)}}};
 async function trash(){
  const isHR=
