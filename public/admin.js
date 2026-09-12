@@ -8233,137 +8233,660 @@ setInterval(()=>{
 
 
 async function aiAssistant(){
+
  content.innerHTML=`
-  <div class="panel">
-   <h2>🤖 مساعد روح الذكي</h2>
-   <p class="muted">
-    اسأل عن المتطوعين والمهام أو اطلب تحليلًا أو مسودة.
-    المساعد للقراءة والاقتراح فقط ولا يعدّل بيانات النظام.
-   </p>
 
-   <div id="aiChat" style="margin:18px 0;display:grid;gap:12px">
-    <div class="notice">
-     💚 أهلًا، أنا مساعد روح. كيف أقدر أساعدك؟
-     <div style="margin-top:12px">
-      <button class="btn" type="button" id="aiServices">
-       ✨ اعرض الخدمات التي أستطيع مساعدتك فيها
-      </button>
+  <div class="rouhAiCenter">
+
+
+   <section class="rouhAiHero">
+
+    <div class="rouhAiHeroContent">
+
+     <span class="rouhAiCode">
+      ROUH / INTELLIGENCE
+     </span>
+
+     <h2>
+      مساعد روح الذكي
+     </h2>
+
+     <p>
+      مساحة ذكية لتحليل بيانات روح،
+      تلخيص العمل، ومساعدتك في إعداد
+      التقارير والمسودات.
+     </p>
+
+
+     <div class="rouhAiSafety">
+
+      <span>
+       <i></i>
+       READ ONLY
+      </span>
+
+      <span>
+       لا يعدّل بيانات النظام
+      </span>
+
      </div>
+
     </div>
-   </div>
 
-   <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
-    <button class="btn aiQuick" type="button" data-q="اعطيني ملخص سريع عن وضع روح حاليًا">📊 ملخص روح</button>
-    <button class="btn aiQuick" type="button" data-q="لخص لي وضع طلبات التطوع الحالية">📝 طلبات التطوع</button>
-    <button class="btn aiQuick" type="button" data-q="لخص لي وضع المهام الحالية">📋 المهام</button>
-    <button class="btn aiQuick" type="button" data-q="هل توجد شكاوى تحتاج متابعة؟ لخصها بدون معلومات شخصية">📩 الشكاوى</button>
-   </div>
 
-   <form id="aiForm">
-    <textarea
-     id="aiMessage"
-     rows="4"
-     maxlength="2000"
-     placeholder="مثال: لخص لي وضع المهام الحالية..."
-     required
-    ></textarea>
+    <div class="rouhAiOrb">
 
-    <div style="margin-top:10px">
-     <button class="btn" id="aiSend" type="submit">
-      إرسال للمساعد 🤖
+     <div class="rouhAiOrbRing">
+
+      <span>R</span>
+
+     </div>
+
+     <small>
+      ROUH AI
+     </small>
+
+    </div>
+
+   </section>
+
+
+   <div class="rouhAiLayout">
+
+
+    <aside class="rouhAiSidebar">
+
+
+     <div class="rouhAiSideHead">
+
+      <span>
+       QUICK INTELLIGENCE
+      </span>
+
+      <h3>
+       اختصارات ذكية
+      </h3>
+
+     </div>
+
+
+     <button
+      class="rouhAiQuick"
+      type="button"
+      data-q="اعطيني ملخص سريع عن وضع روح حاليًا">
+
+      <span class="rouhAiQuickIcon">
+       ◫
+      </span>
+
+      <div>
+       <strong>
+        ملخص روح
+       </strong>
+       <small>
+        نظرة شاملة على الوضع الحالي
+       </small>
+      </div>
+
+      <b>←</b>
+
      </button>
-    </div>
-   </form>
+
+
+     <button
+      class="rouhAiQuick"
+      type="button"
+      data-q="لخص لي وضع طلبات التطوع الحالية">
+
+      <span class="rouhAiQuickIcon">
+       ◇
+      </span>
+
+      <div>
+       <strong>
+        طلبات التطوع
+       </strong>
+       <small>
+        تحليل الطلبات والحالات
+       </small>
+      </div>
+
+      <b>←</b>
+
+     </button>
+
+
+     <button
+      class="rouhAiQuick"
+      type="button"
+      data-q="لخص لي وضع المهام الحالية">
+
+      <span class="rouhAiQuickIcon">
+       ✓
+      </span>
+
+      <div>
+       <strong>
+        تحليل المهام
+       </strong>
+       <small>
+        التقدم والمهام المتأخرة
+       </small>
+      </div>
+
+      <b>←</b>
+
+     </button>
+
+
+     <button
+      class="rouhAiQuick"
+      type="button"
+      data-q="هل توجد شكاوى تحتاج متابعة؟ لخصها بدون معلومات شخصية">
+
+      <span class="rouhAiQuickIcon">
+       !
+      </span>
+
+      <div>
+       <strong>
+        متابعة الشكاوى
+       </strong>
+       <small>
+        الحالات التي تحتاج اهتمام
+       </small>
+      </div>
+
+      <b>←</b>
+
+     </button>
+
+
+     <button
+      id="aiServices"
+      class="rouhAiServices"
+      type="button">
+
+      <span>✦</span>
+
+      ماذا يستطيع مساعد روح؟
+
+     </button>
+
+
+     <div class="rouhAiPrivacy">
+
+      <span>◉</span>
+
+      <div>
+
+       <strong>
+        وضع القراءة فقط
+       </strong>
+
+       <small>
+        المساعد يحلل ويقترح،
+        لكنه لا يغيّر بيانات النظام.
+       </small>
+
+      </div>
+
+     </div>
+
+
+    </aside>
+
+
+    <section class="rouhAiChatShell">
+
+
+     <header class="rouhAiChatHeader">
+
+      <div class="rouhAiAssistantIdentity">
+
+       <div class="rouhAiMiniOrb">
+        R
+       </div>
+
+       <div>
+
+        <strong>
+         مساعد روح
+        </strong>
+
+        <span>
+         <i></i>
+         متصل وجاهز للمساعدة
+        </span>
+
+       </div>
+
+      </div>
+
+
+      <div class="rouhAiMode">
+       ROUH INTELLIGENCE
+      </div>
+
+     </header>
+
+
+     <div
+      id="aiChat"
+      class="rouhAiChat">
+
+
+      <div class="rouhAiWelcome">
+
+       <div class="rouhAiWelcomeIcon">
+        ✦
+       </div>
+
+       <span>
+        ROUH AI ASSISTANT
+       </span>
+
+       <h3>
+        أهلًا، كيف أقدر أساعدك؟
+       </h3>
+
+       <p>
+        اسألني عن المتطوعين، المهام،
+        الفعاليات، الإنجازات، الأفكار
+        أو اطلب مني إعداد ملخص أو مسودة.
+       </p>
+
+      </div>
+
+
+     </div>
+
+
+     <form
+      id="aiForm"
+      class="rouhAiComposer">
+
+
+      <div class="rouhAiInputWrap">
+
+       <textarea
+        id="aiMessage"
+        rows="1"
+        maxlength="2000"
+        placeholder="اكتب سؤالك لمساعد روح..."
+        required
+       ></textarea>
+
+
+       <button
+        id="aiSend"
+        type="submit"
+        aria-label="إرسال">
+
+        <span>↑</span>
+
+       </button>
+
+      </div>
+
+
+      <div class="rouhAiComposerMeta">
+
+       <span>
+        ENTER للإرسال
+      </span>
+
+       <span>
+        2000 حرف كحد أقصى
+       </span>
+
+      </div>
+
+
+     </form>
+
+
+    </section>
+
+
+   </div>
+
+
   </div>
+
  `;
+
 
  const form=$('#aiForm');
  const input=$('#aiMessage');
  const chat=$('#aiChat');
  const sendBtn=$('#aiSend');
-
- document.querySelectorAll('.aiQuick').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-   input.value=btn.dataset.q;
-   input.focus();
-  });
- });
  const servicesBtn=$('#aiServices');
 
- servicesBtn.addEventListener('click',()=>{
-  chat.insertAdjacentHTML('beforeend',`
-   <div class="panel">
-    <strong>🤖 أقدر أساعدك في:</strong><br><br>
-    👥 <strong>المتطوعون:</strong> العدد، الأقسام والحسابات الفعالة.<br>
-    📝 <strong>طلبات التطوع:</strong> pending وaccepted وrejected وتحليل الطلبات.<br>
-    📋 <strong>المهام:</strong> الجديدة، قيد التنفيذ، المكتملة والمتأخرة.<br>
-    📅 <strong>الفعاليات:</strong> عرضها وتلخيصها وتحليلها.<br>
-    🏆 <strong>الإنجازات:</strong> تلخيص الإنجازات والأثر المسجل.<br>
-    💡 <strong>الأفكار:</strong> تحليل الأفكار واقتراح تطويرها.<br>
-    📩 <strong>الشكاوى:</strong> تلخيص الحالات التي تحتاج متابعة حسب صلاحيتك.<br>
-    🏢 <strong>الأقسام:</strong> تحليل محتوى الأقسام والبيانات المتاحة لك.<br>
-    📊 <strong>التقارير:</strong> إعداد تقرير شامل أو مختصر عن وضع روح.<br>
-    ✍️ <strong>الكتابة:</strong> مسودات رسائل وإعلانات ونصوص ومقترحات.<br><br>
-    <span class="muted">أنا للقراءة والتحليل والاقتراح فقط، ولا أعدّل بيانات النظام.</span>
-   </div>
-  `);
- });
 
- form.addEventListener('submit',async e=>{
-  e.preventDefault();
+ const scrollChat=()=>{
 
-  const message=input.value.trim();
-  if(!message)return;
+  requestAnimationFrame(()=>{
+
+   chat.scrollTo({
+    top:chat.scrollHeight,
+    behavior:'smooth'
+   });
+
+  });
+
+ };
+
+
+ const addUserMessage=(message)=>{
 
   chat.insertAdjacentHTML(
    'beforeend',
-   `<div class="panel"><strong>أنت:</strong><br>${esc(message)}</div>`
+   `
+
+    <div class="rouhAiMessage user">
+
+     <div class="rouhAiMessageAvatar">
+      أنت
+     </div>
+
+     <div class="rouhAiBubble">
+
+      <span class="rouhAiMessageName">
+       أنت
+      </span>
+
+      <div>
+       ${esc(message)}
+      </div>
+
+     </div>
+
+    </div>
+
+   `
   );
 
-  input.value='';
-  sendBtn.disabled=true;
-  sendBtn.textContent='يفكر...';
+  scrollChat();
 
-  const thinking=document.createElement('div');
-  thinking.className='notice';
-  thinking.textContent='🤖 مساعد روح يفكر...';
-  chat.appendChild(thinking);
+ };
 
-  try{
-   const r=await fetch('/api/admin/ai',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({message})
-   });
 
-   const data=await r.json();
-   thinking.remove();
+ const addAssistantMessage=(answer)=>{
 
-   if(!r.ok)
-    throw new Error(data.error||'تعذر تشغيل مساعد روح');
+  const box=
+   document.createElement('div');
 
-   const box=document.createElement('div');
-   box.className='panel';
-   box.innerHTML='<strong>🤖 مساعد روح:</strong><br>'+
-    esc(data.answer)
-     .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-     .replace(/\n/g,'<br>');
-   chat.appendChild(box);
+  box.className=
+   'rouhAiMessage assistant';
 
-  }catch(err){
-   thinking.remove();
-   chat.insertAdjacentHTML(
-    'beforeend',
-    `<div class="notice error">${esc(err.message)}</div>`
+  box.innerHTML=`
+
+   <div class="rouhAiMessageAvatar">
+    R
+   </div>
+
+   <div class="rouhAiBubble">
+
+    <span class="rouhAiMessageName">
+     مساعد روح
+    </span>
+
+    <div>
+     ${
+      esc(answer)
+       .replace(
+        /\*\*(.*?)\*\*/g,
+        '<strong>$1</strong>'
+       )
+       .replace(
+        /\n/g,
+        '<br>'
+       )
+     }
+    </div>
+
+   </div>
+
+  `;
+
+  chat.appendChild(box);
+
+  scrollChat();
+
+ };
+
+
+ document
+  .querySelectorAll('.rouhAiQuick')
+  .forEach(btn=>{
+
+   btn.addEventListener(
+    'click',
+    ()=>{
+
+     input.value=
+      btn.dataset.q||'';
+
+     input.focus();
+
+     input.dispatchEvent(
+      new Event('input')
+     );
+
+    }
    );
-  }finally{
-   sendBtn.disabled=false;
-   sendBtn.textContent='إرسال للمساعد 🤖';
-   input.focus();
-  }
- });
-}
 
+  });
+
+
+ servicesBtn.addEventListener(
+  'click',
+  ()=>{
+
+   addAssistantMessage(
+`أقدر أساعدك في:
+
+**المتطوعون:** تحليل العدد، الأقسام والحسابات الفعالة.
+
+**طلبات التطوع:** تلخيص الحالات وتحليل الطلبات.
+
+**المهام:** متابعة الجديدة، قيد التنفيذ، المكتملة والمتأخرة.
+
+**الفعاليات والإنجازات:** تلخيص المحتوى وتحليل الأثر.
+
+**الأفكار والشكاوى:** تحليل الحالات التي تحتاج متابعة حسب صلاحيتك.
+
+**الأقسام:** تحليل البيانات والمحتوى المتاح لك.
+
+**التقارير والكتابة:** إعداد ملخصات، تقارير، رسائل، إعلانات ومسودات.
+
+أنا للقراءة والتحليل والاقتراح فقط، ولا أعدّل بيانات النظام.`
+   );
+
+  }
+ );
+
+
+ input.addEventListener(
+  'input',
+  ()=>{
+
+   input.style.height='auto';
+
+   input.style.height=
+    Math.min(
+     input.scrollHeight,
+     130
+    )+'px';
+
+  }
+ );
+
+
+ input.addEventListener(
+  'keydown',
+  e=>{
+
+   if(
+    e.key==='Enter' &&
+    !e.shiftKey
+   ){
+
+    e.preventDefault();
+
+    if(
+     input.value.trim() &&
+     !sendBtn.disabled
+    ){
+
+     form.requestSubmit();
+
+    }
+
+   }
+
+  }
+ );
+
+
+ form.addEventListener(
+  'submit',
+  async e=>{
+
+   e.preventDefault();
+
+
+   const message=
+    input.value.trim();
+
+
+   if(!message) return;
+
+
+   addUserMessage(message);
+
+
+   input.value='';
+   input.style.height='auto';
+
+   sendBtn.disabled=true;
+
+
+   const thinking=
+    document.createElement('div');
+
+   thinking.className=
+    'rouhAiMessage assistant thinking';
+
+   thinking.innerHTML=`
+
+    <div class="rouhAiMessageAvatar">
+     R
+    </div>
+
+    <div class="rouhAiBubble">
+
+     <span class="rouhAiMessageName">
+      مساعد روح
+     </span>
+
+     <div class="rouhAiThinking">
+
+      <i></i>
+      <i></i>
+      <i></i>
+
+     </div>
+
+    </div>
+
+   `;
+
+
+   chat.appendChild(thinking);
+
+   scrollChat();
+
+
+   try{
+
+    const r=
+     await fetch(
+      '/api/admin/ai',
+      {
+       method:'POST',
+
+       headers:{
+        'Content-Type':
+         'application/json'
+       },
+
+       body:JSON.stringify({
+        message
+       })
+      }
+     );
+
+
+    const data=
+     await r.json();
+
+
+    thinking.remove();
+
+
+    if(!r.ok){
+
+     throw new Error(
+      data.error||
+      'تعذر تشغيل مساعد روح'
+     );
+
+    }
+
+
+    addAssistantMessage(
+     data.answer
+    );
+
+
+   }catch(err){
+
+    thinking.remove();
+
+
+    chat.insertAdjacentHTML(
+     'beforeend',
+     `
+
+      <div class="rouhAiError">
+
+       <span>!</span>
+
+       ${esc(err.message)}
+
+      </div>
+
+     `
+    );
+
+
+    scrollChat();
+
+
+   }finally{
+
+    sendBtn.disabled=false;
+
+    input.focus();
+
+   }
+
+  }
+ );
+
+}
 window.restoreVolunteerAccount=async id=>{
  if(!confirm('هل تريد استعادة حساب هذا المتطوع؟')) return;
 
