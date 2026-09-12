@@ -16329,3 +16329,752 @@ body.complaintDrawerOpen{
  }
 
 }
+
+
+/* ==================================================
+   ROUH REJECTED APPLICATIONS ARCHIVE V2
+   ================================================== */
+
+.rejectedArchive{
+ display:grid;
+ gap:13px;
+}
+
+
+/* HERO */
+
+.rejectedHero{
+ position:relative;
+ overflow:hidden;
+
+ min-height:155px;
+
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:25px;
+
+ padding:26px 30px;
+
+ border-radius:23px;
+
+ background:
+  radial-gradient(
+   circle at 15% 15%,
+   rgba(199,168,125,.12),
+   transparent 30%
+  ),
+  linear-gradient(
+   135deg,
+   #303c43,
+   #4c504d 62%,
+   #665d55
+  );
+
+ color:#fff;
+
+ box-shadow:
+  0 17px 38px
+  rgba(38,55,71,.1);
+}
+
+
+.rejectedHero:after{
+ content:"";
+
+ position:absolute;
+
+ width:250px;
+ height:250px;
+
+ left:-125px;
+ bottom:-200px;
+
+ border:
+  1px solid
+  rgba(255,255,255,.055);
+
+ border-radius:50%;
+
+ box-shadow:
+  0 0 0 38px
+  rgba(255,255,255,.014),
+  0 0 0 75px
+  rgba(255,255,255,.008);
+}
+
+
+.rejectedHero>div:first-child{
+ position:relative;
+ z-index:2;
+}
+
+
+.rejectedHeroCode{
+ display:block;
+
+ color:#d2b27d;
+
+ font-size:6px;
+ font-weight:900;
+
+ letter-spacing:1.7px;
+}
+
+
+.rejectedHero h2{
+ margin:6px 0 0;
+
+ color:#fff;
+
+ font-size:22px;
+}
+
+
+.rejectedHero p{
+ max-width:520px;
+
+ margin:6px 0 0;
+
+ color:
+  rgba(255,255,255,.58);
+
+ font-size:8px;
+ line-height:1.8;
+}
+
+
+.rejectedHeroState{
+ display:flex;
+ flex-wrap:wrap;
+ gap:6px;
+
+ margin-top:14px;
+}
+
+
+.rejectedHeroState span{
+ display:flex;
+ align-items:center;
+ gap:5px;
+
+ padding:5px 8px;
+
+ border:
+  1px solid
+  rgba(255,255,255,.08);
+
+ border-radius:999px;
+
+ background:
+  rgba(255,255,255,.035);
+
+ color:
+  rgba(255,255,255,.6);
+
+ font-size:6px;
+}
+
+
+.rejectedHeroState i{
+ width:5px;
+ height:5px;
+
+ border-radius:50%;
+
+ background:#b69b7d;
+}
+
+
+.rejectedHeroMark{
+ position:relative;
+ z-index:2;
+
+ min-width:120px;
+
+ display:grid;
+ justify-items:center;
+}
+
+
+.rejectedHeroMark>div{
+ width:75px;
+ height:75px;
+
+ display:grid;
+ place-items:center;
+
+ border:
+  1px solid
+  rgba(255,255,255,.1);
+
+ border-radius:50%;
+
+ background:
+  rgba(255,255,255,.035);
+
+ color:#d1b17e;
+
+ font-family:Georgia,serif;
+ font-size:28px;
+
+ box-shadow:
+  0 0 0 9px
+  rgba(255,255,255,.014);
+}
+
+
+.rejectedHeroMark small{
+ margin-top:10px;
+
+ color:
+  rgba(255,255,255,.32);
+
+ font-size:5px;
+ font-weight:900;
+
+ letter-spacing:2px;
+}
+
+
+/* STATS */
+
+.rejectedStats{
+ display:grid;
+
+ grid-template-columns:
+  repeat(3,1fr);
+
+ gap:9px;
+}
+
+
+.rejectedStats article{
+ position:relative;
+ overflow:hidden;
+
+ min-height:78px;
+
+ padding:14px 15px;
+
+ border:
+  1px solid
+  rgba(38,55,71,.06);
+
+ border-radius:15px;
+
+ background:#fff;
+
+ box-shadow:
+  0 7px 20px
+  rgba(38,55,71,.03);
+}
+
+
+.rejectedStats article:after{
+ content:"";
+
+ position:absolute;
+
+ right:0;
+ bottom:0;
+
+ width:3px;
+ height:38%;
+
+ background:#958176;
+}
+
+
+.rejectedStats span{
+ display:block;
+
+ color:#aaaead;
+
+ font-size:5px;
+ font-weight:900;
+
+ letter-spacing:1px;
+}
+
+
+.rejectedStats strong{
+ display:block;
+
+ margin-top:5px;
+
+ color:#52615c;
+
+ font-size:21px;
+}
+
+
+.rejectedStats strong.rejectedTextStat{
+ margin-top:9px;
+
+ font-size:11px;
+}
+
+
+.rejectedStats small{
+ display:block;
+
+ margin-top:3px;
+
+ color:#999f9c;
+
+ font-size:6px;
+}
+
+
+/* REGISTRY */
+
+.rejectedRegistry{
+ padding:18px;
+
+ border:
+  1px solid
+  rgba(38,55,71,.06);
+
+ border-radius:20px;
+
+ background:#fff;
+
+ box-shadow:
+  0 8px 24px
+  rgba(38,55,71,.03);
+}
+
+
+.rejectedRegistryHead{
+ display:flex;
+ align-items:flex-end;
+ justify-content:space-between;
+ gap:20px;
+
+ margin-bottom:15px;
+}
+
+
+.rejectedRegistryHead>div>span{
+ display:block;
+
+ color:#a98b64;
+
+ font-size:5px;
+ font-weight:900;
+
+ letter-spacing:1.2px;
+}
+
+
+.rejectedRegistryHead h3{
+ margin:3px 0 0;
+
+ color:#4b5c57;
+
+ font-size:13px;
+}
+
+
+.rejectedRegistryHead p{
+ margin:4px 0 0;
+
+ color:#9da39f;
+
+ font-size:7px;
+}
+
+
+.rejectedSearch{
+ min-width:230px;
+
+ display:flex;
+ align-items:center;
+ gap:7px;
+
+ padding:0 10px;
+
+ border:1px solid #e1e5e1;
+ border-radius:10px;
+
+ background:#f9faf8;
+}
+
+
+.rejectedSearch span{
+ color:#959e99;
+ font-size:13px;
+}
+
+
+.rejectedSearch input{
+ width:100%;
+
+ padding:9px 0;
+
+ border:0;
+ outline:0;
+
+ background:transparent;
+
+ font-family:inherit;
+ font-size:7px;
+}
+
+
+/* TABLE */
+
+.rejectedTableWrap{
+ overflow-x:auto;
+
+ border:
+  1px solid #e7eae6;
+
+ border-radius:12px;
+}
+
+
+.rejectedTable{
+ width:100%;
+
+ border-collapse:collapse;
+
+ table-layout:fixed;
+}
+
+
+.rejectedTable th{
+ padding:10px 11px;
+
+ border-bottom:
+  1px solid #e6e9e5;
+
+ background:#f7f8f6;
+
+ color:#939b97;
+
+ font-size:6px;
+ font-weight:800;
+
+ text-align:right;
+}
+
+
+.rejectedTable td{
+ padding:10px 11px;
+
+ border-bottom:
+  1px solid #eef0ed;
+
+ color:#68746f;
+
+ font-size:7px;
+
+ vertical-align:middle;
+}
+
+
+.rejectedTable tr:last-child td{
+ border-bottom:0;
+}
+
+
+.rejectedRow{
+ transition:background .18s;
+}
+
+
+.rejectedRow:hover{
+ background:#fbfcfa;
+}
+
+
+.rejectedRow[hidden]{
+ display:none;
+}
+
+
+.rejectedPerson{
+ display:flex;
+ align-items:center;
+ gap:8px;
+
+ min-width:0;
+}
+
+
+.rejectedAvatar{
+ width:31px;
+ height:31px;
+
+ display:grid;
+ place-items:center;
+
+ flex:0 0 auto;
+
+ border-radius:9px;
+
+ background:#f1eeeb;
+
+ color:#8c786c;
+
+ font-size:9px;
+ font-weight:800;
+}
+
+
+.rejectedPerson>div:last-child,
+.rejectedContact,
+.rejectedStudy{
+ min-width:0;
+}
+
+
+.rejectedPerson strong,
+.rejectedContact strong,
+.rejectedStudy strong{
+ display:block;
+
+ overflow:hidden;
+
+ color:#596963;
+
+ font-size:7px;
+
+ white-space:nowrap;
+ text-overflow:ellipsis;
+}
+
+
+.rejectedPerson small,
+.rejectedContact small,
+.rejectedStudy small{
+ display:block;
+
+ overflow:hidden;
+
+ margin-top:2px;
+
+ color:#9ca39f;
+
+ font-size:5px;
+
+ white-space:nowrap;
+ text-overflow:ellipsis;
+}
+
+
+.rejectedCity{
+ display:inline-flex;
+
+ padding:5px 7px;
+
+ border-radius:7px;
+
+ background:#f4f5f3;
+
+ color:#7b8580;
+
+ font-size:6px;
+}
+
+
+.rejectedDate span{
+ display:block;
+
+ color:#b0a49c;
+
+ font-size:5px;
+ font-weight:900;
+
+ letter-spacing:.7px;
+}
+
+
+.rejectedDate strong{
+ display:block;
+
+ overflow:hidden;
+
+ margin-top:3px;
+
+ color:#7a8580;
+
+ font-size:6px;
+
+ white-space:nowrap;
+ text-overflow:ellipsis;
+}
+
+
+.rejectedBadge{
+ width:max-content;
+
+ display:flex;
+ align-items:center;
+ gap:5px;
+
+ padding:5px 7px;
+
+ border-radius:999px;
+
+ background:#f5efed;
+
+ color:#926f67;
+
+ font-size:6px;
+ font-weight:800;
+}
+
+
+.rejectedBadge i{
+ width:5px;
+ height:5px;
+
+ border-radius:50%;
+
+ background:#9a7169;
+}
+
+
+/* EMPTY STATES */
+
+.rejectedEmpty,
+.rejectedNoResults{
+ min-height:230px;
+
+ display:grid;
+ place-items:center;
+ align-content:center;
+
+ text-align:center;
+}
+
+
+.rejectedEmptyIcon{
+ width:52px;
+ height:52px;
+
+ display:grid;
+ place-items:center;
+
+ margin-bottom:9px;
+
+ border-radius:50%;
+
+ background:#eef3ec;
+
+ color:#738875;
+
+ font-size:17px;
+}
+
+
+.rejectedEmpty>span{
+ color:#a58b65;
+
+ font-size:5px;
+ font-weight:900;
+
+ letter-spacing:1px;
+}
+
+
+.rejectedEmpty h3{
+ margin:5px 0 0;
+
+ color:#52645d;
+
+ font-size:11px;
+}
+
+
+.rejectedEmpty p{
+ margin:4px 0 0;
+
+ color:#9ba19e;
+
+ font-size:7px;
+}
+
+
+.rejectedNoResults>div{
+ color:#a2aaa5;
+ font-size:20px;
+}
+
+
+.rejectedNoResults strong{
+ margin-top:7px;
+
+ color:#68756f;
+
+ font-size:9px;
+}
+
+
+.rejectedNoResults span{
+ margin-top:3px;
+
+ color:#a0a6a2;
+
+ font-size:6px;
+}
+
+
+/* MOTION */
+
+#content.sectionContentEnter
+.rejectedHero{
+ animation:
+  rejectedEnter
+  .45s
+  cubic-bezier(.16,1,.3,1)
+  both;
+}
+
+
+@keyframes rejectedEnter{
+
+ from{
+  opacity:0;
+  transform:translateY(9px);
+ }
+
+}
+
+
+/* RESPONSIVE */
+
+@media(max-width:760px){
+
+ .rejectedHeroMark{
+  display:none;
+ }
+
+ .rejectedStats{
+  grid-template-columns:1fr;
+ }
+
+ .rejectedRegistryHead{
+  flex-direction:column;
+  align-items:stretch;
+ }
+
+ .rejectedSearch{
+  min-width:0;
+  width:100%;
+  box-sizing:border-box;
+ }
+
+ .rejectedTable{
+  min-width:760px;
+ }
+
+}
+
+/* Fix rejected archive hidden state */
+.rejectedNoResults[hidden]{
+ display:none !important;
+}

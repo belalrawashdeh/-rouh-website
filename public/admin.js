@@ -5256,57 +5256,462 @@ window.deleteVolunteerAccount=deleteVolunteerAccount;
 
 
 async function rejectedVolunteers(){
- const d=await api('/api/admin/volunteers');
- const items=d.items.filter(v=>v.status==='rejected');
 
- if(!items.length){
-  content.innerHTML=`
-   <div class="panel">
-    <h3>سجل المرفوضين</h3>
-    <p class="muted">لا توجد طلبات مرفوضة حتى الآن.</p>
-   </div>`;
-  return;
- }
+ const d=await api('/api/admin/volunteers');
+
+ const items=(d.items||[])
+  .filter(v=>v.status==='rejected');
+
 
  content.innerHTML=`
-  <div class="panel">
-   <h3>سجل المرفوضين</h3>
-   <p class="muted">
-    الطلبات التي تم رفضها محفوظة هنا ولا يتم حذفها.
-   </p>
 
-   <div class="volunteerTableWrap">
-    <table class="volunteerTable">
-     <thead>
-      <tr>
-       <th>الاسم</th>
-       <th>البريد</th>
-       <th>الهاتف</th>
-       <th>التخصص</th>
-       <th>المستوى</th>
-       <th>المدينة</th>
-       <th>تاريخ الرفض</th>
-      </tr>
-     </thead>
+  <div class="rejectedArchive">
 
-     <tbody>
-      ${items.map(v=>`
-       <tr>
-        <td>${esc(v.name||'')}</td>
-        <td>${esc(v.email||'')}</td>
-        <td>${esc(v.phone||'')}</td>
-        <td>${esc(v.major||'-')}</td>
-        <td>${esc(v.level||'-')}</td>
-        <td>${esc(v.city||'-')}</td>
-        <td>${esc(v.rejected_at||'-')}</td>
-       </tr>
-      `).join('')}
-     </tbody>
-    </table>
-   </div>
-  </div>`;
+
+   <section class="rejectedHero">
+
+    <div>
+
+     <span class="rejectedHeroCode">
+      ROUH / APPLICATION ARCHIVE
+     </span>
+
+     <h2>
+      سجل الطلبات المرفوضة
+     </h2>
+
+     <p>
+      أرشيف منظم لطلبات الانضمام التي
+      انتهت بالرفض، مع الاحتفاظ ببياناتها
+      كسجل إداري دون حذفها.
+     </p>
+
+
+     <div class="rejectedHeroState">
+
+      <span>
+       <i></i>
+       ARCHIVE ACTIVE
+      </span>
+
+      <span>
+       ${items.length} طلب مرفوض
+      </span>
+
+     </div>
+
+    </div>
+
+
+    <div class="rejectedHeroMark">
+
+     <div>
+      ×
+     </div>
+
+     <small>
+      ARCHIVE
+     </small>
+
+    </div>
+
+   </section>
+
+
+   <section class="rejectedStats">
+
+    <article>
+
+     <span>
+      REJECTED APPLICATIONS
+     </span>
+
+     <strong>
+      ${items.length}
+     </strong>
+
+     <small>
+      إجمالي الطلبات المرفوضة
+     </small>
+
+    </article>
+
+
+    <article>
+
+     <span>
+      RECORD STATUS
+     </span>
+
+     <strong class="rejectedTextStat">
+      محفوظ
+     </strong>
+
+     <small>
+      تبقى البيانات في السجل
+     </small>
+
+    </article>
+
+
+    <article>
+
+     <span>
+      ARCHIVE MODE
+     </span>
+
+     <strong class="rejectedTextStat">
+      READ ONLY
+     </strong>
+
+     <small>
+      السجل مخصص للمراجعة
+     </small>
+
+    </article>
+
+   </section>
+
+
+   <section class="rejectedRegistry">
+
+
+    <header class="rejectedRegistryHead">
+
+     <div>
+
+      <span>
+       REJECTED REGISTRY
+      </span>
+
+      <h3>
+       أرشيف الطلبات
+      </h3>
+
+      <p>
+       ابحث داخل السجل باستخدام
+       الاسم أو الهاتف أو التخصص.
+      </p>
+
+     </div>
+
+
+     ${
+      items.length
+       ? `
+
+        <label class="rejectedSearch">
+
+         <span>⌕</span>
+
+         <input
+          id="rejectedSearchInput"
+          type="search"
+          placeholder="ابحث في السجل..."
+          autocomplete="off">
+
+        </label>
+
+       `
+       : ''
+     }
+
+    </header>
+
+
+    ${
+     items.length
+      ? `
+
+       <div class="rejectedTableWrap">
+
+        <table class="rejectedTable">
+
+         <thead>
+
+          <tr>
+
+           <th>
+            المتقدم
+           </th>
+
+           <th>
+            التواصل
+           </th>
+
+           <th>
+            الدراسة
+           </th>
+
+           <th>
+            المدينة
+           </th>
+
+           <th>
+            تاريخ الرفض
+           </th>
+
+           <th>
+            الحالة
+           </th>
+
+          </tr>
+
+         </thead>
+
+
+         <tbody>
+
+          ${items.map((v,index)=>{
+
+           const searchText=[
+            v.name||'',
+            v.email||'',
+            v.phone||'',
+            v.major||'',
+            v.level||'',
+            v.city||''
+           ].join(' ').toLowerCase();
+
+           return `
+
+            <tr
+             class="rejectedRow"
+             data-rejected-search="${esc(searchText)}"
+             style="--rejected-index:${index}">
+
+
+             <td>
+
+              <div class="rejectedPerson">
+
+               <div class="rejectedAvatar">
+
+                ${esc(
+                 String(v.name||'R')
+                  .trim()
+                  .charAt(0)
+                  .toUpperCase()
+                )}
+
+               </div>
+
+
+               <div>
+
+                <strong>
+                 ${esc(v.name||'-')}
+                </strong>
+
+                <small>
+                 APPLICATION #${v.id}
+                </small>
+
+               </div>
+
+              </div>
+
+             </td>
+
+
+             <td>
+
+              <div class="rejectedContact">
+
+               <strong>
+                ${esc(v.phone||'-')}
+               </strong>
+
+               <small>
+                ${esc(v.email||'-')}
+               </small>
+
+              </div>
+
+             </td>
+
+
+             <td>
+
+              <div class="rejectedStudy">
+
+               <strong>
+                ${esc(v.major||'-')}
+               </strong>
+
+               <small>
+                المستوى:
+                ${esc(v.level||'-')}
+               </small>
+
+              </div>
+
+             </td>
+
+
+             <td>
+
+              <span class="rejectedCity">
+               ${esc(v.city||'-')}
+              </span>
+
+             </td>
+
+
+             <td>
+
+              <div class="rejectedDate">
+
+               <span>
+                REJECTED
+               </span>
+
+               <strong>
+                ${esc(v.rejected_at||'-')}
+               </strong>
+
+              </div>
+
+             </td>
+
+
+             <td>
+
+              <span class="rejectedBadge">
+
+               <i></i>
+
+               مرفوض
+
+              </span>
+
+             </td>
+
+
+            </tr>
+
+           `;
+
+          }).join('')}
+
+         </tbody>
+
+        </table>
+
+       </div>
+
+
+       <div
+        id="rejectedNoResults"
+        class="rejectedNoResults"
+        hidden>
+
+        <div>⌕</div>
+
+        <strong>
+         لا توجد نتائج
+        </strong>
+
+        <span>
+         جرّب البحث بكلمة أخرى.
+        </span>
+
+       </div>
+
+      `
+      : `
+
+       <div class="rejectedEmpty">
+
+        <div class="rejectedEmptyIcon">
+         ✓
+        </div>
+
+        <span>
+         ARCHIVE CLEAR
+        </span>
+
+        <h3>
+         لا توجد طلبات مرفوضة
+        </h3>
+
+        <p>
+         لا يحتوي السجل على طلبات
+         مرفوضة حتى الآن.
+        </p>
+
+       </div>
+
+      `
+    }
+
+
+   </section>
+
+
+  </div>
+
+ `;
+
+
+ const search=
+  document.getElementById(
+   'rejectedSearchInput'
+  );
+
+
+ if(search){
+
+  search.addEventListener(
+   'input',
+   ()=>{
+
+    const query=
+     search.value
+      .trim()
+      .toLowerCase();
+
+
+    let visible=0;
+
+
+    document
+     .querySelectorAll('.rejectedRow')
+     .forEach(row=>{
+
+      const match=
+       !query ||
+       (
+        row.dataset.rejectedSearch||''
+       ).includes(query);
+
+
+      row.hidden=!match;
+
+      if(match) visible++;
+
+     });
+
+
+    const empty=
+     document.getElementById(
+      'rejectedNoResults'
+     );
+
+
+    if(empty){
+
+     empty.hidden=
+      visible!==0;
+
+    }
+
+   }
+  );
+
+ }
+
 }
-
 async function updateVolunteer(id,status){
 
  if(status==='contacted'){
