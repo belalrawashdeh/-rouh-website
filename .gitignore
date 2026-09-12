@@ -5,3 +5,9 @@ data/*.db-wal
 # Local backup files
 *.backup-ideas
 *.backup-before-*
+
+# macOS
+.DS_Store
+
+# Local temporary / backup files
+*.bak
