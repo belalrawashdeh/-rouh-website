@@ -19531,3 +19531,802 @@ body.complaintDrawerOpen{
  }
 }
 
+
+
+/* ==========================================================
+   ROUH ACCESS CONTROL V2
+   ========================================================== */
+
+.accessCenter,
+.accessEditor{
+ display:grid;
+ gap:17px;
+}
+
+.accessHero{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:25px;
+ padding:29px 31px;
+ border-radius:22px;
+ background:
+  radial-gradient(circle at 15% 20%,rgba(43,185,128,.16),transparent 30%),
+  linear-gradient(135deg,#071c22,#102e2e);
+ color:#fff;
+}
+
+.accessHeroCode,
+.accessEditorHero>div>span,
+.accessSettingsCode{
+ display:block;
+ margin-bottom:8px;
+ font-size:10px;
+ font-weight:900;
+ letter-spacing:2px;
+ color:#62d49f;
+}
+
+.accessHero h2,
+.accessEditorHero h2{
+ margin:0 0 7px;
+ font-size:28px;
+}
+
+.accessHero p,
+.accessEditorHero p{
+ margin:0 !important;
+ font-size:12px !important;
+ color:rgba(255,255,255,.65);
+}
+
+.accessAddBtn{
+ border:0;
+ border-radius:12px;
+ padding:12px 17px;
+ background:#26b77b;
+ color:#fff;
+ font-size:11px !important;
+ font-weight:900;
+ cursor:pointer;
+}
+
+.accessStats{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:11px;
+}
+
+.accessStat{
+ padding:16px 18px;
+ border:1px solid #e1e9e6;
+ border-radius:16px;
+ background:#fff;
+}
+
+.accessStat span{
+ display:block;
+ font-size:9px;
+ font-weight:900;
+ letter-spacing:1.3px;
+ color:#8a9692;
+}
+
+.accessStat strong{
+ display:block;
+ margin:4px 0;
+ font-size:23px;
+ color:#18372f;
+}
+
+.accessStat small{
+ font-size:9px !important;
+ color:#909c97;
+}
+
+.accessToolbar{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 180px 150px;
+ gap:10px;
+}
+
+.accessSearch{
+ display:flex;
+ align-items:center;
+ gap:8px;
+ padding:0 13px;
+ border:1px solid #dfe7e4;
+ border-radius:12px;
+ background:#fff;
+}
+
+.accessSearch input,
+.accessToolbar select{
+ height:43px;
+ width:100%;
+ border:0;
+ outline:0;
+ background:transparent;
+ font-size:11px !important;
+}
+
+.accessToolbar select{
+ padding:0 10px;
+ border:1px solid #dfe7e4;
+ border-radius:12px;
+ background:#fff;
+}
+
+.accessTableWrap{
+ overflow:hidden;
+ border:1px solid #e1e9e6;
+ border-radius:18px;
+ background:#fff;
+}
+
+.accessTable{
+ width:100%;
+ border-collapse:collapse;
+}
+
+.accessTable th{
+ padding:13px 15px;
+ text-align:right;
+ background:#f8fbfa;
+ border-bottom:1px solid #e9efec;
+ font-size:9px !important;
+ color:#788780;
+}
+
+.accessTable td{
+ padding:14px 15px;
+ border-bottom:1px solid #edf1ef;
+ font-size:10px !important;
+ vertical-align:middle;
+}
+
+.accessUserRow:last-child td{
+ border-bottom:0;
+}
+
+.accessUserRow[hidden],
+.accessNoResults[hidden]{
+ display:none !important;
+}
+
+.accessPerson{
+ display:flex;
+ align-items:center;
+ gap:10px;
+}
+
+.accessAvatar{
+ width:38px;
+ height:38px;
+ display:grid;
+ place-items:center;
+ border-radius:11px;
+ background:#163c34;
+ color:#fff;
+ font-size:12px;
+ font-weight:900;
+}
+
+.accessAvatar.owner{
+ background:#b38a36;
+}
+
+.accessPerson strong,
+.accessContact strong{
+ display:block;
+ font-size:10px;
+ color:#243f38;
+}
+
+.accessPerson small,
+.accessContact small{
+ display:block;
+ margin-top:2px;
+ font-size:8px !important;
+ color:#909c97;
+}
+
+.accessRole,
+.accessStatus,
+.accessDepartment{
+ display:inline-flex;
+ align-items:center;
+ padding:5px 8px;
+ border-radius:999px;
+ font-size:9px;
+ font-weight:800;
+ white-space:nowrap;
+}
+
+.role-owner{
+ background:#fff4dc;
+ color:#927027;
+}
+
+.role-deputy{
+ background:#eaf1fb;
+ color:#466b9e;
+}
+
+.role-admin{
+ background:#eaf7f1;
+ color:#237c5d;
+}
+
+.accessDepartment{
+ background:#f3f5f4;
+ color:#697771;
+}
+
+.accessStatus{
+ gap:5px;
+}
+
+.accessStatus i{
+ width:6px;
+ height:6px;
+ border-radius:50%;
+}
+
+.accessStatus.isActive{
+ background:#e9f8f1;
+ color:#16865b;
+}
+
+.accessStatus.isActive i{
+ background:#20b878;
+}
+
+.accessStatus.isStopped{
+ background:#f4eded;
+ color:#9b5555;
+}
+
+.accessStatus.isStopped i{
+ background:#c46c6c;
+}
+
+.accessEditBtn{
+ border:1px solid #d6e3de;
+ border-radius:9px;
+ padding:7px 10px;
+ background:#f8fbfa;
+ color:#285f51;
+ font-size:9px !important;
+ font-weight:900;
+ cursor:pointer;
+}
+
+.accessOwnerLock{
+ font-size:9px;
+ color:#9b8b67;
+}
+
+.accessNoResults{
+ padding:45px;
+ text-align:center;
+}
+
+.accessNoResults strong{
+ display:block;
+ font-size:13px;
+ color:#29433c;
+}
+
+.accessNoResults p{
+ margin:4px 0 0 !important;
+ font-size:9px !important;
+ color:#909c97;
+}
+
+
+/* EDITOR */
+
+.accessEditorHero{
+ display:flex;
+ align-items:center;
+ gap:18px;
+ padding:24px 27px;
+ border-radius:20px;
+ background:linear-gradient(135deg,#071c22,#102f2e);
+ color:#fff;
+}
+
+.accessBackBtn{
+ align-self:flex-start;
+ border:1px solid rgba(255,255,255,.13);
+ border-radius:9px;
+ padding:8px 11px;
+ background:rgba(255,255,255,.06);
+ color:#fff;
+ font-size:9px !important;
+ cursor:pointer;
+}
+
+.accessEditorForm{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 290px;
+ gap:14px;
+ align-items:start;
+}
+
+.accessEditorPanel,
+.accessSettingsPanel{
+ padding:20px;
+ border:1px solid #e1e9e6;
+ border-radius:18px;
+ background:#fff;
+}
+
+.accessEditorHead{
+ display:flex;
+ gap:11px;
+ margin-bottom:18px;
+}
+
+.accessEditorHead>span{
+ width:30px;
+ height:30px;
+ display:grid;
+ place-items:center;
+ border-radius:9px;
+ background:#eaf7f1;
+ color:#20966a;
+ font-size:9px;
+ font-weight:900;
+}
+
+.accessEditorHead h3,
+.accessSettingsPanel h3{
+ margin:0;
+ font-size:14px !important;
+ color:#19372f;
+}
+
+.accessEditorHead p,
+.accessSettingsPanel>p{
+ margin:3px 0 0 !important;
+ font-size:9px !important;
+ color:#8b9792;
+}
+
+.accessEditorGrid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:12px;
+}
+
+.accessField{
+ display:grid;
+ gap:7px;
+ margin-top:14px;
+}
+
+.accessFieldFull{
+ grid-column:1/-1;
+}
+
+.accessField>span{
+ font-size:10px;
+ font-weight:900;
+ color:#465f58;
+}
+
+.accessField input,
+.accessField select{
+ width:100%;
+ box-sizing:border-box;
+ border:1px solid #dce6e2;
+ border-radius:11px;
+ padding:11px 12px;
+ outline:0;
+ background:#fbfdfc;
+ font-size:11px !important;
+}
+
+.accessField small{
+ font-size:8px !important;
+ color:#909b97;
+}
+
+.accessSettingsPanel{
+ position:sticky;
+ top:18px;
+}
+
+.accessSecurityNote{
+ margin:18px 0 12px;
+ padding:11px;
+ border-radius:10px;
+ background:#f7f9f8;
+}
+
+.accessSecurityNote strong{
+ display:block;
+ font-size:9px;
+ color:#536760;
+}
+
+.accessSecurityNote p{
+ margin:2px 0 0 !important;
+ font-size:8px !important;
+ color:#909b97;
+}
+
+.accessSaveBtn,
+.accessCancelBtn{
+ width:100%;
+ padding:11px;
+ border-radius:11px;
+ font-size:10px !important;
+ font-weight:900;
+ cursor:pointer;
+}
+
+.accessSaveBtn{
+ border:0;
+ background:#16966a;
+ color:#fff;
+}
+
+.accessCancelBtn{
+ margin-top:7px;
+ border:1px solid #dce5e1;
+ background:#fff;
+ color:#65746f;
+}
+
+@media(max-width:900px){
+ .accessStats{
+  grid-template-columns:repeat(2,1fr);
+ }
+
+ .accessToolbar,
+ .accessEditorForm{
+  grid-template-columns:1fr;
+ }
+
+ .accessSettingsPanel{
+  position:static;
+ }
+
+ .accessTableWrap{
+  overflow:auto;
+ }
+}
+
+
+/* ==================================================
+   FIX ADMIN SIDEBAR SCROLL
+   ================================================== */
+
+.sidebar{
+ height:100vh !important;
+ max-height:100vh !important;
+ overflow-y:auto !important;
+ overflow-x:hidden !important;
+ overscroll-behavior:contain;
+ -webkit-overflow-scrolling:touch;
+}
+
+#menu{
+ padding-bottom:80px !important;
+}
+
+/* Scrollbar */
+.sidebar::-webkit-scrollbar{
+ width:6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb{
+ background:rgba(255,255,255,.18);
+ border-radius:20px;
+}
+
+.sidebar::-webkit-scrollbar-track{
+ background:transparent;
+}
+
+
+/* ==========================================================
+   ROUH AUDIT LOG V2
+   ========================================================== */
+
+.auditCenter{
+ display:grid;
+ gap:17px;
+}
+
+.auditHero{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:25px;
+ padding:29px 31px;
+ border-radius:22px;
+ background:
+  radial-gradient(circle at 15% 15%,rgba(41,185,126,.16),transparent 30%),
+  linear-gradient(135deg,#071c22,#102e2e);
+ color:#fff;
+}
+
+.auditHeroCode{
+ display:block;
+ margin-bottom:8px;
+ font-size:10px;
+ font-weight:900;
+ letter-spacing:2px;
+ color:#63d49f;
+}
+
+.auditHero h2{
+ margin:0 0 7px;
+ font-size:28px;
+}
+
+.auditHero p{
+ margin:0 !important;
+ font-size:12px !important;
+ color:rgba(255,255,255,.65);
+}
+
+.auditLive{
+ display:flex;
+ align-items:center;
+ gap:7px;
+ padding:8px 11px;
+ border:1px solid rgba(255,255,255,.12);
+ border-radius:999px;
+ background:rgba(255,255,255,.05);
+ font-size:9px;
+ font-weight:900;
+ letter-spacing:1px;
+}
+
+.auditLive i{
+ width:7px;
+ height:7px;
+ border-radius:50%;
+ background:#42d794;
+ box-shadow:0 0 0 4px rgba(66,215,148,.12);
+}
+
+.auditStats{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:11px;
+}
+
+.auditStat{
+ padding:16px 18px;
+ border:1px solid #e1e9e6;
+ border-radius:16px;
+ background:#fff;
+}
+
+.auditStat span{
+ display:block;
+ font-size:9px;
+ font-weight:900;
+ letter-spacing:1.3px;
+ color:#899690;
+}
+
+.auditStat strong{
+ display:block;
+ margin:4px 0;
+ font-size:23px;
+ color:#18372f;
+}
+
+.auditStat small{
+ font-size:9px !important;
+ color:#909c97;
+}
+
+.auditToolbar{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 200px;
+ gap:10px;
+}
+
+.auditSearch{
+ display:flex;
+ align-items:center;
+ gap:8px;
+ padding:0 13px;
+ border:1px solid #dfe7e4;
+ border-radius:12px;
+ background:#fff;
+}
+
+.auditSearch input,
+.auditToolbar select{
+ width:100%;
+ height:43px;
+ border:0;
+ outline:0;
+ background:transparent;
+ font-size:11px !important;
+}
+
+.auditToolbar select{
+ padding:0 11px;
+ border:1px solid #dfe7e4;
+ border-radius:12px;
+ background:#fff;
+}
+
+.auditTimeline{
+ display:grid;
+ gap:0;
+}
+
+.auditEntry{
+ display:grid;
+ grid-template-columns:28px minmax(0,1fr);
+}
+
+.auditEntry[hidden],
+.auditNoResults[hidden]{
+ display:none !important;
+}
+
+.auditRail{
+ position:relative;
+ display:flex;
+ justify-content:center;
+}
+
+.auditDot{
+ position:relative;
+ z-index:2;
+ width:10px;
+ height:10px;
+ margin-top:25px;
+ border:3px solid #e5f5ee;
+ border-radius:50%;
+ background:#28aa76;
+}
+
+.auditLine{
+ position:absolute;
+ top:35px;
+ bottom:-25px;
+ width:1px;
+ background:#dce7e2;
+}
+
+.auditEntry:last-child .auditLine{
+ display:none;
+}
+
+.auditEntryCard{
+ margin-bottom:11px;
+ padding:16px 18px;
+ border:1px solid #e1e9e6;
+ border-radius:16px;
+ background:#fff;
+}
+
+.auditEntryTop{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:15px;
+ padding-bottom:12px;
+ border-bottom:1px solid #eef2f0;
+}
+
+.auditActor{
+ display:flex;
+ align-items:center;
+ gap:9px;
+}
+
+.auditAvatar{
+ width:35px;
+ height:35px;
+ display:grid;
+ place-items:center;
+ border-radius:10px;
+ background:#143b33;
+ color:#fff;
+ font-size:11px;
+ font-weight:900;
+}
+
+.auditActor strong{
+ display:block;
+ font-size:10px;
+ color:#263f39;
+}
+
+.auditActor small{
+ display:block;
+ margin-top:2px;
+ font-size:8px !important;
+ color:#929e99;
+}
+
+.auditAction{
+ padding:5px 8px;
+ border-radius:999px;
+ background:#eef4f1;
+ color:#526c63;
+ font-size:9px;
+ font-weight:900;
+}
+
+.auditEntryBody{
+ display:grid;
+ grid-template-columns:180px minmax(0,1fr);
+ gap:18px;
+ padding-top:12px;
+}
+
+.auditEntity span,
+.auditDetails span{
+ display:block;
+ margin-bottom:3px;
+ font-size:8px;
+ font-weight:900;
+ color:#98a39f;
+}
+
+.auditEntity strong{
+ font-size:10px;
+ color:#355249;
+}
+
+.auditDetails p{
+ margin:0 !important;
+ font-size:10px !important;
+ color:#65766f;
+ line-height:1.7 !important;
+}
+
+.auditEmpty,
+.auditNoResults{
+ padding:50px 20px;
+ border:1px dashed #cedbd6;
+ border-radius:17px;
+ background:#fff;
+ text-align:center;
+}
+
+.auditEmpty strong,
+.auditNoResults strong{
+ display:block;
+ font-size:13px;
+ color:#29453d;
+}
+
+.auditEmpty p,
+.auditNoResults p{
+ margin:4px 0 0 !important;
+ font-size:9px !important;
+ color:#919d98;
+}
+
+@media(max-width:850px){
+ .auditStats{
+  grid-template-columns:repeat(2,1fr);
+ }
+
+ .auditToolbar,
+ .auditEntryBody{
+  grid-template-columns:1fr;
+ }
+
+ .auditHero{
+  align-items:flex-start;
+  flex-direction:column;
+ }
+}
+

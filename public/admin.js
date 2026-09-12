@@ -3278,25 +3278,372 @@ window.permanentlyDeleteVolunteerAccount=async id=>{
  }
 };
 
-async function users(){const d=await api('/api/admin/users');content.innerHTML=`<div class="panel"><button class="btn green" onclick="userForm()">+ إضافة مسؤول</button></div><div class="panel"><table class="table"><tr><th>الاسم</th><th>الهاتف</th><th>البريد</th><th>الصلاحية</th><th>القسم</th><th>الحالة</th><th></th></tr>${d.items.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.phone||'-')}</td><td>${esc(u.email)}</td><td>${u.role==='owner'?'المالك':u.system_role==='deputy_owner'?'الريس':'مسؤول قسم'}</td><td>${esc(u.department||'-')}</td><td>${u.active?'فعال':'موقوف'}</td><td>${u.role!=='owner'?`<button class="btn light small" onclick='userForm(${JSON.stringify(u).replaceAll("'","&#39;")})'>تعديل</button>`:''}</td></tr>`).join('')}</table></div>`}
-window.userForm=(u={})=>{content.innerHTML=`<div class="panel"><form id="userForm" class="formGrid"><div class="field"><label>الاسم</label><input name="name" value="${esc(u.name||'')}" required></div><div class="field"><label>رقم الهاتف</label><input name="phone" type="tel" value="${esc(u.phone||'')}" maxlength="30" required></div><div class="field"><label>البريد</label><input name="email" type="email" value="${esc(u.email||'')}" required></div>${u.id?'':`<div class="field"><label>كلمة المرور</label><input name="password" type="password" minlength="8" required></div>`}<div class="field"><label>الصلاحية</label><select name="role">
-<option value="admin" ${u.system_role!=='deputy_owner'?'selected':''}>مسؤول قسم</option>
-<option value="deputy_owner" ${u.system_role==='deputy_owner'?'selected':''}>الريس</option>
-</select></div>
-<div class="field">
-<label>القسم</label>
-<select name="department">
-<option value="">بدون قسم</option>
-<option value="الميداني" ${u.department==='الميداني'?'selected':''}>الميداني</option>
-<option value="إدارة الموارد البشرية (HR)" ${u.department==='إدارة الموارد البشرية (HR)'?'selected':''}>إدارة الموارد البشرية (HR)</option>
-<option value="الأكاديمي" ${u.department==='الأكاديمي'?'selected':''}>الأكاديمي</option>
-<option value="العلاقات العامة" ${u.department==='العلاقات العامة'?'selected':''}>العلاقات العامة</option>
-<option value="التقني" ${u.department==='التقني'?'selected':''}>التقني</option>
-<option value="رواق" ${u.department==='رواق'?'selected':''}>رواق</option>
-<option value="الإعلامي" ${u.department==='الإعلامي'?'selected':''}>الإعلامي</option>
-<option value="التيسير" ${u.department==='التيسير'?'selected':''}>التيسير</option>
-</select>
-</div>${u.id?`<div class="field"><label>الحالة</label><select name="active"><option value="1" ${u.active?'selected':''}>فعال</option><option value="0" ${!u.active?'selected':''}>موقوف</option></select></div>`:''}<button class="btn green full">حفظ</button></form></div>`;$('#userForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());if(u.id)o.active=o.active==='1';try{await api('/api/admin/users'+(u.id?'/'+u.id:''),{method:u.id?'PUT':'POST',body:JSON.stringify(o)});flash('تم الحفظ');loadTab('users')}catch(ex){flash(ex.message,true)}}}
+async function users(){
+ const d=await api('/api/admin/users');
+ const items=d.items||[];
+
+ const active=items.filter(u=>Number(u.active)===1).length;
+ const stopped=items.length-active;
+ const deputies=items.filter(u=>u.system_role==='deputy_owner').length;
+
+ content.innerHTML=`
+ <section class="accessCenter">
+
+  <div class="accessHero">
+   <div>
+    <span class="accessHeroCode">ROUH / ACCESS CONTROL</span>
+    <h2>المسؤولون والصلاحيات</h2>
+    <p>إدارة حسابات المسؤولين والأدوار والأقسام داخل لوحة روح.</p>
+   </div>
+
+   <button class="accessAddBtn" onclick="userForm()">
+    + إضافة مسؤول
+   </button>
+  </div>
+
+  <div class="accessStats">
+   <div class="accessStat">
+    <span>TOTAL</span>
+    <strong>${items.length}</strong>
+    <small>إجمالي الحسابات</small>
+   </div>
+
+   <div class="accessStat">
+    <span>ACTIVE</span>
+    <strong>${active}</strong>
+    <small>حسابات فعالة</small>
+   </div>
+
+   <div class="accessStat">
+    <span>DEPUTIES</span>
+    <strong>${deputies}</strong>
+    <small>حسابات الريس</small>
+   </div>
+
+   <div class="accessStat">
+    <span>STOPPED</span>
+    <strong>${stopped}</strong>
+    <small>حسابات موقوفة</small>
+   </div>
+  </div>
+
+  <div class="accessToolbar">
+   <div class="accessSearch">
+    <span>⌕</span>
+    <input id="userSearchInput"
+     placeholder="ابحث بالاسم أو البريد أو القسم..."
+     autocomplete="off">
+   </div>
+
+   <select id="userRoleFilter">
+    <option value="all">كل الصلاحيات</option>
+    <option value="owner">المالك</option>
+    <option value="deputy">الريس</option>
+    <option value="admin">مسؤول قسم</option>
+   </select>
+
+   <select id="userStatusFilter">
+    <option value="all">كل الحالات</option>
+    <option value="active">فعال</option>
+    <option value="stopped">موقوف</option>
+   </select>
+  </div>
+
+  <div class="accessTableWrap">
+   <table class="accessTable">
+    <thead>
+     <tr>
+      <th>المسؤول</th>
+      <th>التواصل</th>
+      <th>الصلاحية</th>
+      <th>القسم</th>
+      <th>الحالة</th>
+      <th>الإجراء</th>
+     </tr>
+    </thead>
+
+    <tbody id="accessUsersBody">
+     ${items.map(u=>{
+      const isOwner=u.role==='owner';
+      const isDeputy=u.system_role==='deputy_owner';
+      const roleKey=isOwner?'owner':isDeputy?'deputy':'admin';
+      const roleLabel=isOwner?'المالك':isDeputy?'الريس':'مسؤول قسم';
+      const activeUser=Number(u.active)===1;
+      const encoded=encodeURIComponent(JSON.stringify(u));
+
+      return `
+       <tr class="accessUserRow"
+        data-search="${esc(((u.name||'')+' '+(u.email||'')+' '+(u.phone||'')+' '+(u.department||'')).toLowerCase())}"
+        data-role="${roleKey}"
+        data-status="${activeUser?'active':'stopped'}">
+
+        <td>
+         <div class="accessPerson">
+          <div class="accessAvatar ${isOwner?'owner':''}">
+           ${esc((u.name||'?').trim().charAt(0)||'?')}
+          </div>
+          <div>
+           <strong>${esc(u.name||'')}</strong>
+           <small>ID #${u.id}</small>
+          </div>
+         </div>
+        </td>
+
+        <td>
+         <div class="accessContact">
+          <strong>${esc(u.email||'-')}</strong>
+          <small>${esc(u.phone||'-')}</small>
+         </div>
+        </td>
+
+        <td>
+         <span class="accessRole role-${roleKey}">
+          ${roleLabel}
+         </span>
+        </td>
+
+        <td>
+         <span class="accessDepartment">
+          ${esc(u.department||'بدون قسم')}
+         </span>
+        </td>
+
+        <td>
+         <span class="accessStatus ${activeUser?'isActive':'isStopped'}">
+          <i></i>
+          ${activeUser?'فعال':'موقوف'}
+         </span>
+        </td>
+
+        <td>
+         ${isOwner
+          ? `<span class="accessOwnerLock">محمي</span>`
+          : `<button class="accessEditBtn"
+              onclick="userForm(JSON.parse(decodeURIComponent('${encoded}')))">
+              تعديل
+             </button>`
+         }
+        </td>
+       </tr>
+      `;
+     }).join('')}
+    </tbody>
+   </table>
+
+   <div class="accessNoResults" id="accessNoResults" hidden>
+    <strong>لا توجد نتائج</strong>
+    <p>جرّب تغيير البحث أو الفلاتر.</p>
+   </div>
+  </div>
+
+ </section>`;
+
+ const search=$('#userSearchInput');
+ const role=$('#userRoleFilter');
+ const status=$('#userStatusFilter');
+
+ const apply=()=>{
+  const q=(search?.value||'').trim().toLowerCase();
+  const r=role?.value||'all';
+  const st=status?.value||'all';
+  let shown=0;
+
+  document.querySelectorAll('.accessUserRow').forEach(row=>{
+   const okText=!q||(row.dataset.search||'').includes(q);
+   const okRole=r==='all'||row.dataset.role===r;
+   const okStatus=st==='all'||row.dataset.status===st;
+   const show=okText&&okRole&&okStatus;
+
+   row.hidden=!show;
+   if(show) shown++;
+  });
+
+  const no=$('#accessNoResults');
+  if(no) no.hidden=shown!==0;
+ };
+
+ search?.addEventListener('input',apply);
+ role?.addEventListener('change',apply);
+ status?.addEventListener('change',apply);
+}
+
+
+window.userForm=(u={})=>{
+ const editing=!!u.id;
+
+ content.innerHTML=`
+ <section class="accessEditor">
+
+  <div class="accessEditorHero">
+   <button class="accessBackBtn" type="button" onclick="loadTab('users')">
+    ← العودة
+   </button>
+
+   <div>
+    <span>ROUH / ACCESS EDITOR</span>
+    <h2>${editing?'تعديل مسؤول':'إضافة مسؤول جديد'}</h2>
+    <p>${editing
+      ?'حدّث بيانات الحساب وصلاحياته وحالته.'
+      :'أنشئ حساب مسؤول جديد وحدد صلاحياته داخل النظام.'}</p>
+   </div>
+  </div>
+
+  <form id="userForm" class="accessEditorForm">
+
+   <div class="accessEditorMain">
+
+    <div class="accessEditorPanel">
+     <div class="accessEditorHead">
+      <span>01</span>
+      <div>
+       <h3>البيانات الأساسية</h3>
+       <p>بيانات المسؤول المستخدمة للتواصل وتسجيل الحساب.</p>
+      </div>
+     </div>
+
+     <div class="accessEditorGrid">
+      <label class="accessField">
+       <span>الاسم</span>
+       <input name="name" value="${esc(u.name||'')}" required>
+      </label>
+
+      <label class="accessField">
+       <span>رقم الهاتف</span>
+       <input name="phone" type="tel"
+        value="${esc(u.phone||'')}"
+        maxlength="30" required>
+      </label>
+
+      <label class="accessField accessFieldFull">
+       <span>البريد الإلكتروني</span>
+       <input name="email" type="email"
+        value="${esc(u.email||'')}" required>
+      </label>
+
+      ${editing?'':`
+      <label class="accessField accessFieldFull">
+       <span>كلمة المرور</span>
+       <input name="password"
+        type="password"
+        minlength="8"
+        placeholder="8 أحرف على الأقل"
+        required>
+       <small>سيستخدمها المسؤول عند تسجيل الدخول.</small>
+      </label>
+      `}
+     </div>
+    </div>
+
+   </div>
+
+   <aside class="accessEditorSide">
+    <div class="accessSettingsPanel">
+
+     <span class="accessSettingsCode">PERMISSIONS</span>
+     <h3>الصلاحيات</h3>
+     <p>حدد دور المسؤول والقسم المرتبط به.</p>
+
+     <label class="accessField">
+      <span>الصلاحية</span>
+      <select name="role" id="accessRoleSelect">
+       <option value="admin"
+        ${u.system_role!=='deputy_owner'?'selected':''}>
+        مسؤول قسم
+       </option>
+       <option value="deputy_owner"
+        ${u.system_role==='deputy_owner'?'selected':''}>
+        الريس
+       </option>
+      </select>
+     </label>
+
+     <label class="accessField" id="accessDepartmentField">
+      <span>القسم</span>
+      <select name="department">
+       <option value="">بدون قسم</option>
+       <option value="الميداني" ${u.department==='الميداني'?'selected':''}>الميداني</option>
+       <option value="إدارة الموارد البشرية (HR)" ${u.department==='إدارة الموارد البشرية (HR)'?'selected':''}>إدارة الموارد البشرية (HR)</option>
+       <option value="الأكاديمي" ${u.department==='الأكاديمي'?'selected':''}>الأكاديمي</option>
+       <option value="العلاقات العامة" ${u.department==='العلاقات العامة'?'selected':''}>العلاقات العامة</option>
+       <option value="التقني" ${u.department==='التقني'?'selected':''}>التقني</option>
+       <option value="رواق" ${u.department==='رواق'?'selected':''}>رواق</option>
+       <option value="الإعلامي" ${u.department==='الإعلامي'?'selected':''}>الإعلامي</option>
+       <option value="التيسير" ${u.department==='التيسير'?'selected':''}>التيسير</option>
+      </select>
+     </label>
+
+     ${editing?`
+     <label class="accessField">
+      <span>الحالة</span>
+      <select name="active">
+       <option value="1" ${u.active?'selected':''}>فعال</option>
+       <option value="0" ${!u.active?'selected':''}>موقوف</option>
+      </select>
+     </label>
+     `:''}
+
+     <div class="accessSecurityNote">
+      <strong>تنبيه أمني</strong>
+      <p>صلاحية الريس لا ترتبط بقسم محدد.</p>
+     </div>
+
+     <button class="accessSaveBtn" type="submit">
+      ${editing?'حفظ التعديلات':'إنشاء الحساب'}
+     </button>
+
+     <button class="accessCancelBtn"
+      type="button"
+      onclick="loadTab('users')">
+      إلغاء
+     </button>
+
+    </div>
+   </aside>
+
+  </form>
+ </section>`;
+
+ const roleSelect=$('#accessRoleSelect');
+ const departmentField=$('#accessDepartmentField');
+
+ const syncDepartment=()=>{
+  if(!roleSelect||!departmentField)return;
+  departmentField.style.display=
+   roleSelect.value==='deputy_owner'?'none':'grid';
+ };
+
+ roleSelect?.addEventListener('change',syncDepartment);
+ syncDepartment();
+
+ $('#userForm').onsubmit=async e=>{
+  e.preventDefault();
+
+  const btn=e.target.querySelector('.accessSaveBtn');
+  const old=btn.textContent;
+  btn.disabled=true;
+  btn.textContent='جارٍ الحفظ...';
+
+  const o=Object.fromEntries(new FormData(e.target).entries());
+
+  if(u.id)
+   o.active=o.active==='1';
+
+  try{
+   await api('/api/admin/users'+(u.id?'/'+u.id:''),{
+    method:u.id?'PUT':'POST',
+    body:JSON.stringify(o)
+   });
+
+   flash('تم الحفظ');
+   loadTab('users');
+  }catch(ex){
+   flash(ex.message,true);
+   btn.disabled=false;
+   btn.textContent=old;
+  }
+ };
+}
+
 
 async function deletionRequests(){
 
@@ -3840,7 +4187,200 @@ window.decideDeletionRequest=async(id,action)=>{
  }
 };
 
-async function audit(){const d=await api('/api/admin/audit');content.innerHTML=`<div class="panel"><table class="table"><tr><th>المسؤول</th><th>الإجراء</th><th>العنصر</th><th>التفاصيل</th><th>الوقت</th></tr>${d.items.map(a=>`<tr><td>${esc(a.user_name||'النظام')}</td><td>${esc(a.action)}</td><td>${esc(a.entity)} ${esc(a.entity_id)}</td><td>${esc(a.details)}</td><td>${esc(a.created_at)}</td></tr>`).join('')}</table></div>`}
+async function audit(){
+ const d=await api('/api/admin/audit');
+ const items=d.items||[];
+
+ const actionNames={
+  create:'إنشاء',
+  update:'تعديل',
+  delete:'حذف',
+  trash:'نقل للسلة',
+  restore:'استرجاع',
+  permanent_delete:'حذف نهائي',
+  request_delete:'طلب حذف',
+  approve_delete:'موافقة حذف',
+  reject_delete:'رفض حذف',
+  login:'تسجيل دخول',
+  logout:'تسجيل خروج'
+ };
+
+ const entityNames={
+  user:'مسؤول',
+  faq:'سؤال شائع',
+  events:'فعالية',
+  event:'فعالية',
+  achievements:'إنجاز',
+  achievement:'إنجاز',
+  volunteer:'متطوع',
+  volunteer_application:'طلب متطوع',
+  department_content:'محتوى قسم',
+  idea:'فكرة',
+  complaint:'شكوى',
+  task:'مهمة'
+ };
+
+ const today=new Date().toISOString().slice(0,10);
+ const todayCount=items.filter(a=>
+  String(a.created_at||'').slice(0,10)===today
+ ).length;
+
+ const admins=new Set(
+  items.map(a=>a.user_name).filter(Boolean)
+ ).size;
+
+ content.innerHTML=`
+ <section class="auditCenter">
+
+  <div class="auditHero">
+   <div>
+    <span class="auditHeroCode">ROUH / SYSTEM ACTIVITY</span>
+    <h2>سجل التعديلات</h2>
+    <p>
+     سجل رقابي لآخر العمليات الإدارية التي تمت داخل نظام مبادرة روح.
+    </p>
+   </div>
+
+   <div class="auditLive">
+    <i></i>
+    AUDIT ACTIVE
+   </div>
+  </div>
+
+  <div class="auditStats">
+   <div class="auditStat">
+    <span>RECORDS</span>
+    <strong>${items.length}</strong>
+    <small>عملية معروضة</small>
+   </div>
+
+   <div class="auditStat">
+    <span>TODAY</span>
+    <strong>${todayCount}</strong>
+    <small>عمليات اليوم</small>
+   </div>
+
+   <div class="auditStat">
+    <span>ADMINS</span>
+    <strong>${admins}</strong>
+    <small>مسؤولون في السجل</small>
+   </div>
+
+   <div class="auditStat">
+    <span>LIMIT</span>
+    <strong>200</strong>
+    <small>آخر عملية محفوظة للعرض</small>
+   </div>
+  </div>
+
+  <div class="auditToolbar">
+   <div class="auditSearch">
+    <span>⌕</span>
+    <input id="auditSearchInput"
+     placeholder="ابحث بالمسؤول أو الإجراء أو العنصر..."
+     autocomplete="off">
+   </div>
+
+   <select id="auditActionFilter">
+    <option value="all">كل الإجراءات</option>
+    ${[...new Set(items.map(a=>a.action).filter(Boolean))]
+      .map(a=>`<option value="${esc(a)}">${esc(actionNames[a]||a)}</option>`)
+      .join('')}
+   </select>
+  </div>
+
+  <div class="auditTimeline" id="auditTimeline">
+   ${items.length ? items.map(a=>{
+    const action=actionNames[a.action]||a.action||'عملية';
+    const entity=entityNames[a.entity]||a.entity||'عنصر';
+    const search=((a.user_name||'النظام')+' '+(a.action||'')+' '+(a.entity||'')+' '+(a.details||'')).toLowerCase();
+
+    return `
+     <article class="auditEntry"
+      data-search="${esc(search)}"
+      data-action="${esc(a.action||'')}">
+
+      <div class="auditRail">
+       <span class="auditDot"></span>
+       <span class="auditLine"></span>
+      </div>
+
+      <div class="auditEntryCard">
+
+       <div class="auditEntryTop">
+        <div class="auditActor">
+         <div class="auditAvatar">
+          ${esc((a.user_name||'ن').trim().charAt(0)||'ن')}
+         </div>
+
+         <div>
+          <strong>${esc(a.user_name||'النظام')}</strong>
+          <small>${esc(a.created_at||'-')}</small>
+         </div>
+        </div>
+
+        <span class="auditAction action-${esc(a.action||'other')}">
+         ${esc(action)}
+        </span>
+       </div>
+
+       <div class="auditEntryBody">
+        <div class="auditEntity">
+         <span>العنصر</span>
+         <strong>
+          ${esc(entity)}
+          ${a.entity_id?`#${esc(a.entity_id)}`:''}
+         </strong>
+        </div>
+
+        <div class="auditDetails">
+         <span>التفاصيل</span>
+         <p>${esc(a.details||'لا توجد تفاصيل إضافية')}</p>
+        </div>
+       </div>
+
+      </div>
+     </article>
+    `;
+   }).join('') : `
+    <div class="auditEmpty">
+     <strong>لا توجد عمليات مسجلة</strong>
+     <p>سيظهر النشاط الإداري هنا عند حدوثه.</p>
+    </div>
+   `}
+  </div>
+
+  <div class="auditNoResults" id="auditNoResults" hidden>
+   <strong>لا توجد نتائج</strong>
+   <p>جرّب تغيير البحث أو فلتر الإجراءات.</p>
+  </div>
+
+ </section>`;
+
+ const search=$('#auditSearchInput');
+ const filter=$('#auditActionFilter');
+
+ const apply=()=>{
+  const q=(search?.value||'').trim().toLowerCase();
+  const action=filter?.value||'all';
+  let shown=0;
+
+  document.querySelectorAll('.auditEntry').forEach(row=>{
+   const okText=!q||(row.dataset.search||'').includes(q);
+   const okAction=action==='all'||row.dataset.action===action;
+   const show=okText&&okAction;
+
+   row.hidden=!show;
+   if(show)shown++;
+  });
+
+  const no=$('#auditNoResults');
+  if(no)no.hidden=shown!==0||!items.length;
+ };
+
+ search?.addEventListener('input',apply);
+ filter?.addEventListener('change',apply);
+}
 init().catch(e=>console.error(e));
 
 
