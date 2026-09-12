@@ -2017,7 +2017,681 @@ window.entityForm=(type,item={})=>{
 };
 async function upload(file){const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});return (await api('/api/admin/upload',{method:'POST',body:JSON.stringify({filename:file.name,dataUrl})})).url}
 window.removeEntity=async(type,id)=>{if(!confirm(me.role==='owner'?'نقل العنصر إلى سلة المحذوفات؟':'إرسال طلب حذف إلى المالك؟'))return;try{const r=await api('/api/admin/'+type+'/'+id,{method:'DELETE'});flash(r.pendingApproval?'تم إرسال طلب الحذف للمالك':'تم النقل إلى سلة المحذوفات');loadTab(type)}catch(e){flash(e.message,true)}};
-async function editContent(){const d=await api('/api/admin/content'),s=d.settings,st=d.stats;content.innerHTML=`<form id="contentForm"><div class="panel formGrid"><div class="field"><label>اسم المبادرة</label><input name="initiative_name" value="${esc(s.initiative_name)}"></div><div class="field"><label>الشعار النصي</label><input name="tagline" value="${esc(s.tagline)}"></div>${[['hero_text','نص الواجهة'],['belief','عبارة الإيمان'],['about','من نحن'],['mission','الرسالة'],['vision','الرؤية'],['join_intro','نص الانضمام']].map(x=>`<div class="field full"><label>${x[1]}</label><textarea name="${x[0]}">${esc(s[x[0]])}</textarea></div>`).join('')}<div class="field"><label>البريد</label><input name="email" value="${esc(s.email)}"></div><div class="field"><label>رابط نموذج الانتساب</label><input name="join_url" value="${esc(s.join_url)}"></div><div class="field"><label>Instagram</label><input name="instagram" value="${esc(s.instagram)}"></div><div class="field"><label>Facebook</label><input name="facebook" value="${esc(s.facebook)}"></div><div class="field full"><label>القيم (JSON)</label><textarea name="values_json">${esc(s.values_json)}</textarea></div><div class="field full"><label>المجالات (JSON)</label><textarea name="fields_json">${esc(s.fields_json)}</textarea></div><div class="field full"><label>أسباب الانضمام (JSON)</label><textarea name="join_reasons_json">${esc(s.join_reasons_json)}</textarea></div><div class="field"><label>إظهار أرقام الأثر</label><select name="stats_visible"><option value="0" ${s.stats_visible!=='1'?'selected':''}>مخفي</option><option value="1" ${s.stats_visible==='1'?'selected':''}>ظاهر</option></select></div></div><div class="panel formGrid"><h3 class="full">أرقام الأثر</h3>${[['volunteers','المتطوعون'],['events','الفعاليات'],['hours','ساعات التطوع'],['beneficiaries','المستفيدون']].map(x=>`<div class="field"><label>${x[1]}</label><input type="number" name="stat_${x[0]}" value="${st[x[0]]}"></div>`).join('')}<button class="btn green full">حفظ التعديلات</button></div></form>`;$('#contentForm').onsubmit=async e=>{e.preventDefault();try{const o=Object.fromEntries(new FormData(e.target).entries()),stats={};for(const k of ['volunteers','events','hours','beneficiaries']){stats[k]=o['stat_'+k];delete o['stat_'+k]}await api('/api/admin/settings',{method:'PUT',body:JSON.stringify(o)});await api('/api/admin/stats',{method:'PUT',body:JSON.stringify(stats)});flash('تم تحديث محتوى الموقع')}catch(ex){flash(ex.message,true)}}}
+async function editContent(){
+
+ const d=await api('/api/admin/content');
+ const s=d.settings;
+ const st=d.stats;
+
+
+ content.innerHTML=`
+
+  <form id="contentForm" class="contentStudio">
+
+
+   <section class="contentStudioHero">
+
+    <div>
+
+     <span class="contentStudioCode">
+      ROUH / CONTENT STUDIO
+     </span>
+
+     <h2>
+      استوديو محتوى روح
+     </h2>
+
+     <p>
+      تحكم بهوية الموقع، النصوص،
+      روابط التواصل وأرقام الأثر
+      من مساحة واحدة منظمة.
+     </p>
+
+
+     <div class="contentStudioState">
+
+      <span>
+       <i></i>
+       CONTENT SYSTEM ACTIVE
+      </span>
+
+      <span>
+       إعدادات الموقع العامة
+      </span>
+
+     </div>
+
+    </div>
+
+
+    <div class="contentStudioMark">
+
+     <div>R</div>
+
+     <small>
+      EDITOR
+     </small>
+
+    </div>
+
+   </section>
+
+
+   <div class="contentStudioLayout">
+
+
+    <main class="contentStudioMain">
+
+
+     <section class="contentStudioPanel">
+
+      <header class="contentStudioPanelHead">
+
+       <div class="contentStudioPanelIcon">
+        ◇
+       </div>
+
+       <div>
+
+        <span>
+         BRAND IDENTITY
+        </span>
+
+        <h3>
+         هوية المبادرة
+        </h3>
+
+        <p>
+         الاسم والشعار النصي الظاهر
+         في الموقع.
+        </p>
+
+       </div>
+
+      </header>
+
+
+      <div class="contentStudioGrid">
+
+       <label class="contentStudioField">
+
+        <span>
+         اسم المبادرة
+        </span>
+
+        <input
+         name="initiative_name"
+         value="${esc(s.initiative_name||'')}">
+
+       </label>
+
+
+       <label class="contentStudioField">
+
+        <span>
+         الشعار النصي
+        </span>
+
+        <input
+         name="tagline"
+         value="${esc(s.tagline||'')}">
+
+       </label>
+
+      </div>
+
+     </section>
+
+
+     <section class="contentStudioPanel">
+
+      <header class="contentStudioPanelHead">
+
+       <div class="contentStudioPanelIcon">
+        ≡
+       </div>
+
+       <div>
+
+        <span>
+         WEBSITE COPY
+        </span>
+
+        <h3>
+         نصوص الموقع
+        </h3>
+
+        <p>
+         المحتوى الرئيسي الذي يعرّف
+         الزائر بمبادرة روح.
+        </p>
+
+       </div>
+
+      </header>
+
+
+      <div class="contentStudioTextSections">
+
+       ${[
+        ['hero_text','نص الواجهة','النص الرئيسي في واجهة الموقع'],
+        ['belief','عبارة الإيمان','العبارة التي تعبّر عن إيمان المبادرة'],
+        ['about','من نحن','تعريف مختصر بمبادرة روح'],
+        ['mission','الرسالة','رسالة المبادرة'],
+        ['vision','الرؤية','رؤية المبادرة المستقبلية'],
+        ['join_intro','نص الانضمام','المقدمة الظاهرة في قسم الانضمام']
+       ].map(([name,title,hint])=>`
+
+        <label class="contentStudioTextField">
+
+         <div>
+
+          <strong>
+           ${title}
+          </strong>
+
+          <small>
+           ${hint}
+          </small>
+
+         </div>
+
+         <textarea
+          name="${name}"
+          rows="4">${esc(s[name]||'')}</textarea>
+
+        </label>
+
+       `).join('')}
+
+      </div>
+
+     </section>
+
+
+     <section class="contentStudioPanel">
+
+      <header class="contentStudioPanelHead">
+
+       <div class="contentStudioPanelIcon">
+        ↗
+       </div>
+
+       <div>
+
+        <span>
+         CONTACT & LINKS
+        </span>
+
+        <h3>
+         التواصل والروابط
+        </h3>
+
+        <p>
+         بيانات التواصل وروابط
+         المنصات المستخدمة في الموقع.
+        </p>
+
+       </div>
+
+      </header>
+
+
+      <div class="contentStudioGrid">
+
+       <label class="contentStudioField">
+
+        <span>
+         البريد الإلكتروني
+        </span>
+
+        <input
+         type="email"
+         name="email"
+         value="${esc(s.email||'')}"
+         placeholder="example@email.com">
+
+       </label>
+
+
+       <label class="contentStudioField">
+
+        <span>
+         رابط نموذج الانتساب
+        </span>
+
+        <input
+         name="join_url"
+         value="${esc(s.join_url||'')}"
+         placeholder="https://...">
+
+       </label>
+
+
+       <label class="contentStudioField">
+
+        <span>
+         Instagram
+        </span>
+
+        <input
+         name="instagram"
+         value="${esc(s.instagram||'')}"
+         placeholder="https://instagram.com/...">
+
+       </label>
+
+
+       <label class="contentStudioField">
+
+        <span>
+         Facebook
+        </span>
+
+        <input
+         name="facebook"
+         value="${esc(s.facebook||'')}"
+         placeholder="https://facebook.com/...">
+
+       </label>
+
+      </div>
+
+     </section>
+
+
+     <section class="contentStudioPanel">
+
+      <header class="contentStudioPanelHead">
+
+       <div class="contentStudioPanelIcon">
+        { }
+       </div>
+
+       <div>
+
+        <span>
+         STRUCTURED CONTENT
+        </span>
+
+        <h3>
+         البيانات المنظمة
+        </h3>
+
+        <p>
+         إعدادات JSON المتقدمة
+         المستخدمة لبناء أقسام الموقع.
+        </p>
+
+       </div>
+
+      </header>
+
+
+      <div class="contentJsonNotice">
+
+       <span>!</span>
+
+       <div>
+
+        <strong>
+         إعدادات متقدمة
+        </strong>
+
+        <p>
+         حافظ على صيغة JSON صحيحة عند
+         تعديل هذه الحقول حتى لا يتأثر
+         عرض المحتوى في الموقع.
+        </p>
+
+       </div>
+
+      </div>
+
+
+      <div class="contentStudioJsonGrid">
+
+       <label class="contentStudioJsonField">
+
+        <div>
+
+         <strong>
+          القيم
+         </strong>
+
+         <span>
+          values_json
+         </span>
+
+        </div>
+
+        <textarea
+         name="values_json"
+         rows="7"
+         spellcheck="false">${esc(s.values_json||'')}</textarea>
+
+       </label>
+
+
+       <label class="contentStudioJsonField">
+
+        <div>
+
+         <strong>
+          المجالات
+         </strong>
+
+         <span>
+          fields_json
+         </span>
+
+        </div>
+
+        <textarea
+         name="fields_json"
+         rows="7"
+         spellcheck="false">${esc(s.fields_json||'')}</textarea>
+
+       </label>
+
+
+       <label class="contentStudioJsonField full">
+
+        <div>
+
+         <strong>
+          أسباب الانضمام
+         </strong>
+
+         <span>
+          join_reasons_json
+         </span>
+
+        </div>
+
+        <textarea
+         name="join_reasons_json"
+         rows="7"
+         spellcheck="false">${esc(s.join_reasons_json||'')}</textarea>
+
+       </label>
+
+      </div>
+
+     </section>
+
+
+    </main>
+
+
+    <aside class="contentStudioSide">
+
+
+     <section class="contentImpactPanel">
+
+      <header>
+
+       <span>
+        IMPACT METRICS
+       </span>
+
+       <h3>
+        أرقام الأثر
+       </h3>
+
+       <p>
+        الأرقام الإحصائية المعروضة
+        على الموقع.
+       </p>
+
+      </header>
+
+
+      <label class="contentVisibility">
+
+       <div>
+
+        <strong>
+         إظهار أرقام الأثر
+        </strong>
+
+        <small>
+         التحكم بظهورها للزوار
+        </small>
+
+       </div>
+
+
+       <select name="stats_visible">
+
+        <option
+         value="1"
+         ${s.stats_visible==='1'
+          ? 'selected'
+          : ''}>
+         ظاهر
+        </option>
+
+        <option
+         value="0"
+         ${s.stats_visible!=='1'
+          ? 'selected'
+          : ''}>
+         مخفي
+        </option>
+
+       </select>
+
+      </label>
+
+
+      <div class="contentImpactGrid">
+
+       ${[
+        ['volunteers','المتطوعون','VOLUNTEERS','○'],
+        ['events','الفعاليات','EVENTS','◇'],
+        ['hours','ساعات التطوع','HOURS','◷'],
+        ['beneficiaries','المستفيدون','BENEFICIARIES','◎']
+       ].map(([key,title,code,icon])=>`
+
+        <label class="contentImpactMetric">
+
+         <div class="contentImpactMetricTop">
+
+          <span>
+           ${icon}
+          </span>
+
+          <small>
+           ${code}
+          </small>
+
+         </div>
+
+         <strong>
+          ${title}
+         </strong>
+
+         <input
+          type="number"
+          name="stat_${key}"
+          value="${esc(st[key]??0)}">
+
+        </label>
+
+       `).join('')}
+
+      </div>
+
+     </section>
+
+
+     <section class="contentSavePanel">
+
+      <div class="contentSaveState">
+
+       <span>
+        <i></i>
+       </span>
+
+       <div>
+
+        <strong>
+         جاهز للحفظ
+        </strong>
+
+        <small>
+         ستُحدّث إعدادات الموقع
+         وأرقام الأثر معًا.
+        </small>
+
+       </div>
+
+      </div>
+
+
+      <button
+       class="contentStudioSave"
+       type="submit">
+
+       <span>
+        ✓
+       </span>
+
+       حفظ تعديلات الموقع
+
+      </button>
+
+     </section>
+
+
+    </aside>
+
+
+   </div>
+
+
+  </form>
+
+ `;
+
+
+ const form=
+  document.getElementById(
+   'contentForm'
+  );
+
+
+ form.onsubmit=async e=>{
+
+  e.preventDefault();
+
+
+  const button=
+   form.querySelector(
+    '.contentStudioSave'
+   );
+
+
+  const oldHtml=
+   button.innerHTML;
+
+
+  try{
+
+   button.disabled=true;
+
+   button.innerHTML=`
+    <span>•••</span>
+    جارٍ حفظ التعديلات
+   `;
+
+
+   const o=
+    Object.fromEntries(
+     new FormData(
+      e.target
+     ).entries()
+    );
+
+
+   const stats={};
+
+
+   for(
+    const k of [
+     'volunteers',
+     'events',
+     'hours',
+     'beneficiaries'
+    ]
+   ){
+
+    stats[k]=
+     o['stat_'+k];
+
+    delete o['stat_'+k];
+
+   }
+
+
+   await api(
+    '/api/admin/settings',
+    {
+     method:'PUT',
+     body:JSON.stringify(o)
+    }
+   );
+
+
+   await api(
+    '/api/admin/stats',
+    {
+     method:'PUT',
+     body:JSON.stringify(stats)
+    }
+   );
+
+
+   flash(
+    'تم تحديث محتوى الموقع'
+   );
+
+
+   button.innerHTML=`
+    <span>✓</span>
+    تم حفظ التعديلات
+   `;
+
+
+   setTimeout(()=>{
+
+    button.innerHTML=
+     oldHtml;
+
+   },1400);
+
+
+  }catch(ex){
+
+   flash(
+    ex.message,
+    true
+   );
+
+   button.innerHTML=
+    oldHtml;
+
+
+  }finally{
+
+   button.disabled=false;
+
+  }
+
+ };
+
+}
 async function faqs(){const d=await api('/api/admin/faqs');content.innerHTML=`<div class="panel"><button class="btn green" onclick="faqForm()">+ إضافة سؤال</button></div><div class="panel">${d.items.map(f=>`<div class="faq"><b>${esc(f.question)}</b><p>${esc(f.answer)}</p><div class="rowActions"><button class="btn light small" onclick='faqForm(${JSON.stringify(f).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="deleteFaq(${f.id})">حذف</button></div></div>`).join('')}</div>`}
 window.faqForm=(f={})=>{content.innerHTML=`<div class="panel"><form id="faqForm" class="formGrid"><div class="field full"><label>السؤال</label><input name="question" value="${esc(f.question||'')}" required></div><div class="field full"><label>الإجابة</label><textarea name="answer" required>${esc(f.answer||'')}</textarea></div><div class="field"><label>الترتيب</label><input name="sort_order" type="number" value="${f.sort_order||0}"></div><div class="field"><label>الحالة</label><select name="active"><option value="1">ظاهر</option><option value="0" ${f.active===0?'selected':''}>مخفي</option></select></div><button class="btn green full">حفظ</button></form></div>`;$('#faqForm').onsubmit=async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target).entries());o.active=o.active==='1';try{await api('/api/admin/faqs'+(f.id?'/'+f.id:''),{method:f.id?'PUT':'POST',body:JSON.stringify(o)});loadTab('faqs')}catch(ex){flash(ex.message,true)}}}
 window.deleteFaq=async id=>{if(confirm(me.role==='owner'?'حذف السؤال؟':'إرسال طلب حذف السؤال إلى المالك؟')){try{const r=await api('/api/admin/faqs/'+id,{method:'DELETE'});flash(r.pendingApproval?'تم إرسال طلب الحذف للمالك':'تم نقل السؤال إلى سلة المحذوفات');loadTab('faqs')}catch(e){flash(e.message,true)}}};
