@@ -908,8 +908,1113 @@ async function dashboard(){
 
 }
 const cfg={events:{title:'فعالية',date:'event_date',fields:[['title','اسم الفعالية'],['summary','وصف مختصر'],['description','الوصف الكامل'],['event_date','التاريخ','date'],['event_time','الوقت','time'],['location','المكان'],['registration_url','رابط التسجيل'],['event_state','الحالة الظاهرة']],image:'cover_image'},achievements:{title:'إنجاز',date:'achievement_date',fields:[['title','عنوان الإنجاز'],['summary','وصف مختصر'],['description','الوصف الكامل'],['achievement_date','التاريخ','date'],['volunteers','عدد المتطوعين','number'],['beneficiaries','عدد المستفيدين','number'],['volunteer_hours','الساعات التطوعية','number']],image:'cover_image'}};
-async function listEntities(type){const d=await api('/api/admin/'+type);content.innerHTML=`<div class="panel"><button class="btn green" onclick="entityForm('${type}')">+ إضافة ${cfg[type].title}</button></div><div class="panel"><table class="table"><thead><tr><th>الصورة</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody>${d.items.map(x=>`<tr><td>${x.cover_image?`<img class="thumb" src="${esc(x.cover_image)}">`:''}</td><td>${esc(x.title)}</td><td>${esc(x.status)}</td><td>${esc(x[cfg[type].date])}</td><td><div class="rowActions"><button class="btn light small" onclick='entityForm("${type}",${JSON.stringify(x).replaceAll("'","&#39;")})'>تعديل</button><button class="btn danger small" onclick="removeEntity('${type}',${x.id})">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="5">لا يوجد محتوى بعد.</td></tr>'}</tbody></table></div>`}
-window.entityForm=(type,item={})=>{const c=cfg[type];content.innerHTML=`<div class="panel"><h3>${item.id?'تعديل':'إضافة'} ${c.title}</h3><form id="entityForm" class="formGrid">${c.fields.map(f=>`<div class="field ${['summary','description'].includes(f[0])?'full':''}"><label>${f[1]}</label>${['summary','description'].includes(f[0])?`<textarea name="${f[0]}">${esc(item[f[0]]||'')}</textarea>`:`<input name="${f[0]}" type="${f[2]||'text'}" value="${esc(item[f[0]]||'')}">`}</div>`).join('')}<div class="field"><label>الصورة</label><input id="imgFile" type="file" accept="image/jpeg,image/png,image/webp"><input type="hidden" name="cover_image" value="${esc(item.cover_image||'')}">${item.cover_image?`<img class="imagePreview" src="${esc(item.cover_image)}">`:''}</div><div class="field"><label>حالة النشر</label><select name="status"><option value="draft" ${item.status!=='published'?'selected':''}>مسودة</option><option value="published" ${item.status==='published'?'selected':''}>منشور</option></select></div><div class="full rowActions"><button class="btn green" type="submit">حفظ</button><button class="btn light" type="button" onclick="loadTab('${type}')">إلغاء</button></div></form></div>`;$('#entityForm').onsubmit=async e=>{e.preventDefault();try{const fd=new FormData(e.target),obj=Object.fromEntries(fd.entries());const file=$('#imgFile').files[0];if(file)obj.cover_image=await upload(file);await api('/api/admin/'+type+(item.id?'/'+item.id:''),{method:item.id?'PUT':'POST',body:JSON.stringify(obj)});flash('تم الحفظ');loadTab(type)}catch(ex){flash(ex.message,true)}}};
+async function listEntities(type){
+
+ const d=await api('/api/admin/'+type);
+ const items=d.items||[];
+ const c=cfg[type];
+
+ const isEvents=type==='events';
+
+ const published=
+  items.filter(x=>x.status==='published').length;
+
+ const drafts=
+  items.filter(x=>x.status!=='published').length;
+
+
+ const info=isEvents
+  ? {
+     code:'ROUH / EVENTS',
+     title:'مركز إدارة الفعاليات',
+     subtitle:'أنشئ فعاليات المبادرة، تابع مواعيدها وتحكم بالمحتوى المنشور.',
+     icon:'◇',
+     itemLabel:'فعالية'
+    }
+  : {
+     code:'ROUH / IMPACT',
+     title:'مركز الإنجازات',
+     subtitle:'وثّق أثر المبادرة واعرض الإنجازات والنتائج التي حققها الفريق.',
+     icon:'★',
+     itemLabel:'إنجاز'
+    };
+
+
+ content.innerHTML=`
+
+  <div class="entityCenter"
+       data-entity-type="${type}">
+
+
+   <section class="entityHero">
+
+    <div class="entityHeroContent">
+
+     <span class="entityHeroCode">
+      ${info.code}
+     </span>
+
+     <h2>
+      ${info.title}
+     </h2>
+
+     <p>
+      ${info.subtitle}
+     </p>
+
+     <button
+      type="button"
+      class="entityCreateButton"
+      onclick="entityForm('${type}')">
+
+      <span>＋</span>
+
+      إضافة ${info.itemLabel}
+
+     </button>
+
+    </div>
+
+
+    <div class="entityHeroSymbol">
+
+     <div>
+      ${info.icon}
+     </div>
+
+     <span>
+      ${isEvents?'EVENTS':'IMPACT'}
+     </span>
+
+    </div>
+
+   </section>
+
+
+   <section class="entityStats">
+
+    <article>
+
+     <span>
+      TOTAL
+     </span>
+
+     <strong>
+      ${items.length}
+     </strong>
+
+     <small>
+      إجمالي ${isEvents?'الفعاليات':'الإنجازات'}
+     </small>
+
+    </article>
+
+
+    <article class="published">
+
+     <span>
+      PUBLISHED
+     </span>
+
+     <strong>
+      ${published}
+     </strong>
+
+     <small>
+      منشور على الموقع
+     </small>
+
+    </article>
+
+
+    <article class="draft">
+
+     <span>
+      DRAFTS
+     </span>
+
+     <strong>
+      ${drafts}
+     </strong>
+
+     <small>
+      مسودة
+     </small>
+
+    </article>
+
+   </section>
+
+
+   <section class="entityLibrary">
+
+    <div class="entityLibraryHead">
+
+     <div>
+
+      <span>
+       CONTENT LIBRARY
+      </span>
+
+      <h3>
+       ${isEvents?'سجل الفعاليات':'سجل الإنجازات'}
+      </h3>
+
+      <p>
+       إدارة المحتوى الحالي وتعديله أو حذفه.
+      </p>
+
+     </div>
+
+
+     <div class="entityLibraryTools">
+
+      <label class="entitySearch">
+
+       <span>⌕</span>
+
+       <input
+        id="entitySearchInput"
+        type="search"
+        placeholder="بحث بالعنوان..."
+        autocomplete="off">
+
+      </label>
+
+
+      <select id="entityStatusFilter">
+
+       <option value="all">
+        جميع الحالات
+       </option>
+
+       <option value="published">
+        المنشور
+       </option>
+
+       <option value="draft">
+        المسودات
+       </option>
+
+      </select>
+
+     </div>
+
+    </div>
+
+
+    <div class="entityCards">
+
+     ${
+      items.length
+       ? items.map((x,index)=>{
+
+          const status=
+           x.status==='published'
+            ? 'published'
+            : 'draft';
+
+          const statusText=
+           status==='published'
+            ? 'منشور'
+            : 'مسودة';
+
+          const date=
+           x[c.date]||'بدون تاريخ';
+
+          const searchText=[
+           x.title||'',
+           x.summary||'',
+           date,
+           statusText
+          ].join(' ').toLowerCase();
+
+          return `
+
+           <article
+            class="entityCard"
+            data-entity-status="${status}"
+            data-entity-search="${esc(searchText)}"
+            style="--entity-index:${index}">
+
+
+            <div class="entityCardMedia">
+
+             ${
+              x.cover_image
+               ? `
+                <img
+                 src="${esc(x.cover_image)}"
+                 alt="${esc(x.title||'')}">
+               `
+               : `
+                <div class="entityMediaPlaceholder">
+                 <span>
+                  ${info.icon}
+                 </span>
+                 <small>
+                  ROUH
+                 </small>
+                </div>
+               `
+             }
+
+
+             <span class="
+              entityStatusBadge
+              ${status}
+             ">
+              <i></i>
+              ${statusText}
+             </span>
+
+            </div>
+
+
+            <div class="entityCardBody">
+
+             <span class="entityCardCode">
+              ${
+               isEvents
+                ? 'EVENT'
+                : 'ACHIEVEMENT'
+              }
+              /
+              ${String(x.id||index+1).padStart(2,'0')}
+             </span>
+
+
+             <h4>
+              ${esc(x.title||'بدون عنوان')}
+             </h4>
+
+
+             ${
+              x.summary
+               ? `
+                <p>
+                 ${esc(x.summary)}
+                </p>
+               `
+               : `
+                <p class="entityEmptySummary">
+                 لا يوجد وصف مختصر.
+                </p>
+               `
+             }
+
+
+             <div class="entityCardMeta">
+
+              <span>
+               <b>◷</b>
+               ${esc(date)}
+              </span>
+
+              ${
+               isEvents && x.location
+                ? `
+                 <span>
+                  <b>⌖</b>
+                  ${esc(x.location)}
+                 </span>
+                `
+                : ''
+              }
+
+             </div>
+
+
+             <div class="entityCardActions">
+
+              <button
+               type="button"
+               class="entityEditButton"
+               onclick='entityForm(
+                "${type}",
+                ${JSON.stringify(x).replaceAll("'","&#39;")}
+               )'>
+
+               تعديل
+
+              </button>
+
+
+              <button
+               type="button"
+               class="entityDeleteButton"
+               onclick="
+                removeEntity(
+                 '${type}',
+                 ${x.id}
+                )
+               ">
+
+               حذف
+
+              </button>
+
+             </div>
+
+            </div>
+
+           </article>
+
+          `;
+
+         }).join('')
+       : `
+
+        <div class="entityEmptyState">
+
+         <div>
+          ${info.icon}
+         </div>
+
+         <h3>
+          لا يوجد ${isEvents?'فعاليات':'إنجازات'} بعد
+         </h3>
+
+         <p>
+          ابدأ بإضافة أول
+          ${info.itemLabel}
+          للمبادرة.
+         </p>
+
+         <button
+          type="button"
+          onclick="entityForm('${type}')">
+
+          إضافة ${info.itemLabel}
+
+         </button>
+
+        </div>
+
+       `
+     }
+
+    </div>
+
+
+    ${
+     items.length
+      ? `
+       <div
+        id="entityNoResults"
+        class="entityNoResults"
+        hidden>
+
+        لا توجد نتائج مطابقة للبحث.
+
+       </div>
+      `
+      : ''
+    }
+
+   </section>
+
+
+  </div>
+
+ `;
+
+
+ const search=
+  document.getElementById(
+   'entitySearchInput'
+  );
+
+ const filter=
+  document.getElementById(
+   'entityStatusFilter'
+  );
+
+
+ const applyFilters=()=>{
+
+  const query=
+   (search?.value||'')
+   .trim()
+   .toLowerCase();
+
+  const status=
+   filter?.value||'all';
+
+  let visible=0;
+
+
+  document
+   .querySelectorAll('.entityCard')
+   .forEach(card=>{
+
+    const matchesSearch=
+     !query ||
+     (
+      card.dataset.entitySearch||''
+     ).includes(query);
+
+    const matchesStatus=
+     status==='all' ||
+     card.dataset.entityStatus===status;
+
+    const show=
+     matchesSearch &&
+     matchesStatus;
+
+    card.hidden=!show;
+
+    if(show) visible++;
+
+   });
+
+
+  const noResults=
+   document.getElementById(
+    'entityNoResults'
+   );
+
+  if(noResults){
+   noResults.hidden=
+    visible!==0;
+  }
+
+ };
+
+
+ search?.addEventListener(
+  'input',
+  applyFilters
+ );
+
+ filter?.addEventListener(
+  'change',
+  applyFilters
+ );
+
+}
+window.entityForm=(type,item={})=>{
+
+ const c=cfg[type];
+
+ if(!c) return;
+
+ const isEvents=type==='events';
+ const editing=Boolean(item.id);
+
+ const info=isEvents
+  ? {
+     code:'EVENT EDITOR',
+     title:editing
+      ? 'تعديل الفعالية'
+      : 'إنشاء فعالية جديدة',
+     subtitle:editing
+      ? 'حدّث تفاصيل الفعالية ومعلومات النشر.'
+      : 'أضف تفاصيل الفعالية لتظهر ضمن محتوى المبادرة.',
+     symbol:'◇'
+    }
+  : {
+     code:'IMPACT EDITOR',
+     title:editing
+      ? 'تعديل الإنجاز'
+      : 'توثيق إنجاز جديد',
+     subtitle:editing
+      ? 'حدّث بيانات الإنجاز والأثر المسجل.'
+      : 'وثّق إنجاز المبادرة وأرقام الأثر المرتبطة به.',
+     symbol:'★'
+    };
+
+
+ const field=(name,label,typeName='text',full=false)=>{
+
+  const value=item[name]??'';
+
+  const textarea=
+   name==='summary' ||
+   name==='description';
+
+  if(textarea){
+
+   return `
+    <div class="
+     entityEditorField
+     ${full?'full':''}
+    ">
+
+     <label for="entity-${name}">
+      ${label}
+     </label>
+
+     <textarea
+      id="entity-${name}"
+      name="${name}"
+      ${name==='description'
+       ? 'rows="7"'
+       : 'rows="4"'}
+     >${esc(value)}</textarea>
+
+    </div>
+   `;
+
+  }
+
+  return `
+   <div class="
+    entityEditorField
+    ${full?'full':''}
+   ">
+
+    <label for="entity-${name}">
+     ${label}
+    </label>
+
+    <input
+     id="entity-${name}"
+     name="${name}"
+     type="${typeName}"
+     value="${esc(value)}"
+     ${name==='title'
+      ? 'required'
+      : ''}
+    >
+
+   </div>
+  `;
+
+ };
+
+
+ let details='';
+
+
+ if(isEvents){
+
+  details=`
+
+   ${field(
+    'event_date',
+    'تاريخ الفعالية',
+    'date'
+   )}
+
+   ${field(
+    'event_time',
+    'وقت الفعالية',
+    'time'
+   )}
+
+   ${field(
+    'location',
+    'المكان'
+   )}
+
+   ${field(
+    'event_state',
+    'الحالة الظاهرة'
+   )}
+
+   ${field(
+    'registration_url',
+    'رابط التسجيل',
+    'url',
+    true
+   )}
+
+  `;
+
+ }else{
+
+  details=`
+
+   ${field(
+    'achievement_date',
+    'تاريخ الإنجاز',
+    'date'
+   )}
+
+   ${field(
+    'volunteers',
+    'عدد المتطوعين',
+    'number'
+   )}
+
+   ${field(
+    'beneficiaries',
+    'عدد المستفيدين',
+    'number'
+   )}
+
+   ${field(
+    'volunteer_hours',
+    'الساعات التطوعية',
+    'number'
+   )}
+
+  `;
+
+ }
+
+
+ content.innerHTML=`
+
+  <div class="entityEditor">
+
+
+   <section class="entityEditorHero">
+
+    <button
+     type="button"
+     class="entityEditorBack"
+     onclick="loadTab('${type}')">
+
+     <span>→</span>
+     العودة
+
+    </button>
+
+
+    <div>
+
+     <span class="entityEditorCode">
+      ROUH /
+      ${info.code}
+     </span>
+
+     <h2>
+      ${info.title}
+     </h2>
+
+     <p>
+      ${info.subtitle}
+     </p>
+
+    </div>
+
+
+    <div class="entityEditorSymbol">
+     ${info.symbol}
+    </div>
+
+   </section>
+
+
+   <form id="entityForm"
+         class="entityEditorLayout">
+
+
+    <main class="entityEditorMain">
+
+
+     <section class="entityEditorSection">
+
+      <div class="entityEditorSectionHead">
+
+       <span>01</span>
+
+       <div>
+
+        <small>
+         BASIC INFORMATION
+        </small>
+
+        <h3>
+         المعلومات الأساسية
+        </h3>
+
+       </div>
+
+      </div>
+
+
+      <div class="entityEditorGrid">
+
+       ${field(
+        'title',
+        isEvents
+         ? 'اسم الفعالية'
+         : 'عنوان الإنجاز',
+        'text',
+        true
+       )}
+
+       ${field(
+        'summary',
+        'وصف مختصر',
+        'text',
+        true
+       )}
+
+       ${field(
+        'description',
+        'الوصف الكامل',
+        'text',
+        true
+       )}
+
+      </div>
+
+     </section>
+
+
+     <section class="entityEditorSection">
+
+      <div class="entityEditorSectionHead">
+
+       <span>02</span>
+
+       <div>
+
+        <small>
+         ${isEvents
+          ? 'EVENT DETAILS'
+          : 'IMPACT DETAILS'}
+        </small>
+
+        <h3>
+         ${isEvents
+          ? 'تفاصيل الفعالية'
+          : 'بيانات الأثر'}
+        </h3>
+
+       </div>
+
+      </div>
+
+
+      <div class="entityEditorGrid">
+
+       ${details}
+
+      </div>
+
+     </section>
+
+
+    </main>
+
+
+    <aside class="entityEditorSide">
+
+
+     <section class="entityEditorSideCard">
+
+      <div class="entityEditorSideHead">
+
+       <span>03</span>
+
+       <div>
+
+        <small>
+         COVER
+        </small>
+
+        <h3>
+         صورة الغلاف
+        </h3>
+
+       </div>
+
+      </div>
+
+
+      <label
+       class="
+        entityImageUploader
+        ${item.cover_image
+         ? 'hasImage'
+         : ''}
+       "
+       for="imgFile">
+
+       <div
+        id="entityImagePreview"
+        class="entityImagePreview">
+
+        ${
+         item.cover_image
+          ? `
+           <img
+            src="${esc(item.cover_image)}"
+            alt="صورة الغلاف">
+          `
+          : `
+           <span>＋</span>
+           <strong>
+            اختيار صورة
+           </strong>
+           <small>
+            JPG / PNG / WEBP
+           </small>
+          `
+        }
+
+       </div>
+
+      </label>
+
+
+      <input
+       id="imgFile"
+       class="entityImageInput"
+       type="file"
+       accept="image/jpeg,image/png,image/webp">
+
+
+      <input
+       type="hidden"
+       name="cover_image"
+       value="${esc(
+        item.cover_image||''
+       )}">
+
+
+      <p class="entityImageHint">
+       يفضل استخدام صورة واضحة
+       وعريضة لظهور أفضل على الموقع.
+      </p>
+
+     </section>
+
+
+     <section class="entityEditorSideCard">
+
+      <div class="entityEditorSideHead">
+
+       <span>04</span>
+
+       <div>
+
+        <small>
+         VISIBILITY
+        </small>
+
+        <h3>
+         حالة النشر
+        </h3>
+
+       </div>
+
+      </div>
+
+
+      <div class="entityPublishOptions">
+
+       <label>
+
+        <input
+         type="radio"
+         name="status"
+         value="published"
+         ${item.status==='published'
+          ? 'checked'
+          : ''}>
+
+        <span>
+
+         <i class="published"></i>
+
+         <b>
+          منشور
+         </b>
+
+         <small>
+          ظاهر على الموقع
+         </small>
+
+        </span>
+
+       </label>
+
+
+       <label>
+
+        <input
+         type="radio"
+         name="status"
+         value="draft"
+         ${item.status!=='published'
+          ? 'checked'
+          : ''}>
+
+        <span>
+
+         <i class="draft"></i>
+
+         <b>
+          مسودة
+         </b>
+
+         <small>
+          محفوظ وغير ظاهر
+         </small>
+
+        </span>
+
+       </label>
+
+      </div>
+
+     </section>
+
+
+     <section class="entityEditorActions">
+
+      <button
+       type="submit"
+       class="entityEditorSave">
+
+       <span>✓</span>
+
+       ${editing
+        ? 'حفظ التعديلات'
+        : `إنشاء ${c.title}`}
+
+      </button>
+
+
+      <button
+       type="button"
+       class="entityEditorCancel"
+       onclick="loadTab('${type}')">
+
+       إلغاء والعودة
+
+      </button>
+
+     </section>
+
+
+    </aside>
+
+
+   </form>
+
+
+  </div>
+
+ `;
+
+
+ const imageInput=
+  document.getElementById(
+   'imgFile'
+  );
+
+ const preview=
+  document.getElementById(
+   'entityImagePreview'
+  );
+
+
+ imageInput?.addEventListener(
+  'change',
+  ()=>{
+
+   const file=imageInput.files?.[0];
+
+   if(!file) return;
+
+   const url=
+    URL.createObjectURL(file);
+
+   preview.innerHTML=`
+    <img
+     src="${url}"
+     alt="معاينة الصورة">
+   `;
+
+   preview
+    .closest('.entityImageUploader')
+    ?.classList.add('hasImage');
+
+  }
+ );
+
+
+ $('#entityForm').onsubmit=async e=>{
+
+  e.preventDefault();
+
+  const submit=
+   e.target.querySelector(
+    '.entityEditorSave'
+   );
+
+  const oldHTML=
+   submit.innerHTML;
+
+  try{
+
+   submit.disabled=true;
+
+   submit.innerHTML=`
+    <span class="entitySaveSpinner"></span>
+    جارٍ الحفظ...
+   `;
+
+
+   const fd=
+    new FormData(e.target);
+
+   const obj=
+    Object.fromEntries(
+     fd.entries()
+    );
+
+
+   const file=
+    imageInput?.files?.[0];
+
+
+   if(file){
+
+    obj.cover_image=
+     await upload(file);
+
+   }
+
+
+   await api(
+    '/api/admin/'+
+    type+
+    (item.id
+     ? '/'+item.id
+     : ''),
+    {
+     method:item.id
+      ? 'PUT'
+      : 'POST',
+
+     body:JSON.stringify(obj)
+    }
+   );
+
+
+   flash(
+    editing
+     ? 'تم حفظ التعديلات'
+     : `تمت إضافة ${c.title}`
+   );
+
+
+   loadTab(type);
+
+
+  }catch(ex){
+
+   flash(
+    ex.message,
+    true
+   );
+
+   submit.disabled=false;
+   submit.innerHTML=oldHTML;
+
+  }
+
+ };
+
+};
 async function upload(file){const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});return (await api('/api/admin/upload',{method:'POST',body:JSON.stringify({filename:file.name,dataUrl})})).url}
 window.removeEntity=async(type,id)=>{if(!confirm(me.role==='owner'?'نقل العنصر إلى سلة المحذوفات؟':'إرسال طلب حذف إلى المالك؟'))return;try{const r=await api('/api/admin/'+type+'/'+id,{method:'DELETE'});flash(r.pendingApproval?'تم إرسال طلب الحذف للمالك':'تم النقل إلى سلة المحذوفات');loadTab(type)}catch(e){flash(e.message,true)}};
 async function editContent(){const d=await api('/api/admin/content'),s=d.settings,st=d.stats;content.innerHTML=`<form id="contentForm"><div class="panel formGrid"><div class="field"><label>اسم المبادرة</label><input name="initiative_name" value="${esc(s.initiative_name)}"></div><div class="field"><label>الشعار النصي</label><input name="tagline" value="${esc(s.tagline)}"></div>${[['hero_text','نص الواجهة'],['belief','عبارة الإيمان'],['about','من نحن'],['mission','الرسالة'],['vision','الرؤية'],['join_intro','نص الانضمام']].map(x=>`<div class="field full"><label>${x[1]}</label><textarea name="${x[0]}">${esc(s[x[0]])}</textarea></div>`).join('')}<div class="field"><label>البريد</label><input name="email" value="${esc(s.email)}"></div><div class="field"><label>رابط نموذج الانتساب</label><input name="join_url" value="${esc(s.join_url)}"></div><div class="field"><label>Instagram</label><input name="instagram" value="${esc(s.instagram)}"></div><div class="field"><label>Facebook</label><input name="facebook" value="${esc(s.facebook)}"></div><div class="field full"><label>القيم (JSON)</label><textarea name="values_json">${esc(s.values_json)}</textarea></div><div class="field full"><label>المجالات (JSON)</label><textarea name="fields_json">${esc(s.fields_json)}</textarea></div><div class="field full"><label>أسباب الانضمام (JSON)</label><textarea name="join_reasons_json">${esc(s.join_reasons_json)}</textarea></div><div class="field"><label>إظهار أرقام الأثر</label><select name="stats_visible"><option value="0" ${s.stats_visible!=='1'?'selected':''}>مخفي</option><option value="1" ${s.stats_visible==='1'?'selected':''}>ظاهر</option></select></div></div><div class="panel formGrid"><h3 class="full">أرقام الأثر</h3>${[['volunteers','المتطوعون'],['events','الفعاليات'],['hours','ساعات التطوع'],['beneficiaries','المستفيدون']].map(x=>`<div class="field"><label>${x[1]}</label><input type="number" name="stat_${x[0]}" value="${st[x[0]]}"></div>`).join('')}<button class="btn green full">حفظ التعديلات</button></div></form>`;$('#contentForm').onsubmit=async e=>{e.preventDefault();try{const o=Object.fromEntries(new FormData(e.target).entries()),stats={};for(const k of ['volunteers','events','hours','beneficiaries']){stats[k]=o['stat_'+k];delete o['stat_'+k]}await api('/api/admin/settings',{method:'PUT',body:JSON.stringify(o)});await api('/api/admin/stats',{method:'PUT',body:JSON.stringify(stats)});flash('تم تحديث محتوى الموقع')}catch(ex){flash(ex.message,true)}}}
