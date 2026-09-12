@@ -2995,89 +2995,269 @@ async function trash(){
   d=await api('/api/admin/trash');
  }
 
- const group=(title,type,items)=>`
-  <div class="panel">
-   <h3>${title}</h3>
-   ${items.map(x=>`
-    <p>
-     ${esc(x.title)}
-     <button class="btn light small" onclick="restore('${type}',${x.id})">
-      استرجاع
-     </button>
-    </p>
-   `).join('')||'<p class="muted">فارغة</p>'}
-  </div>`;
-
- let volunteerTrash='';
+ let volunteerAccounts=[];
 
  if(me.role==='owner' || isHR){
   try{
    const vd=await api('/api/admin/volunteer-accounts/trash');
-
-   volunteerTrash=`
-    <div class="panel">
-     <h3>حسابات المتطوعين المحذوفة</h3>
-
-     ${vd.items.map(v=>`
-      <p>
-       <b>${esc(v.name)}</b>
-       — ${esc(v.username||'-')}
-       — ${esc(v.department||'-')}
-
-       <button class="btn light small"
-        onclick="restoreVolunteerAccount(${v.id})">
-        ↩️ استعادة
-       </button>
-
-       <button class="btn danger small"
-        onclick="permanentlyDeleteVolunteerAccount(${v.id})">
-        🗑️ إزالة نهائيًا
-       </button>
-      </p>
-     `).join('')||'<p class="muted">فارغة</p>'}
-    </div>`;
+   volunteerAccounts=vd.items||[];
   }catch(e){}
  }
 
- const deletedVolunteerApplications=
-  me.role==='owner'
-   ? `<div class="panel">
-       <h3>المتطوعون المحذوفون</h3>
+ const totalGeneral=
+  (d.events||[]).length+
+  (d.achievements||[]).length+
+  (d.faqs||[]).length+
+  (d.department_content||[]).length+
+  (d.volunteer_applications||[]).length;
 
-       ${d.volunteer_applications.map(v=>`
-        <p>
-         <b>${esc(v.name||'')}</b>
-         — ${esc(v.phone||'-')}
-         — ${esc(v.department||'-')}
+ const totalAll=totalGeneral+volunteerAccounts.length;
 
-         <button class="btn light small"
-          onclick="restoreVolunteerApplication(${v.id})">
-          ↩️ استعادة
-         </button>
+ const generalGroup=(title,subtitle,type,items,icon)=>`
+  <section class="trashGroup">
+   <div class="trashGroupHead">
+    <div class="trashGroupIdentity">
+     <span class="trashGroupIcon">${icon}</span>
+     <div>
+      <h3>${title}</h3>
+      <p>${subtitle}</p>
+     </div>
+    </div>
 
-         <button class="btn danger small"
-          onclick="permanentlyDeleteVolunteerApplication(${v.id})">
-          🗑️ إزالة نهائيًا
-         </button>
-        </p>
-       `).join('')||'<p class="muted">فارغة</p>'}
-      </div>`
+    <span class="trashGroupCount">${items.length}</span>
+   </div>
+
+   <div class="trashItems">
+    ${items.length ? items.map(x=>`
+     <div class="trashItem">
+      <div class="trashItemInfo">
+       <strong>${esc(x.title||'بدون عنوان')}</strong>
+       <small>ID #${x.id}</small>
+      </div>
+
+      <button class="trashRestoreBtn"
+       onclick="restore('${type}',${x.id})">
+       ↩ استرجاع
+      </button>
+     </div>
+    `).join('') : `
+     <div class="trashEmptyMini">
+      لا توجد عناصر محذوفة
+     </div>
+    `}
+   </div>
+  </section>
+ `;
+
+ const volunteerAccountGroup=`
+  <section class="trashGroup trashVolunteerGroup">
+   <div class="trashGroupHead">
+    <div class="trashGroupIdentity">
+     <span class="trashGroupIcon">👤</span>
+     <div>
+      <h3>حسابات المتطوعين المحذوفة</h3>
+      <p>حسابات تسجيل الدخول الخاصة بالمتطوعين.</p>
+     </div>
+    </div>
+
+    <span class="trashGroupCount">${volunteerAccounts.length}</span>
+   </div>
+
+   <div class="trashItems">
+    ${volunteerAccounts.length ? volunteerAccounts.map(v=>`
+     <div class="trashVolunteerItem">
+      <div class="trashVolunteerMain">
+       <div class="trashVolunteerAvatar">
+        ${esc((v.name||'?').trim().charAt(0) || '?')}
+       </div>
+
+       <div>
+        <strong>${esc(v.name||'بدون اسم')}</strong>
+        <small>
+         ${esc(v.username||'-')} · ${esc(v.department||'-')}
+        </small>
+       </div>
+      </div>
+
+      <div class="trashItemActions">
+       <button class="trashRestoreBtn"
+        onclick="restoreVolunteerAccount(${v.id})">
+        ↩ استعادة
+       </button>
+
+       <button class="trashPermanentBtn"
+        onclick="permanentlyDeleteVolunteerAccount(${v.id})">
+        حذف نهائي
+       </button>
+      </div>
+     </div>
+    `).join('') : `
+     <div class="trashEmptyMini">
+      لا توجد حسابات متطوعين محذوفة
+     </div>
+    `}
+   </div>
+  </section>
+ `;
+
+ const deletedVolunteerApplications=`
+  <section class="trashGroup trashVolunteerGroup">
+   <div class="trashGroupHead">
+    <div class="trashGroupIdentity">
+     <span class="trashGroupIcon">📄</span>
+     <div>
+      <h3>طلبات المتطوعين المحذوفة</h3>
+      <p>طلبات الانتساب التي تم نقلها إلى السلة.</p>
+     </div>
+    </div>
+
+    <span class="trashGroupCount">${(d.volunteer_applications||[]).length}</span>
+   </div>
+
+   <div class="trashItems">
+    ${(d.volunteer_applications||[]).length ? d.volunteer_applications.map(v=>`
+     <div class="trashVolunteerItem">
+      <div class="trashVolunteerMain">
+       <div class="trashVolunteerAvatar">
+        ${esc((v.name||'?').trim().charAt(0) || '?')}
+       </div>
+
+       <div>
+        <strong>${esc(v.name||'بدون اسم')}</strong>
+        <small>
+         ${esc(v.phone||'-')} · ${esc(v.department||'-')}
+        </small>
+       </div>
+      </div>
+
+      <div class="trashItemActions">
+       <button class="trashRestoreBtn"
+        onclick="restoreVolunteerApplication(${v.id})">
+        ↩ استعادة
+       </button>
+
+       <button class="trashPermanentBtn"
+        onclick="permanentlyDeleteVolunteerApplication(${v.id})">
+        حذف نهائي
+       </button>
+      </div>
+     </div>
+    `).join('') : `
+     <div class="trashEmptyMini">
+      لا توجد طلبات متطوعين محذوفة
+     </div>
+    `}
+   </div>
+  </section>
+ `;
+
+ const generalTrash=me.role==='owner'
+  ? `
+    ${generalGroup(
+      'الفعاليات',
+      'الفعاليات التي تم نقلها إلى السلة.',
+      'events',
+      d.events||[],
+      '◫'
+    )}
+
+    ${generalGroup(
+      'الإنجازات',
+      'إنجازات المبادرة المحذوفة.',
+      'achievements',
+      d.achievements||[],
+      '★'
+    )}
+
+    ${generalGroup(
+      'الأسئلة الشائعة',
+      'الأسئلة التي تمت إزالتها من الموقع.',
+      'faqs',
+      d.faqs||[],
+      '?'
+    )}
+
+    ${generalGroup(
+      'محتوى الأقسام',
+      'عناصر محتوى الأقسام المحذوفة.',
+      'department_content',
+      d.department_content||[],
+      '▦'
+    )}
+
+    ${deletedVolunteerApplications}
+   `
+  : '';
+
+ const volunteerTrash=
+  (me.role==='owner'||isHR)
+   ? volunteerAccountGroup
    : '';
 
- const generalTrash=
-  me.role==='owner'
-   ? group('الفعاليات','events',d.events)+
-     group('الإنجازات','achievements',d.achievements)+
-     group('الأسئلة','faqs',d.faqs)+
-     group('محتوى الأقسام','department_content',d.department_content)+
-     deletedVolunteerApplications
-   : '';
+ content.innerHTML=`
+ <section class="trashCenter">
 
- content.innerHTML=
-  generalTrash+
-  volunteerTrash;
+  <div class="trashHero">
+   <div>
+    <span class="trashHeroCode">ROUH / RECOVERY CENTER</span>
+    <h2>مركز الاسترجاع</h2>
+    <p>
+     استعرض العناصر المحذوفة واسترجعها عند الحاجة.
+     الحذف النهائي لا يمكن التراجع عنه.
+    </p>
+   </div>
 
+   <div class="trashHeroVisual">
+    <span>♻</span>
+   </div>
+  </div>
+
+  <div class="trashStats">
+   <div class="trashStat">
+    <span>DELETED</span>
+    <strong>${totalAll}</strong>
+    <small>إجمالي العناصر المحذوفة</small>
+   </div>
+
+   <div class="trashStat">
+    <span>ACCOUNTS</span>
+    <strong>${volunteerAccounts.length}</strong>
+    <small>حسابات متطوعين</small>
+   </div>
+
+   <div class="trashStat">
+    <span>RECOVERY</span>
+    <strong>ON</strong>
+    <small>الاسترجاع متاح</small>
+   </div>
+  </div>
+
+  <div class="trashWarning">
+   <div class="trashWarningIcon">!</div>
+   <div>
+    <strong>منطقة حساسة</strong>
+    <p>
+     استخدم الحذف النهائي فقط عند التأكد أن العنصر لن تحتاج لاسترجاعه لاحقًا.
+    </p>
+   </div>
+  </div>
+
+  <div class="trashGrid">
+   ${generalTrash}
+   ${volunteerTrash}
+
+   ${!generalTrash && !volunteerTrash ? `
+    <div class="trashEmptyState">
+     <span>♻</span>
+     <strong>لا توجد عناصر متاحة لك في سلة المحذوفات</strong>
+     <p>قد تكون صلاحيتك لا تسمح بعرض محتويات هذه الصفحة.</p>
+    </div>
+   `:''}
+  </div>
+
+ </section>`;
 }
+
 window.restore=async(type,id)=>{await api(`/api/admin/trash/${type}/${id}/restore`,{method:'POST'});flash('تم الاسترجاع');loadTab('trash')};
 
 window.permanentlyDeleteVolunteerAccount=async id=>{
