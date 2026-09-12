@@ -1,46 +1,279 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta name="robots" content="noindex, nofollow">
+<meta name="robots" content="noindex, nofollow">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>دخول المتطوعين - مبادرة روح</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>دخول المتطوعين | مبادرة روح</title>
 
 <style>
 *{box-sizing:border-box}
 
+:root{
+ --ink:#263747;
+ --green:#607760;
+ --green2:#879b83;
+ --gold:#c8a76c;
+ --cream:#f8f5ef;
+ --muted:#70787d;
+}
+
 body{
  margin:0;
- font-family:Arial,sans-serif;
- background:#f5f7f4;
- color:#1f2937;
  min-height:100vh;
+ font-family:Tahoma,Arial,sans-serif;
+ background:
+  radial-gradient(circle at 15% 15%,rgba(200,167,108,.15),transparent 25%),
+  radial-gradient(circle at 85% 80%,rgba(111,130,111,.16),transparent 30%),
+  var(--cream);
+ color:var(--ink);
  display:flex;
  align-items:center;
  justify-content:center;
- padding:20px;
+ padding:25px;
+ overflow-x:hidden;
 }
 
-.card{
- width:100%;
- max-width:460px;
- background:white;
- border-radius:24px;
- padding:35px;
- box-shadow:0 15px 45px rgba(0,0,0,.08);
+/* ===== الخلفية ===== */
+
+.bgOrb{
+ position:fixed;
+ border-radius:50%;
+ pointer-events:none;
+ filter:blur(2px);
+ opacity:.55;
+ animation:orbFloat 8s ease-in-out infinite;
+}
+
+.orb1{
+ width:180px;height:180px;
+ background:#dbe5d8;
+ top:-60px;right:-50px;
+}
+
+.orb2{
+ width:120px;height:120px;
+ background:#eadcc3;
+ bottom:-35px;left:3%;
+ animation-delay:-3s;
+}
+
+@keyframes orbFloat{
+ 50%{transform:translateY(-20px) rotate(8deg)}
+}
+
+/* ===== LOGIN ===== */
+
+.loginExperience{
+ width:min(1050px,100%);
+ min-height:650px;
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ background:rgba(255,255,255,.92);
+ border:1px solid rgba(255,255,255,.8);
+ border-radius:34px;
+ overflow:hidden;
+ box-shadow:0 30px 90px rgba(38,55,71,.13);
+ animation:pageEnter .8s cubic-bezier(.16,1,.3,1);
+}
+
+@keyframes pageEnter{
+ from{
+  opacity:0;
+  transform:translateY(25px) scale(.98);
+ }
+ to{
+  opacity:1;
+  transform:none;
+ }
+}
+
+/* ===== الجانب البصري ===== */
+
+.visualSide{
+ position:relative;
+ overflow:hidden;
+ min-height:650px;
+ background:
+  radial-gradient(circle at 70% 30%,rgba(255,255,255,.09),transparent 25%),
+  linear-gradient(145deg,#263747,#4f6959 60%,#7e927b);
+ color:white;
+ padding:42px;
+ display:flex;
+ flex-direction:column;
+ justify-content:space-between;
+}
+
+.visualSide:before{
+ content:"";
+ position:absolute;
+ width:420px;
+ height:420px;
+ border-radius:50%;
+ border:1px solid rgba(255,255,255,.1);
+ right:-190px;
+ top:-170px;
 }
 
 .brand{
- text-align:center;
- font-size:38px;
+ position:relative;
+ z-index:3;
+ display:flex;
+ align-items:center;
+ gap:12px;
  font-weight:800;
- margin-bottom:8px;
+}
+
+.brandIcon{
+ width:48px;
+ height:48px;
+ display:grid;
+ place-items:center;
+ border-radius:15px;
+ background:rgba(255,255,255,.1);
+ border:1px solid rgba(255,255,255,.15);
+ font-size:23px;
+}
+
+.brand small{
+ display:block;
+ font-size:10px;
+ letter-spacing:2px;
+ opacity:.7;
+ margin-top:2px;
+}
+
+.visualText{
+ position:relative;
+ z-index:4;
+}
+
+.visualText h2{
+ margin:0 0 10px;
+ font-size:42px;
+ line-height:1.3;
+}
+
+.visualText h2 span{
+ color:#efe0b7;
+}
+
+.visualText p{
+ margin:0;
+ max-width:380px;
+ color:rgba(255,255,255,.75);
+ font-size:14px;
+}
+
+/* ===== الشخصية ===== */
+
+.loginCharacter{
+ position:absolute;
+ width:340px;
+ left:50%;
+ bottom:-82px;
+ transform:translateX(-50%);
+ z-index:2;
+ transform-origin:50% 85%;
+ filter:drop-shadow(0 24px 20px rgba(0,0,0,.25));
+ animation:
+  characterEnter 1.1s cubic-bezier(.16,1,.3,1) both,
+  characterIdle 5s ease-in-out 1.1s infinite;
+ will-change:transform;
+}
+
+@keyframes characterEnter{
+ from{
+  opacity:0;
+  transform:translateX(-50%) translateY(70px) scale(.88);
+ }
+ 70%{
+  opacity:1;
+  transform:translateX(-50%) translateY(-7px) scale(1.025);
+ }
+ to{
+  opacity:1;
+  transform:translateX(-50%) translateY(0) scale(1);
+ }
+}
+
+@keyframes characterIdle{
+ 0%,100%{
+  transform:translateX(-50%) translateY(0) rotate(0);
+ }
+ 50%{
+  transform:translateX(-50%) translateY(-9px) rotate(.7deg);
+ }
+}
+
+.visualSide.focused .loginCharacter{
+ animation:characterFocus .65s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+@keyframes characterFocus{
+ to{
+  transform:translateX(-47%) translateY(-8px)
+            rotate(1.5deg) scale(1.025);
+ }
+}
+
+.visualSide.successState .loginCharacter{
+ animation:characterSuccess .85s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes characterSuccess{
+ 35%{
+  transform:translateX(-50%) translateY(-30px)
+            rotate(-3deg) scale(1.06);
+ }
+ 65%{
+  transform:translateX(-50%) translateY(-12px)
+            rotate(3deg) scale(1.04);
+ }
+}
+
+/* ===== الفورم ===== */
+
+.formSide{
+ padding:60px 58px;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ position:relative;
+}
+
+.homeLink{
+ position:absolute;
+ top:28px;
+ left:30px;
+ color:var(--muted);
+ font-size:13px;
+ text-decoration:none;
+ transition:.2s;
+}
+
+.homeLink:hover{
+ transform:translateX(-4px);
+ color:var(--ink);
+}
+
+.kicker{
+ color:var(--gold);
+ font-size:11px;
+ font-weight:800;
+ letter-spacing:3px;
+ margin-bottom:9px;
+}
+
+.formSide h1{
+ margin:0;
+ font-size:38px;
 }
 
 .subtitle{
- text-align:center;
- color:#6b7280;
- margin-bottom:30px;
+ color:var(--muted);
+ margin:8px 0 32px;
+ line-height:1.8;
 }
 
 .field{
@@ -49,130 +282,742 @@ body{
 
 label{
  display:block;
- margin-bottom:8px;
- font-weight:700;
+ margin-bottom:7px;
+ font-size:13px;
+ font-weight:800;
+}
+
+.inputWrap{
+ position:relative;
 }
 
 input{
  width:100%;
- padding:14px;
- border:1px solid #d1d5db;
- border-radius:12px;
- font-size:16px;
+ padding:15px 16px;
+ border:1px solid #ddd8cf;
+ border-radius:14px;
+ background:#fffdfa;
+ color:var(--ink);
+ font:inherit;
+ font-size:15px;
  outline:none;
+ transition:.25s;
+}
+
+input:hover{
+ border-color:#bcc7b9;
 }
 
 input:focus{
- border-color:#4f7d5a;
+ border-color:var(--green);
+ background:white;
+ box-shadow:0 0 0 4px rgba(96,119,96,.11);
+ transform:translateY(-1px);
 }
 
-button{
+.passwordInput{
+ padding-left:55px;
+}
+
+.passwordToggle{
+ position:absolute;
+ left:8px;
+ top:50%;
+ transform:translateY(-50%);
+ width:39px;
+ height:39px;
+ border:0;
+ border-radius:10px;
+ background:transparent;
+ color:#6f777d;
+ cursor:pointer;
+ font-size:17px;
+ transition:.2s;
+}
+
+.passwordToggle:hover{
+ background:#eef2ec;
+}
+
+.loginBtn{
  width:100%;
  border:0;
- border-radius:12px;
- padding:14px;
- font-size:16px;
- font-weight:700;
- cursor:pointer;
- background:#4f7d5a;
+ border-radius:14px;
+ padding:15px;
+ margin-top:5px;
+ background:linear-gradient(110deg,#586f59,#81957d);
  color:white;
+ font:inherit;
+ font-weight:800;
+ cursor:pointer;
+ box-shadow:0 12px 28px rgba(88,111,89,.22);
+ position:relative;
+ overflow:hidden;
+ transition:.25s;
 }
 
-button:disabled{
- opacity:.6;
+.loginBtn:before{
+ content:"";
+ position:absolute;
+ width:80px;
+ height:200%;
+ top:-50%;
+ left:-130px;
+ transform:rotate(25deg);
+ background:rgba(255,255,255,.18);
+ transition:.65s;
+}
+
+.loginBtn:hover{
+ transform:translateY(-3px);
+ box-shadow:0 16px 32px rgba(88,111,89,.28);
+}
+
+.loginBtn:hover:before{
+ left:115%;
+}
+
+.loginBtn:disabled{
+ opacity:.65;
  cursor:not-allowed;
+ transform:none;
 }
 
 .message{
- margin-top:18px;
- padding:12px;
- border-radius:10px;
  display:none;
+ margin-top:18px;
+ padding:13px 15px;
+ border-radius:13px;
  text-align:center;
+ font-size:14px;
+ animation:messageIn .35s ease;
 }
 
-.error{
+@keyframes messageIn{
+ from{opacity:0;transform:translateY(7px)}
+}
+
+.message.error{
  display:block;
- background:#fee2e2;
- color:#991b1b;
+ background:#fff0f0;
+ border:1px solid #efd0d0;
+ color:#8b3a3a;
 }
 
-.success{
+.message.success{
  display:block;
- background:#dcfce7;
- color:#166534;
+ background:#edf7ed;
+ border:1px solid #cce3cd;
+ color:#315b38;
 }
 
-.links{
- text-align:center;
- margin-top:22px;
+.bottomLinks{
+ margin-top:25px;
+ display:flex;
+ justify-content:center;
+ gap:7px;
+ font-size:13px;
+ color:var(--muted);
 }
 
-.links a{
- color:#4f7d5a;
+.bottomLinks a{
+ color:var(--green);
+ font-weight:800;
  text-decoration:none;
- font-weight:700;
 }
+
+.securityHint{
+ margin-top:28px;
+ display:flex;
+ align-items:center;
+ gap:10px;
+ padding:12px 14px;
+ background:#f7f5f0;
+ border-radius:13px;
+ color:#747b7e;
+ font-size:12px;
+}
+
+.securityIcon{
+ width:30px;
+ height:30px;
+ border-radius:9px;
+ display:grid;
+ place-items:center;
+ background:#e7eee5;
+}
+
+/* ===== موبايل ===== */
+
+@media(max-width:850px){
+ .loginExperience{
+  grid-template-columns:1fr;
+ }
+
+ .visualSide{
+  min-height:310px;
+  padding:30px;
+ }
+
+ .visualText h2{
+  font-size:31px;
+ }
+
+ .visualText p{
+  max-width:55%;
+ }
+
+ .loginCharacter{
+  width:220px;
+  left:22%;
+  bottom:-55px;
+ }
+
+ .formSide{
+  padding:55px 30px 35px;
+ }
+}
+
+@media(max-width:520px){
+ body{padding:12px}
+
+ .loginExperience{
+  border-radius:25px;
+ }
+
+ .visualSide{
+  min-height:260px;
+  padding:24px;
+ }
+
+ .visualText h2{
+  font-size:27px;
+ }
+
+ .visualText p{
+  display:none;
+ }
+
+ .loginCharacter{
+  width:190px;
+  left:24%;
+ }
+
+ .formSide{
+  padding:50px 20px 28px;
+ }
+
+ .formSide h1{
+  font-size:30px;
+ }
+}
+
+@media(prefers-reduced-motion:reduce){
+ *,*:before,*:after{
+  animation-duration:.01ms!important;
+  animation-iteration-count:1!important;
+  transition-duration:.01ms!important;
+ }
+}
+
+/* ===== ROUH LOGIN MOTION V2 ===== */
+
+.visualSide{
+ isolation:isolate;
+}
+
+/* هالة خلف الشخصية */
+.visualSide::after{
+ content:"";
+ position:absolute;
+ width:300px;
+ height:300px;
+ left:50%;
+ bottom:70px;
+ transform:translateX(-50%);
+ border-radius:50%;
+ background:radial-gradient(
+  circle,
+  rgba(239,224,183,.18),
+  rgba(255,255,255,.06) 45%,
+  transparent 70%
+ );
+ animation:rouhAura 3.2s ease-in-out infinite;
+ z-index:1;
+ pointer-events:none;
+}
+
+@keyframes rouhAura{
+ 0%,100%{
+  transform:translateX(-50%) scale(.92);
+  opacity:.45;
+ }
+ 50%{
+  transform:translateX(-50%) scale(1.12);
+  opacity:.85;
+ }
+}
+
+/* رفع الشخصية + حركة أسرع */
+.loginCharacter{
+ width:350px !important;
+ bottom:-25px !important;
+ transform-origin:50% 82%;
+ z-index:3;
+ animation:
+  rouhFastEntrance .9s cubic-bezier(.16,1,.3,1) both,
+  rouhActiveIdle 3s ease-in-out .9s infinite !important;
+}
+
+@keyframes rouhFastEntrance{
+ 0%{
+  opacity:0;
+  transform:
+   translateX(-50%)
+   translateY(100px)
+   scale(.78)
+   rotate(-5deg);
+  filter:blur(6px)
+   drop-shadow(0 10px 10px rgba(0,0,0,.1));
+ }
+ 62%{
+  opacity:1;
+  transform:
+   translateX(-50%)
+   translateY(-22px)
+   scale(1.06)
+   rotate(2.5deg);
+ }
+ 80%{
+  transform:
+   translateX(-50%)
+   translateY(7px)
+   scale(.985)
+   rotate(-1deg);
+ }
+ 100%{
+  opacity:1;
+  transform:
+   translateX(-50%)
+   translateY(0)
+   scale(1);
+  filter:drop-shadow(0 25px 22px rgba(0,0,0,.25));
+ }
+}
+
+@keyframes rouhActiveIdle{
+ 0%,100%{
+  transform:
+   translateX(-50%)
+   translateY(0)
+   rotate(-.8deg);
+ }
+ 25%{
+  transform:
+   translateX(-50%)
+   translateY(-9px)
+   rotate(.5deg);
+ }
+ 50%{
+  transform:
+   translateX(-50%)
+   translateY(-16px)
+   rotate(1.2deg);
+ }
+ 75%{
+  transform:
+   translateX(-50%)
+   translateY(-7px)
+   rotate(-.2deg);
+ }
+}
+
+/* Username */
+.visualSide.usernameFocus .loginCharacter{
+ animation:rouhUsername .55s
+ cubic-bezier(.34,1.56,.64,1) forwards !important;
+}
+
+@keyframes rouhUsername{
+ to{
+  transform:
+   translateX(-56%)
+   translateY(-17px)
+   rotate(-2.5deg)
+   scale(1.055);
+ }
+}
+
+/* Password */
+.visualSide.passwordFocus .loginCharacter{
+ animation:rouhPassword .55s
+ cubic-bezier(.34,1.56,.64,1) forwards !important;
+}
+
+@keyframes rouhPassword{
+ to{
+  transform:
+   translateX(-47%)
+   translateY(-10px)
+   rotate(2.5deg)
+   scale(.985);
+ }
+}
+
+/* الضغط على العين */
+.visualSide.peekState .loginCharacter{
+ animation:rouhPeek .45s
+ cubic-bezier(.34,1.56,.64,1) !important;
+}
+
+@keyframes rouhPeek{
+ 0%{
+  transform:translateX(-50%) translateY(0);
+ }
+ 45%{
+  transform:
+   translateX(-43%)
+   translateY(-15px)
+   rotate(5deg)
+   scale(1.06);
+ }
+ 100%{
+  transform:
+   translateX(-50%)
+   translateY(0)
+   scale(1);
+ }
+}
+
+/* أثناء تسجيل الدخول */
+.visualSide.loadingState .loginCharacter{
+ animation:rouhLoading .52s ease-in-out
+ infinite alternate !important;
+}
+
+@keyframes rouhLoading{
+ from{
+  transform:
+   translateX(-50%)
+   translateY(-5px)
+   rotate(-1.5deg)
+   scale(1.01);
+ }
+ to{
+  transform:
+   translateX(-50%)
+   translateY(-20px)
+   rotate(1.5deg)
+   scale(1.045);
+ }
+}
+
+/* نجاح */
+.visualSide.successState::after{
+ animation:rouhSuccessAura .7s ease-out forwards;
+}
+
+@keyframes rouhSuccessAura{
+ 50%{
+  opacity:1;
+  transform:translateX(-50%) scale(1.45);
+ }
+ 100%{
+  opacity:.3;
+  transform:translateX(-50%) scale(1.15);
+ }
+}
+
+.visualSide.successState .loginCharacter{
+ animation:rouhLoginSuccess .8s
+ cubic-bezier(.34,1.56,.64,1) !important;
+}
+
+@keyframes rouhLoginSuccess{
+ 0%{
+  transform:translateX(-50%) translateY(0);
+ }
+ 30%{
+  transform:
+   translateX(-50%)
+   translateY(-38px)
+   rotate(-4deg)
+   scale(1.08);
+ }
+ 55%{
+  transform:
+   translateX(-50%)
+   translateY(-13px)
+   rotate(4deg)
+   scale(1.055);
+ }
+ 75%{
+  transform:
+   translateX(-50%)
+   translateY(-25px)
+   rotate(-1deg)
+   scale(1.035);
+ }
+ 100%{
+  transform:
+   translateX(-50%)
+   translateY(0)
+   scale(1);
+ }
+}
+
+/* جزيئات النجاح */
+.loginParticles{
+ position:absolute;
+ inset:0;
+ z-index:5;
+ pointer-events:none;
+ overflow:hidden;
+}
+
+.loginParticle{
+ position:absolute;
+ left:50%;
+ top:62%;
+ opacity:0;
+ font-size:20px;
+ animation:loginParticleFly .9s ease-out forwards;
+}
+
+@keyframes loginParticleFly{
+ 0%{
+  opacity:0;
+  transform:translate(0,0) scale(.4);
+ }
+ 15%{opacity:1}
+ 100%{
+  opacity:0;
+  transform:
+   translate(var(--x),var(--y))
+   rotate(var(--r))
+   scale(1.25);
+ }
+}
+
+@media(max-width:850px){
+ .loginCharacter{
+  width:230px !important;
+  bottom:-30px !important;
+ }
+
+ .visualSide::after{
+  width:220px;
+  height:220px;
+  bottom:20px;
+ }
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="card">
+<div class="bgOrb orb1"></div>
+<div class="bgOrb orb2"></div>
 
-<div class="brand">روح 🌱</div>
+<main class="loginExperience">
 
-<div class="subtitle">
-دخول حساب المتطوع
-</div>
+<section class="visualSide" id="visualSide">
 
-<form id="loginForm">
+ <div class="brand">
+  <div class="brandIcon">🌱</div>
+  <div>
+   مبادرة روح
+   <small>ROUH INITIATIVE</small>
+  </div>
+ </div>
 
-<div class="field">
-<label for="username">اسم المستخدم</label>
-<input
- id="username"
- type="text"
- autocomplete="username"
- required
- placeholder="اسم المستخدم">
-</div>
+ <div class="visualText">
+  <h2>
+   أهلاً بعودتك<br>
+   إلى <span>روح.</span>
+  </h2>
 
-<div class="field">
-<label for="password">كلمة المرور</label>
-<input
- id="password"
- type="password"
- autocomplete="current-password"
- required
- placeholder="كلمة المرور">
-</div>
+  <p>
+   حسابك هو مساحتك لمتابعة مهامك،
+   إنجازاتك ومشاركتك داخل فريق المبادرة.
+  </p>
+ </div>
 
-<button id="loginBtn" type="submit">
-تسجيل الدخول
-</button>
+ <img
+  src="/assets/rouh-volunteer.png"
+  class="loginCharacter"
+  id="loginCharacter"
+  alt="متطوع مبادرة روح"
+ >
 
-</form>
+</section>
 
-<div id="message" class="message"></div>
+<section class="formSide">
 
-<div class="links">
-<a href="/">العودة إلى موقع روح</a>
-</div>
+ <a href="/" class="homeLink">← الرئيسية</a>
 
-</div>
+ <div class="kicker">VOLUNTEER ACCESS</div>
+
+ <h1>دخول المتطوعين</h1>
+
+ <p class="subtitle">
+  أدخل بيانات حسابك للوصول إلى مساحة المتطوع الخاصة بك.
+ </p>
+
+ <form id="loginForm">
+
+  <div class="field">
+   <label for="username">اسم المستخدم</label>
+
+   <div class="inputWrap">
+    <input
+     id="username"
+     type="text"
+     autocomplete="username"
+     required
+     placeholder="اسم المستخدم">
+   </div>
+  </div>
+
+  <div class="field">
+   <label for="password">كلمة المرور</label>
+
+   <div class="inputWrap">
+    <input
+     id="password"
+     class="passwordInput"
+     type="password"
+     autocomplete="current-password"
+     required
+     placeholder="كلمة المرور">
+
+    <button
+     class="passwordToggle"
+     id="passwordToggle"
+     type="button"
+     aria-label="إظهار كلمة المرور">
+     ◉
+    </button>
+   </div>
+  </div>
+
+  <button
+   id="loginBtn"
+   class="loginBtn"
+   type="submit">
+   تسجيل الدخول
+  </button>
+
+ </form>
+
+ <div id="message" class="message"></div>
+
+ <div class="bottomLinks">
+  <span>ليس لديك حساب؟</span>
+  <a href="/volunteer-apply">قدّم للانضمام إلى روح</a>
+ </div>
+
+ <div class="securityHint">
+  <div class="securityIcon">🔒</div>
+  <div>
+   مساحة مخصصة لأعضاء مبادرة روح المعتمدين.
+  </div>
+ </div>
+
+</section>
+
+</main>
 
 <script>
-
 const form=document.getElementById('loginForm');
 const btn=document.getElementById('loginBtn');
 const message=document.getElementById('message');
+const password=document.getElementById('password');
+const passwordToggle=document.getElementById('passwordToggle');
+const visualSide=document.getElementById('visualSide');
+const loginCharacter=document.getElementById('loginCharacter');
 
 function showMessage(text,type='error'){
  message.textContent=text;
  message.className='message '+type;
 }
 
+/* إظهار كلمة المرور */
+passwordToggle.addEventListener('click',()=>{
+
+ visualSide.classList.remove('peekState');
+ void visualSide.offsetWidth;
+ visualSide.classList.add('peekState');
+
+ setTimeout(()=>{
+  visualSide.classList.remove('peekState');
+ },480);
+
+ const showing=password.type==='text';
+
+ password.type=showing?'password':'text';
+ passwordToggle.textContent=showing?'◉':'◎';
+
+ passwordToggle.setAttribute(
+  'aria-label',
+  showing?'إظهار كلمة المرور':'إخفاء كلمة المرور'
+ );
+});
+
+/* تفاعل الشخصية مع الحقول */
+document.querySelectorAll('input').forEach(input=>{
+
+ input.addEventListener('focus',()=>{
+
+  visualSide.classList.remove(
+   'usernameFocus',
+   'passwordFocus'
+  );
+
+  if(input.id==='username')
+   visualSide.classList.add('usernameFocus');
+
+  if(input.id==='password')
+   visualSide.classList.add('passwordFocus');
+ });
+
+ input.addEventListener('blur',()=>{
+  visualSide.classList.remove(
+   'usernameFocus',
+   'passwordFocus'
+  );
+ });
+});
+
+/* Parallax خفيف */
+visualSide.addEventListener('mousemove',e=>{
+
+ if(
+  visualSide.classList.contains('focused') ||
+  visualSide.classList.contains('successState')
+ ) return;
+
+ const rect=visualSide.getBoundingClientRect();
+
+ const x=((e.clientX-rect.left)/rect.width)-.5;
+ const y=((e.clientY-rect.top)/rect.height)-.5;
+
+ loginCharacter.style.animation='none';
+
+ loginCharacter.style.transform=
+  `translateX(calc(-50% + ${x*10}px))
+   translateY(${y*6}px)
+   rotate(${x*1.4}deg)
+   scale(1.01)`;
+});
+
+visualSide.addEventListener('mouseleave',()=>{
+ loginCharacter.style.transform='';
+ loginCharacter.style.animation='';
+});
+
+/* تسجيل الدخول */
 form.addEventListener('submit',async e=>{
 
  e.preventDefault();
@@ -183,12 +1028,16 @@ form.addEventListener('submit',async e=>{
   .trim()
   .toLowerCase();
 
- const password=document
-  .getElementById('password')
-  .value;
+ const passwordValue=password.value;
 
  btn.disabled=true;
  btn.textContent='جارٍ تسجيل الدخول...';
+
+ visualSide.classList.remove(
+  'usernameFocus',
+  'passwordFocus'
+ );
+ visualSide.classList.add('loadingState');
 
  try{
 
@@ -199,7 +1048,7 @@ form.addEventListener('submit',async e=>{
    },
    body:JSON.stringify({
     username,
-    password
+    password:passwordValue
    })
   });
 
@@ -213,11 +1062,24 @@ form.addEventListener('submit',async e=>{
    'success'
   );
 
+  visualSide.classList.remove(
+   'focused',
+   'loadingState',
+   'usernameFocus',
+   'passwordFocus'
+  );
+
+  visualSide.classList.add('successState');
+
+  createLoginCelebration();
+
   setTimeout(()=>{
    window.location.href='/volunteer-account';
-  },800);
+  },850);
 
  }catch(error){
+
+  visualSide.classList.remove('loadingState');
 
   showMessage(error.message);
 
@@ -228,7 +1090,104 @@ form.addEventListener('submit',async e=>{
 
 });
 
+function createLoginCelebration(){
+
+ const layer=document.createElement('div');
+ layer.className='loginParticles';
+
+ const particles=[
+  ['✨','-125px','-120px','-35deg'],
+  ['🌿','110px','-130px','35deg'],
+  ['✨','145px','-65px','65deg'],
+  ['🌱','-145px','-60px','-55deg'],
+  ['✨','65px','-160px','30deg'],
+  ['🌿','-65px','-155px','-25deg'],
+  ['•','25px','-175px','90deg']
+ ];
+
+ particles.forEach((item,index)=>{
+
+  const particle=document.createElement('span');
+
+  particle.className='loginParticle';
+  particle.textContent=item[0];
+
+  particle.style.setProperty('--x',item[1]);
+  particle.style.setProperty('--y',item[2]);
+  particle.style.setProperty('--r',item[3]);
+
+  particle.style.animationDelay=
+   (index*.04)+'s';
+
+  layer.appendChild(particle);
+ });
+
+ visualSide.appendChild(layer);
+
+ setTimeout(()=>{
+  layer.remove();
+ },1200);
+}
+
 </script>
 
 </body>
 </html>
+
+<style>
+/* ===== ROUH MOTION BLUR FIX ===== */
+
+.loginCharacter{
+  filter:drop-shadow(0 25px 22px rgba(0,0,0,.25)) !important;
+  opacity:1;
+}
+
+/* حتى أثناء كل حالات التفاعل تبقى الصورة واضحة */
+.visualSide.usernameFocus .loginCharacter,
+.visualSide.passwordFocus .loginCharacter,
+.visualSide.peekState .loginCharacter,
+.visualSide.loadingState .loginCharacter,
+.visualSide.successState .loginCharacter{
+  filter:drop-shadow(0 25px 22px rgba(0,0,0,.25)) !important;
+}
+
+/* نرفعها درجة إضافية */
+.loginCharacter{
+  bottom:-5px !important;
+}
+
+/* حركة idle واضحة بدون blur */
+@keyframes rouhActiveIdle{
+  0%,100%{
+    transform:
+      translateX(-50%)
+      translateY(0)
+      rotate(-1deg)
+      scale(1);
+  }
+
+  25%{
+    transform:
+      translateX(-52%)
+      translateY(-10px)
+      rotate(.8deg)
+      scale(1.015);
+  }
+
+  50%{
+    transform:
+      translateX(-50%)
+      translateY(-19px)
+      rotate(1.5deg)
+      scale(1.025);
+  }
+
+  75%{
+    transform:
+      translateX(-48%)
+      translateY(-9px)
+      rotate(-.5deg)
+      scale(1.01);
+  }
+}
+</style>

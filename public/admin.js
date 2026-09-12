@@ -23,7 +23,146 @@ async function init(){
   showAuth();
 }
 function showAuth(){ $('#authView').classList.remove('hidden');$('#adminView').classList.add('hidden');$('#authTitle').textContent=needsSetup?'إعداد الموقع لأول مرة':'دخول المسؤولين';$('#nameField').classList.toggle('hidden',!needsSetup)}
-$('#authForm').onsubmit=async e=>{e.preventDefault();try{if(needsSetup){await api('/api/setup',{method:'POST',body:JSON.stringify({name:$('#authName').value,email:$('#authEmail').value,password:$('#authPassword').value})});needsSetup=false;$('#authMsg').innerHTML='<div class="notice">تم إنشاء حساب المالك. سجّل الدخول الآن.</div>';showAuth()}else{await api('/api/login',{method:'POST',body:JSON.stringify({email:$('#authEmail').value,password:$('#authPassword').value})});me=(await api('/api/me')).user;showAdmin()}}catch(ex){$('#authMsg').innerHTML=`<div class="notice error">${esc(ex.message)}</div>`}}
+$('#authForm').onsubmit=async e=>{
+ e.preventDefault();
+
+ const authView=$('#authView');
+ const submitBtn=$('#authForm button[type="submit"]');
+ const status=$('#authView .systemStatus');
+
+ try{
+
+  /* إعداد المالك لأول مرة يبقى كما هو */
+  if(needsSetup){
+
+   await api('/api/setup',{
+    method:'POST',
+    body:JSON.stringify({
+     name:$('#authName').value,
+     email:$('#authEmail').value,
+     password:$('#authPassword').value
+    })
+   });
+
+   needsSetup=false;
+
+   $('#authMsg').innerHTML=
+    '<div class="notice">تم إنشاء حساب المالك. سجّل الدخول الآن.</div>';
+
+   showAuth();
+   return;
+  }
+
+  /* ===== VERIFYING ===== */
+
+  authView.classList.remove(
+   'loginDenied',
+   'accessGranted',
+   'adminLoginExit'
+  );
+
+  authView.classList.add('adminVerifying');
+
+  if(submitBtn){
+   submitBtn.disabled=true;
+
+   const text=submitBtn.querySelector('.buttonText');
+   if(text) text.textContent='جارٍ التحقق من الهوية...';
+  }
+
+  if(status){
+   status.innerHTML=
+    '<span></span> VERIFYING ACCESS';
+  }
+
+  await api('/api/login',{
+   method:'POST',
+   body:JSON.stringify({
+    email:$('#authEmail').value,
+    password:$('#authPassword').value
+   })
+  });
+
+  me=(await api('/api/me')).user;
+
+  /* ===== ACCESS GRANTED ===== */
+
+  authView.classList.remove('adminVerifying');
+  authView.classList.add('accessGranted');
+
+  if(status){
+   status.innerHTML=
+    '<span></span> ACCESS GRANTED';
+  }
+
+  const heroTitle=
+   document.querySelector('#authView .controlHero h2');
+
+  const heroText=
+   document.querySelector('#authView .controlHero p');
+
+  if(heroTitle){
+   heroTitle.innerHTML=
+    'تم منح الوصول<br><span>أهلاً بعودتك.</span>';
+  }
+
+  if(heroText){
+   heroText.textContent=
+    'تم التحقق من هويتك بنجاح. جارٍ تجهيز لوحة الإدارة الخاصة بك.';
+  }
+
+  /* شاشة النجاح لمدة قصيرة */
+  await new Promise(resolve=>setTimeout(resolve,1250));
+
+  /* خروج شاشة Login */
+  authView.classList.add('adminLoginExit');
+
+  await new Promise(resolve=>setTimeout(resolve,420));
+
+  /* Dashboard الطبيعي */
+  showAdmin();
+
+  /* تنظيف الحالات للمرة القادمة */
+  authView.classList.remove(
+   'adminVerifying',
+   'accessGranted',
+   'adminLoginExit',
+   'loginDenied'
+  );
+
+ }catch(ex){
+
+  authView.classList.remove(
+   'adminVerifying',
+   'accessGranted',
+   'adminLoginExit'
+  );
+
+  /* Shake */
+  authView.classList.remove('loginDenied');
+  void authView.offsetWidth;
+  authView.classList.add('loginDenied');
+
+  if(status){
+   status.innerHTML=
+    '<span></span> SYSTEM ONLINE';
+  }
+
+  if(submitBtn){
+   submitBtn.disabled=false;
+
+   const text=submitBtn.querySelector('.buttonText');
+   if(text) text.textContent='دخول لوحة التحكم';
+  }
+
+  $('#authMsg').innerHTML=
+   `<div class="notice error">${esc(ex.message)}</div>`;
+
+  setTimeout(()=>{
+   authView.classList.remove('loginDenied');
+  },450);
+ }
+}
 let selectedDepartment='all';
 
 async function renderDepartmentBar(){

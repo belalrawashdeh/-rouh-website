@@ -1,6 +1,254 @@
 <!doctype html><html lang="ar" dir="rtl"><head>
   <meta name="robots" content="noindex, nofollow"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة موقع روح</title><link rel="stylesheet" href="/styles.css"></head><body class="adminBody">
-<div id="authView" class="loginWrap"><div class="loginCard"><div class="brand">روح<small>ROUH ADMIN</small></div><h1 id="authTitle">دخول المسؤولين</h1><div id="authMsg"></div><form id="authForm" class="formGrid"><div class="field full hidden" id="nameField"><label>الاسم</label><input id="authName"></div><div class="field full"><label>البريد الإلكتروني</label><input id="authEmail" type="email" required></div><div class="field full"><label>كلمة المرور</label><input id="authPassword" type="password" required></div><button class="btn green full" type="submit">متابعة</button></form><p class="muted">في أول تشغيل فقط ستنشئ حساب المالك الرئيسي.</p></div></div>
+
+<div id="authView" class="loginWrap rouhControlLogin">
+
+  <div class="controlAmbient">
+    <span class="controlOrb orbA"></span>
+    <span class="controlOrb orbB"></span>
+    <span class="controlOrb orbC"></span>
+  </div>
+
+  <div class="controlGrid"></div>
+
+  <div class="controlLoginShell">
+
+    <!-- الجانب البصري -->
+    <section class="controlVisual">
+
+      <div class="controlVisualTop">
+        <div class="controlLogoMark">ر</div>
+
+        <div class="controlBrand">
+          <strong>مبادرة روح</strong>
+          <small>ROUH CONTROL CENTER</small>
+        </div>
+
+        <div class="systemStatus">
+          <span></span>
+          SYSTEM ONLINE
+        </div>
+      </div>
+
+      <div class="controlHero">
+
+        <div class="controlEyebrow">
+          MANAGEMENT SYSTEM
+        </div>
+
+        <h2>
+          مساحة الإدارة<br>
+          <span>تبدأ من هنا.</span>
+        </h2>
+
+        <p>
+          إدارة فريق روح، المحتوى، المتطوعين
+          والصلاحيات من مساحة واحدة آمنة.
+        </p>
+
+        <div class="controlStats">
+
+          <div>
+            <span class="statIcon">◆</span>
+            <strong>إدارة مركزية</strong>
+            <small>CONTROL</small>
+          </div>
+
+          <div>
+            <span class="statIcon">◈</span>
+            <strong>صلاحيات آمنة</strong>
+            <small>SECURITY</small>
+          </div>
+
+          <div>
+            <span class="statIcon">✦</span>
+            <strong>متابعة مباشرة</strong>
+            <small>MONITORING</small>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="visualScanner">
+        <span></span>
+      </div>
+
+      <div class="controlVisualFooter">
+        <span>ROUH</span>
+        <div></div>
+        <small>ADMINISTRATION PLATFORM</small>
+      </div>
+
+    </section>
+
+
+    <!-- تسجيل الدخول -->
+    <section class="controlFormSide">
+
+      <a href="/" class="controlBack">
+        ← العودة للموقع
+      </a>
+
+      <div class="accessBadge">
+        <span></span>
+        AUTHORIZED ACCESS
+      </div>
+
+      <div class="controlFormHeading">
+        <div class="miniShield">◆</div>
+
+        <div>
+          <div class="controlKicker">
+            ROUH ADMINISTRATION
+          </div>
+
+          <h1 id="authTitle">
+            دخول المسؤولين
+          </h1>
+        </div>
+      </div>
+
+      <p class="controlDescription">
+        أدخل بيانات حسابك للوصول إلى لوحة إدارة مبادرة روح.
+      </p>
+
+      <div id="authMsg"></div>
+<div id="adminAccessSuccess" class="adminAccessSuccess">
+
+ <div class="accessSuccessIcon">
+  <span>✓</span>
+ </div>
+
+ <div class="accessSuccessCode">
+  IDENTITY VERIFIED
+ </div>
+
+ <h2>تم التحقق بنجاح</h2>
+
+ <p>
+  أهلاً بعودتك إلى لوحة إدارة مبادرة روح
+ </p>
+
+ <div class="accessLoading">
+  <span></span>
+ </div>
+
+ <small>
+  جارٍ تجهيز مساحة الإدارة...
+ </small>
+
+</div>
+
+
+      <form id="authForm" class="formGrid controlAuthForm">
+
+        <div
+          class="field full hidden controlField"
+          id="nameField">
+
+          <label>الاسم</label>
+
+          <div class="controlInput">
+            <span class="inputIcon">◇</span>
+            <input
+              id="authName"
+              autocomplete="name"
+              placeholder="الاسم الكامل">
+          </div>
+
+        </div>
+
+
+        <div class="field full controlField">
+
+          <label>البريد الإلكتروني</label>
+
+          <div class="controlInput">
+            <span class="inputIcon">@</span>
+
+            <input
+              id="authEmail"
+              type="email"
+              autocomplete="username"
+              required
+              placeholder="admin@rouh">
+          </div>
+
+        </div>
+
+
+        <div class="field full controlField">
+
+          <label>كلمة المرور</label>
+
+          <div class="controlInput">
+
+            <span class="inputIcon">●</span>
+
+            <input
+              id="authPassword"
+              type="password"
+              autocomplete="current-password"
+              required
+              placeholder="••••••••">
+
+            <button
+              id="adminPasswordToggle"
+              class="adminPasswordToggle"
+              type="button"
+              aria-label="إظهار كلمة المرور">
+              ◉
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <button
+          class="controlLoginButton full"
+          type="submit">
+
+          <span class="buttonText">
+            دخول لوحة التحكم
+          </span>
+
+          <span class="buttonArrow">
+            ←
+          </span>
+
+        </button>
+
+      </form>
+
+
+      <div class="controlSecurity">
+
+        <div class="securityMark">
+          ✓
+        </div>
+
+        <div>
+          <strong>وصول محمي</strong>
+          <small>
+            مخصص للمسؤولين المصرح لهم في مبادرة روح
+          </small>
+        </div>
+
+      </div>
+
+
+      <p class="muted setupHint">
+        في أول تشغيل فقط ستنشئ حساب المالك الرئيسي.
+      </p>
+
+    </section>
+
+  </div>
+
+</div>
+
 <div id="adminView" class="adminShell hidden"><aside class="sidebar"><div class="brand">روح<small>ROUH ADMIN</small></div><div id="userBox"></div><div class="menu" id="menu"><button data-tab="dashboard" class="active">لوحة التحكم</button><button data-tab="events" data-role="management">الفعاليات</button><button data-tab="achievements" data-role="management">الإنجازات</button><button data-tab="ideas" data-role="management">الأفكار</button><button data-tab="complaints" data-role="hr">الشكاوى</button><button data-tab="volunteers" data-role="admin">طلبات المتطوعين</button><button data-tab="tasks" data-role="admin">📋 المهام</button><button data-tab="ai" data-role="admin">🤖 مساعد روح</button><button data-tab="department-work" data-role="admin">محتوى القسم</button><button data-tab="rejected-volunteers" data-role="admin">سجل المرفوضين</button><button data-tab="content" data-role="management">محتوى الموقع</button><button data-tab="faqs" data-role="management">الأسئلة الشائعة</button><button data-tab="trash" data-role="trash">سلة المحذوفات</button><button data-tab="approvals" data-role="owner">طلبات الموافقة</button><button data-tab="users" data-role="owner">المسؤولون والصلاحيات</button><button data-tab="audit" data-role="owner">سجل التعديلات</button></div><button class="btn light" id="logoutBtn">تسجيل الخروج</button></aside><main class="adminMain">
 <div id="adminWelcome" class="adminWelcome" style="display:none">
  <h2 id="adminWelcomeTitle"></h2>
@@ -14,4 +262,53 @@
 <a class="btn light" href="/" target="_blank">مشاهدة الموقع</a>
 <div id="notificationPanel" class="notificationPanel hidden"></div>
 </div></div><div id="departmentBar"></div><div id="msg"></div><div id="content"></div></main></div>
-<script src="/admin.js"></script></body></html>
+<script src="/admin.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+
+ const toggle=
+  document.getElementById('adminPasswordToggle');
+
+ const password=
+  document.getElementById('authPassword');
+
+ if(toggle && password){
+
+  toggle.addEventListener('click',()=>{
+
+   const visible=
+    password.type==='text';
+
+   password.type=
+    visible?'password':'text';
+
+   toggle.textContent=
+    visible?'◉':'◎';
+
+   toggle.setAttribute(
+    'aria-label',
+    visible
+     ?'إظهار كلمة المرور'
+     :'إخفاء كلمة المرور'
+   );
+
+   toggle.animate(
+    [
+     {transform:'translateY(-50%) scale(1)'},
+     {transform:'translateY(-50%) scale(1.25) rotate(8deg)'},
+     {transform:'translateY(-50%) scale(1)'}
+    ],
+    {
+     duration:350,
+     easing:'ease-out'
+    }
+   );
+
+  });
+
+ }
+
+});
+</script>
+
+</body></html>
