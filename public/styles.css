@@ -20401,3 +20401,905 @@ body.complaintDrawerOpen{
   font-size: 14px !important;
 }
 
+
+/* =========================================================
+   ROUH INTERACTIVE ACCESS CARD
+   ========================================================= */
+
+
+.rouhAccessCard{
+  position:relative;
+  width:100%;
+  min-height:460px;
+  perspective:1200px;
+  margin:24px 0;
+}
+
+/* البطاقة الداخلية */
+.rouhAccessInside{
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  border-radius:28px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.98),
+      rgba(244,249,246,.96)
+    );
+
+  box-shadow:
+    0 25px 70px rgba(0,0,0,.12),
+    inset 0 1px 0 rgba(255,255,255,.95);
+
+  opacity:0;
+
+  transform:
+    translateY(24px)
+    rotateX(-8deg)
+    scale(.94);
+
+  transform-origin:center top;
+
+  transition:
+    opacity .5s ease,
+    transform .75s cubic-bezier(.16,1,.3,1),
+    box-shadow .6s ease;
+}
+
+/* الغلاف الأمامي */
+.rouhAccessCover{
+  position:relative;
+  z-index:5;
+
+  width:100%;
+  min-height:230px;
+
+  border:0;
+  border-radius:28px;
+
+  cursor:pointer;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  overflow:hidden;
+
+  color:#fff;
+
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(126,190,151,.20),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 75% 80%,
+      rgba(100,160,140,.12),
+      transparent 38%
+    ),
+    linear-gradient(
+      145deg,
+      #0c2926 0%,
+      #143934 45%,
+      #213d37 100%
+    );
+
+  box-shadow:
+    0 25px 65px rgba(12,40,36,.24),
+    inset 0 1px 0 rgba(255,255,255,.14);
+
+  transform:
+    translateZ(20px)
+    rotateX(0deg);
+
+  transform-origin:center top;
+
+  transition:
+    transform .85s cubic-bezier(.16,1,.3,1),
+    opacity .5s ease,
+    filter .5s ease,
+    box-shadow .5s ease;
+}
+
+/* حركة خفيفة قبل الفتح */
+.rouhAccessCover:hover{
+  transform:
+    translateY(-5px)
+    translateZ(28px)
+    rotateX(-2deg);
+
+  box-shadow:
+    0 35px 85px rgba(12,40,36,.30),
+    inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+/* طبقة لمعان */
+.rouhAccessCover::before{
+  content:"";
+
+  position:absolute;
+  inset:-80%;
+
+  background:
+    linear-gradient(
+      115deg,
+      transparent 42%,
+      rgba(255,255,255,.08) 50%,
+      transparent 58%
+    );
+
+  transform:translateX(-35%) rotate(12deg);
+
+  transition:
+    transform 1.2s ease;
+}
+
+.rouhAccessCover:hover::before{
+  transform:translateX(35%) rotate(12deg);
+}
+
+/* الإضاءة */
+.rouhCardGlow{
+  position:absolute;
+
+  width:260px;
+  height:260px;
+
+  border-radius:50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(100,190,143,.28),
+      transparent 68%
+    );
+
+  filter:blur(5px);
+
+  pointer-events:none;
+
+  transition:
+    transform .8s ease,
+    opacity .5s ease;
+}
+
+/* الشعار */
+.rouhCardLogo{
+  position:relative;
+  z-index:2;
+
+  width:76px;
+  height:76px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:50%;
+
+  font-size:34px;
+  font-weight:700;
+
+  color:#e0eee5;
+
+  border:
+    1px solid rgba(210,235,220,.40);
+
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      rgba(255,255,255,.10),
+      rgba(255,255,255,.02)
+    );
+
+  box-shadow:
+    0 0 0 10px rgba(210,235,220,.035),
+    0 0 0 20px rgba(210,235,220,.018),
+    0 12px 35px rgba(0,0,0,.16);
+
+  transition:
+    transform .7s cubic-bezier(.16,1,.3,1);
+}
+
+.rouhAccessCover:hover .rouhCardLogo{
+  transform:
+    translateY(-4px)
+    rotateY(12deg);
+}
+
+/* ROUH */
+.rouhCardBrand{
+  position:relative;
+  z-index:2;
+
+  margin-top:18px;
+
+  font-size:23px;
+  font-weight:800;
+
+  letter-spacing:7px;
+
+  text-shadow:
+    0 4px 20px rgba(0,0,0,.22);
+}
+
+/* ADMIN ACCESS */
+.rouhCardType{
+  position:relative;
+  z-index:2;
+
+  margin-top:6px;
+
+  font-size:10px;
+
+  letter-spacing:3px;
+
+  opacity:.68;
+}
+
+/* زر الفتح */
+.rouhCardHint{
+  position:relative;
+  z-index:2;
+
+  margin-top:22px;
+
+  padding:9px 17px;
+
+  border-radius:999px;
+
+  font-size:12px;
+
+  color:rgba(255,255,255,.86);
+
+  background:
+    rgba(255,255,255,.075);
+
+  border:
+    1px solid rgba(255,255,255,.13);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 8px 25px rgba(0,0,0,.10);
+
+  transition:
+    background .3s ease,
+    transform .3s ease,
+    box-shadow .3s ease;
+}
+
+.rouhCardHint b{
+  display:inline-block;
+
+  margin-right:7px;
+
+  transition:
+    transform .4s cubic-bezier(.16,1,.3,1);
+}
+
+.rouhAccessCover:hover .rouhCardHint{
+  background:
+    rgba(255,255,255,.13);
+
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.14);
+}
+
+.rouhAccessCover:hover .rouhCardHint b{
+  transform:
+    translate(4px,-4px);
+}
+
+/* =========================
+   OPEN STATE
+   ========================= */
+
+.rouhAccessCard.is-open .rouhAccessCover{
+  position:absolute;
+  inset:0;
+  z-index:1;
+
+  width:100%;
+  height:100%;
+  min-height:100%;
+
+  opacity:1;
+  pointer-events:none;
+
+  transform:
+    scale(.94)
+    rotateX(0deg) !important;
+
+  filter:brightness(.52) saturate(.82);
+
+  box-shadow:
+    0 25px 70px rgba(12,40,36,.28),
+    inset 0 1px 0 rgba(255,255,255,.10);
+
+  transition:
+    transform .7s cubic-bezier(.2,.8,.2,1),
+    filter .5s ease,
+    opacity .4s ease;
+}
+
+.rouhAccessCard.is-open .rouhAccessInside{
+  position:relative;
+  z-index:5;
+
+  opacity:1;
+
+  transform:
+    translateY(0)
+    scale(1);
+
+  width:100%;
+  min-height:420px;
+
+  background:rgba(255,255,255,.94);
+
+  border-radius:28px;
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.20),
+    0 0 0 1px rgba(255,255,255,.75);
+
+  animation:
+    rouhCardFormReveal
+    .65s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+/* خط الإضاءة */
+.rouhAccessInside::before{
+  content:"";
+
+  position:absolute;
+
+  top:0;
+  right:0;
+  left:0;
+
+  height:3px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(91,160,119,.80),
+      transparent
+    );
+
+  opacity:0;
+
+  transform:
+    scaleX(.4);
+
+  transition:
+    opacity .5s ease .25s,
+    transform .7s ease .25s;
+}
+
+.rouhAccessCard.is-open .rouhAccessInside::before{
+  opacity:1;
+
+  transform:
+    scaleX(1);
+}
+
+/* الحقول تدخل بعد البطاقة */
+.rouhAccessCard.is-open .controlField{
+  animation:
+    rouhFieldIn .55s cubic-bezier(.16,1,.3,1) both;
+}
+
+.rouhAccessCard.is-open .controlField:nth-child(1){
+  animation-delay:.10s;
+}
+
+.rouhAccessCard.is-open .controlField:nth-child(2){
+  animation-delay:.17s;
+}
+
+.rouhAccessCard.is-open .controlField:nth-child(3){
+  animation-delay:.24s;
+}
+
+.rouhAccessCard.is-open .controlLoginButton{
+  animation:
+    rouhButtonIn .6s cubic-bezier(.16,1,.3,1) .30s both;
+}
+
+@keyframes rouhFieldIn{
+  from{
+    opacity:0;
+    transform:
+      translateY(16px)
+      scale(.97);
+  }
+
+  to{
+    opacity:1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes rouhButtonIn{
+  from{
+    opacity:0;
+    transform:
+      translateY(18px)
+      scale(.96);
+  }
+
+  to{
+    opacity:1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* Mobile */
+@media (max-width:700px){
+
+  .rouhAccessCover{
+    min-height:200px;
+    border-radius:22px;
+  }
+
+  .rouhAccessInside{
+    border-radius:22px;
+  }
+
+  .rouhCardLogo{
+    width:62px;
+    height:62px;
+    font-size:27px;
+  }
+
+  .rouhCardBrand{
+    font-size:19px;
+    letter-spacing:5px;
+  }
+
+}
+
+/* Mobile */
+@media (max-width:700px){
+
+  .rouhAccessCover{
+    min-height:200px;
+    border-radius:22px;
+  }
+
+  .rouhAccessInside{
+    border-radius:22px;
+  }
+
+  .rouhCardLogo{
+    width:62px;
+    height:62px;
+    font-size:27px;
+  }
+
+  .rouhCardBrand{
+    font-size:19px;
+  }
+
+}
+
+/* ==================================================
+   ADMIN LOGIN — EMAIL LABEL
+   ================================================== */
+
+.controlAuthForm .emailFieldLabel{
+  display:block;
+  margin-bottom:9px;
+
+  font-size:15px;
+  line-height:1.5;
+
+  font-weight:800;
+  letter-spacing:0;
+
+  color:#203a34;
+
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.8);
+}
+
+.controlAuthForm .emailFieldLabel::after{
+  content:"";
+
+  display:inline-block;
+
+  width:5px;
+  height:5px;
+
+  margin-right:7px;
+
+  vertical-align:middle;
+
+  border-radius:50%;
+
+  background:#6c9b7d;
+
+  box-shadow:
+    0 0 0 3px rgba(108,155,125,.10);
+}
+
+
+/* Login field labels — clearer RTL alignment */
+.controlAuthForm .loginFieldLabel{
+  display:block;
+  width:calc(100% - 8px);
+  margin-right:8px;
+  margin-bottom:9px;
+
+  text-align:right;
+
+  font-size:15px;
+  font-weight:800;
+  line-height:1.5;
+
+  color:#203a34;
+}
+
+.controlAuthForm .loginFieldLabel::after{
+  content:"";
+
+  display:inline-block;
+  width:5px;
+  height:5px;
+
+  margin-right:7px;
+
+  vertical-align:middle;
+
+  border-radius:50%;
+
+  background:#6c9b7d;
+
+  box-shadow:0 0 0 3px rgba(108,155,125,.10);
+}
+
+
+/* =========================================
+   LOGIN MESSAGE / CARD — MORE SPACE
+   ========================================= */
+
+.adminAccessSuccess{
+  width:100%;
+  box-sizing:border-box;
+
+  padding:32px 34px;
+
+  min-height:300px;
+
+  border-radius:28px;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  text-align:center;
+
+  overflow:visible;
+
+  word-break:normal;
+  overflow-wrap:break-word;
+}
+
+.adminAccessSuccess h2{
+  width:100%;
+  margin:14px 0 8px;
+
+  font-size:24px;
+  line-height:1.5;
+
+  white-space:normal;
+}
+
+.adminAccessSuccess p{
+  width:100%;
+  max-width:520px;
+
+  margin:0 auto 16px;
+
+  font-size:15px;
+  line-height:1.8;
+
+  white-space:normal;
+}
+
+.adminAccessSuccess small{
+  display:block;
+
+  width:100%;
+
+  font-size:13px;
+  line-height:1.7;
+
+  white-space:normal;
+}
+
+@media(max-width:700px){
+
+  .adminAccessSuccess{
+    padding:28px 22px;
+    min-height:280px;
+  }
+
+  .adminAccessSuccess h2{
+    font-size:21px;
+  }
+
+  .adminAccessSuccess p{
+    font-size:14px;
+  }
+
+}
+
+
+/* =========================================
+   ADMIN LOGIN TITLE — FULL VISIBILITY
+   ========================================= */
+
+.controlFormHeading{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+
+  padding-right:12px;
+  padding-left:12px;
+
+  overflow:visible;
+}
+
+.controlFormHeading > div:last-child{
+  min-width:0;
+  flex:1;
+  overflow:visible;
+}
+
+.controlFormHeading h1{
+  display:block;
+
+  width:100%;
+
+  margin:0;
+
+  padding:2px 8px;
+
+  box-sizing:border-box;
+
+  font-size:28px;
+  line-height:1.6;
+
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+
+  word-break:normal;
+  overflow-wrap:normal;
+
+  text-align:right;
+}
+
+.controlKicker{
+  padding-right:8px;
+
+  white-space:normal;
+  overflow:visible;
+}
+
+@media(max-width:700px){
+
+  .controlFormHeading{
+    padding-right:8px;
+    padding-left:8px;
+  }
+
+  .controlFormHeading h1{
+    font-size:24px;
+    line-height:1.6;
+    padding-right:5px;
+  }
+
+}
+
+
+/* تحسين ظهور عناوين حقول دخول المسؤولين */
+.controlAuthForm .controlField > label{
+  display:block;
+  width:max-content;
+  max-width:calc(100% - 24px);
+  padding:0 8px;
+  margin-right:14px;
+  position:relative;
+  z-index:3;
+  white-space:nowrap;
+  line-height:1.5;
+  font-size:14px;
+  font-weight:700;
+  text-align:right;
+  background:#fff;
+}
+
+/* نفس المسافة لكلمة المرور والبريد */
+.controlAuthForm .controlField{
+  overflow:visible;
+}
+
+.controlAuthForm .controlInput{
+  overflow:visible;
+}
+
+@media (max-width:700px){
+  .controlAuthForm .controlField > label{
+    margin-right:10px;
+    font-size:13px;
+  }
+}
+
+
+/* =========================================================
+   VOLUNTEER ACCESS CARD — OPEN STATE FIX
+   ========================================================= */
+
+#volunteerAccessCard{
+  position:relative;
+  min-height:460px;
+}
+
+/* الغلاف يبقى ظاهرًا بالخلف */
+#volunteerAccessCard.is-open .rouhAccessCover{
+  position:absolute;
+  inset:0;
+
+  z-index:1;
+
+  width:100%;
+  height:100%;
+  min-height:100%;
+
+  opacity:1;
+  pointer-events:none;
+
+  transform:
+    scale(.94)
+    rotateX(0deg) !important;
+
+  filter:
+    brightness(.52)
+    saturate(.82);
+
+  transition:
+    transform .7s cubic-bezier(.2,.8,.2,1),
+    filter .5s ease;
+}
+
+/* نموذج المتطوع يظهر فوق البطاقة */
+#volunteerAccessCard.is-open .rouhAccessInside{
+  position:relative;
+
+  z-index:5;
+
+  opacity:1;
+
+  width:100%;
+  min-height:420px;
+
+  background:
+    rgba(255,255,255,.95);
+
+  border-radius:28px;
+
+  transform:
+    translateY(0)
+    scale(1);
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.20),
+    0 0 0 1px rgba(255,255,255,.75);
+
+  animation:
+    volunteerCardFormReveal
+    .65s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+/* حركة ظهور النموذج */
+@keyframes volunteerCardFormReveal{
+
+  from{
+    opacity:0;
+
+    transform:
+      translateY(28px)
+      scale(.94);
+  }
+
+  to{
+    opacity:1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+/* حقول المتطوع */
+#volunteerAccessCard.is-open .field{
+  animation:
+    volunteerFieldIn
+    .5s
+    cubic-bezier(.16,1,.3,1)
+    both;
+}
+
+#volunteerAccessCard.is-open .field:nth-child(1){
+  animation-delay:.10s;
+}
+
+#volunteerAccessCard.is-open .field:nth-child(2){
+  animation-delay:.18s;
+}
+
+/* زر تسجيل الدخول */
+#volunteerAccessCard.is-open .loginBtn{
+  animation:
+    volunteerFieldIn
+    .5s
+    cubic-bezier(.16,1,.3,1)
+    both;
+
+  animation-delay:.26s;
+}
+
+@keyframes volunteerFieldIn{
+
+  from{
+    opacity:0;
+    transform:translateY(16px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+}
+
+/* نخلي محتوى البطاقة الخلفية أخف */
+#volunteerAccessCard.is-open .rouhCardLogo,
+#volunteerAccessCard.is-open .rouhCardBrand,
+#volunteerAccessCard.is-open .rouhCardType,
+#volunteerAccessCard.is-open .rouhCardHint{
+  opacity:.30;
+}
+
+@media(max-width:700px){
+
+  #volunteerAccessCard{
+    min-height:500px;
+  }
+
+  #volunteerAccessCard.is-open .rouhAccessInside{
+    min-height:410px;
+  }
+
+}

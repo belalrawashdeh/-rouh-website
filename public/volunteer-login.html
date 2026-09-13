@@ -813,6 +813,326 @@ input:focus{
 }
 
 </style>
+<style>
+
+/* =========================================================
+   ROUH VOLUNTEER ACCESS CARD
+   ========================================================= */
+
+.rouhAccessCard{
+  position:relative;
+  width:100%;
+  min-height:460px;
+  margin:24px 0;
+  perspective:1200px;
+}
+
+.rouhAccessCover{
+  position:relative;
+  z-index:5;
+
+  width:100%;
+  min-height:230px;
+
+  border:0;
+  border-radius:28px;
+
+  cursor:pointer;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  overflow:hidden;
+
+  color:#fff;
+
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(126,190,151,.20),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 75% 80%,
+      rgba(100,160,140,.12),
+      transparent 38%
+    ),
+    linear-gradient(
+      145deg,
+      #0c2926 0%,
+      #143934 45%,
+      #213d37 100%
+    );
+
+  box-shadow:
+    0 25px 65px rgba(12,40,36,.24),
+    inset 0 1px 0 rgba(255,255,255,.14);
+
+  transform:
+    translateZ(20px)
+    rotateX(0deg);
+
+  transform-origin:center top;
+
+  transition:
+    transform .85s cubic-bezier(.16,1,.3,1),
+    filter .5s ease,
+    box-shadow .5s ease;
+}
+
+.rouhAccessCover:hover{
+  transform:
+    translateY(-5px)
+    translateZ(28px)
+    rotateX(-2deg);
+
+  box-shadow:
+    0 35px 85px rgba(12,40,36,.30),
+    inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+.rouhCardGlow{
+  position:absolute;
+
+  width:260px;
+  height:260px;
+
+  border-radius:50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(100,190,143,.28),
+      transparent 68%
+    );
+
+  filter:blur(5px);
+  pointer-events:none;
+}
+
+.rouhCardLogo{
+  position:relative;
+  z-index:2;
+
+  width:76px;
+  height:76px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:50%;
+
+  font-size:34px;
+  font-weight:700;
+
+  color:#e0eee5;
+
+  border:1px solid rgba(210,235,220,.40);
+
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      rgba(255,255,255,.10),
+      rgba(255,255,255,.02)
+    );
+
+  box-shadow:
+    0 0 0 10px rgba(210,235,220,.035),
+    0 0 0 20px rgba(210,235,220,.018),
+    0 12px 35px rgba(0,0,0,.16);
+}
+
+.rouhCardBrand{
+  position:relative;
+  z-index:2;
+
+  margin-top:18px;
+
+  font-size:23px;
+  font-weight:800;
+  letter-spacing:7px;
+}
+
+.rouhCardType{
+  position:relative;
+  z-index:2;
+
+  margin-top:6px;
+
+  font-size:10px;
+  letter-spacing:3px;
+  opacity:.68;
+}
+
+.rouhCardHint{
+  position:relative;
+  z-index:2;
+
+  margin-top:22px;
+  padding:9px 17px;
+
+  border-radius:999px;
+
+  font-size:12px;
+
+  color:rgba(255,255,255,.86);
+
+  background:rgba(255,255,255,.075);
+
+  border:1px solid rgba(255,255,255,.13);
+}
+
+.rouhCardHint b{
+  display:inline-block;
+  margin-right:7px;
+}
+
+/* النموذج مخفي بالكامل قبل الضغط */
+.rouhAccessInside{
+  position:relative;
+  z-index:2;
+
+  width:100%;
+
+  opacity:0;
+
+  visibility:hidden;
+
+  pointer-events:none;
+
+  transform:
+    translateY(24px)
+    scale(.94);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.98),
+      rgba(244,249,246,.96)
+    );
+
+  border-radius:28px;
+
+  box-shadow:
+    0 25px 70px rgba(0,0,0,.12),
+    inset 0 1px 0 rgba(255,255,255,.95);
+
+  transition:
+    opacity .45s ease,
+    visibility 0s linear .45s,
+    transform .65s cubic-bezier(.16,1,.3,1);
+}
+
+/* بعد الضغط */
+.rouhAccessCard.is-open .rouhAccessCover{
+  position:absolute;
+  inset:0;
+
+  z-index:1;
+
+  opacity:1;
+  pointer-events:none;
+
+  transform:
+    scale(.94)
+    translateZ(0);
+
+  filter:
+    brightness(.48)
+    saturate(.78);
+}
+
+.rouhAccessCard.is-open .rouhAccessInside{
+  z-index:5;
+
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+
+  transform:
+    translateY(0)
+    scale(1);
+
+  min-height:420px;
+
+  animation:
+    volunteerCardReveal
+    .65s
+    cubic-bezier(.16,1,.3,1)
+    both;
+}
+
+@keyframes volunteerCardReveal{
+  from{
+    opacity:0;
+    transform:
+      translateY(30px)
+      scale(.93);
+  }
+
+  to{
+    opacity:1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* ظهور الحقول بعد البطاقة */
+.rouhAccessCard.is-open .field{
+  animation:
+    volunteerFieldReveal
+    .5s
+    cubic-bezier(.16,1,.3,1)
+    both;
+}
+
+.rouhAccessCard.is-open .field:nth-child(1){
+  animation-delay:.10s;
+}
+
+.rouhAccessCard.is-open .field:nth-child(2){
+  animation-delay:.18s;
+}
+
+.rouhAccessCard.is-open .loginBtn{
+  animation:
+    volunteerFieldReveal
+    .5s
+    cubic-bezier(.16,1,.3,1)
+    both;
+
+  animation-delay:.26s;
+}
+
+@keyframes volunteerFieldReveal{
+  from{
+    opacity:0;
+    transform:translateY(15px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media(max-width:700px){
+
+  .rouhAccessCard{
+    min-height:430px;
+  }
+
+  .rouhAccessCover{
+    min-height:210px;
+  }
+
+}
+
+</style>
 </head>
 
 <body>
@@ -865,7 +1185,22 @@ input:focus{
   أدخل بيانات حسابك للوصول إلى مساحة المتطوع الخاصة بك.
  </p>
 
- <form id="loginForm">
+ <div class="rouhAccessCard" id="volunteerAccessCard">
+
+  <button type="button" class="rouhAccessCover" id="volunteerAccessCover">
+    <span class="rouhCardGlow"></span>
+    <span class="rouhCardLogo">R</span>
+
+    <span class="rouhCardBrand">ROUH</span>
+    <span class="rouhCardType">VOLUNTEER ACCESS</span>
+
+    <span class="rouhCardHint">
+      اضغط للفتح
+      <b>↗</b>
+    </span>
+  </button>
+
+  <div class="rouhAccessInside"><form id="loginForm">
 
   <div class="field">
    <label for="username">اسم المستخدم</label>
@@ -910,6 +1245,8 @@ input:focus{
   </button>
 
  </form>
+  </div>
+</div>
 
  <div id="message" class="message"></div>
 
@@ -1130,6 +1467,34 @@ function createLoginCelebration(){
 }
 
 </script>
+
+
+
+<!-- ROUH ACCESS CARD INTERACTION -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const card = document.getElementById('volunteerAccessCard');
+  const cover = document.getElementById('volunteerAccessCover');
+
+  if(!card || !cover) return;
+
+  cover.addEventListener('click', function(){
+    card.classList.add('is-open');
+
+    setTimeout(function(){
+      const firstInput = card.querySelector(
+        'input:not([type="hidden"])'
+      );
+
+      if(firstInput){
+        firstInput.focus();
+      }
+    }, 550);
+  });
+});
+</script>
+
+<!-- ROUH ACCESS CARD INTERACTION -->
 
 </body>
 </html>
