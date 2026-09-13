@@ -141,7 +141,22 @@
 </div>
 
 
-      <form id="authForm" class="formGrid controlAuthForm">
+      <div class="rouhAccessCard" id="adminAccessCard">
+
+  <button type="button" class="rouhAccessCover" id="adminAccessCover">
+    <span class="rouhCardGlow"></span>
+    <span class="rouhCardLogo">R</span>
+
+    <span class="rouhCardBrand">ROUH</span>
+    <span class="rouhCardType">ADMIN ACCESS</span>
+
+    <span class="rouhCardHint">
+      اضغط للفتح
+      <b>↗</b>
+    </span>
+  </button>
+
+  <div class="rouhAccessInside"><form id="authForm" class="formGrid controlAuthForm">
 
         <div
           class="field full hidden controlField"
@@ -162,7 +177,7 @@
 
         <div class="field full controlField">
 
-          <label>البريد الإلكتروني</label>
+          <label class="emailFieldLabel">البريد الإلكتروني</label>
 
           <div class="controlInput">
             <span class="inputIcon">@</span>
@@ -180,7 +195,7 @@
 
         <div class="field full controlField">
 
-          <label>كلمة المرور</label>
+          <label class="loginFieldLabel">كلمة المرور</label>
 
           <div class="controlInput">
 
@@ -221,6 +236,8 @@
         </button>
 
       </form>
+  </div>
+</div>
 
 
       <div class="controlSecurity">
@@ -330,5 +347,159 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 });
 </script>
+
+
+
+<!-- ROUH ACCESS CARD INTERACTION -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const card = document.getElementById('adminAccessCard');
+  const cover = document.getElementById('adminAccessCover');
+
+  if(!card || !cover) return;
+
+  /* فتح البطاقة */
+  cover.addEventListener('click', function(){
+
+    card.classList.add('is-open');
+
+    setTimeout(function(){
+
+      const firstInput = card.querySelector(
+        'input:not([type="hidden"])'
+      );
+
+      if(firstInput){
+        firstInput.focus();
+      }
+
+    }, 650);
+
+  });
+
+
+  /* حركة 3D خفيفة قبل الفتح */
+  card.addEventListener('pointermove', function(e){
+
+    if(card.classList.contains('is-open')) return;
+
+    const rect = card.getBoundingClientRect();
+
+    const x =
+      (e.clientX - rect.left) /
+      rect.width;
+
+    const y =
+      (e.clientY - rect.top) /
+      rect.height;
+
+    const rotateY =
+      (x - .5) * 7;
+
+    const rotateX =
+      (.5 - y) * 5;
+
+    cover.style.transform =
+      'translateY(-3px) translateZ(24px) ' +
+      'rotateX(' + rotateX + 'deg) ' +
+      'rotateY(' + rotateY + 'deg)';
+
+  });
+
+
+  card.addEventListener('pointerleave', function(){
+
+    if(card.classList.contains('is-open')) return;
+
+    cover.style.transform =
+      'translateZ(20px) rotateX(0deg) rotateY(0deg)';
+
+  });
+});
+</script>
+
+<!-- ROUH ACCESS CARD INTERACTION -->
+
+
+<style>
+/* ===== ADMIN SUCCESS SCREEN FIX v2 ===== */
+
+#adminAccessSuccess{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:20 !important;
+
+  display:flex !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  padding:40px 28px;
+
+  border-radius:28px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.98),
+      rgba(244,249,246,.98)
+    );
+
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+
+  transform:scale(.98);
+  transition:
+    opacity .35s ease,
+    transform .45s cubic-bezier(.16,1,.3,1),
+    visibility 0s linear .35s;
+}
+
+/* تظهر فقط أثناء نجاح الدخول */
+#authView.accessGranted #adminAccessSuccess{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:scale(1);
+
+  transition:
+    opacity .35s ease,
+    transform .45s cubic-bezier(.16,1,.3,1);
+}
+
+/* تخفي نموذج الدخول أثناء شاشة النجاح */
+#authView.accessGranted .rouhAccessCard{
+  visibility:hidden;
+  pointer-events:none;
+}
+
+/* عند بدء الخروج تختفي شاشة النجاح */
+#authView.adminLoginExit #adminAccessSuccess{
+  opacity:0;
+  transform:scale(1.03) translateY(-8px);
+  visibility:hidden;
+}
+
+/* لا نسمح للنص بالقص */
+#adminAccessSuccess h2,
+#adminAccessSuccess p,
+#adminAccessSuccess small{
+  overflow:visible;
+  text-overflow:clip;
+}
+
+#adminAccessSuccess h2{
+  white-space:nowrap;
+  text-align:center;
+}
+
+@media(max-width:700px){
+  #adminAccessSuccess h2{
+    white-space:normal;
+  }
+}
+
+</style>
 
 </body></html>
