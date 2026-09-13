@@ -20330,3 +20330,74 @@ body.complaintDrawerOpen{
  }
 }
 
+
+/* ==========================================================
+   TASKS — TYPOGRAPHY BOOST
+   ========================================================== */
+
+.taskTable,
+.taskTable td,
+.taskTable th,
+.tasksTable,
+.tasksTable td,
+.tasksTable th{
+  font-size: 14px !important;
+}
+
+.taskTable td strong,
+.taskTable td b,
+.tasksTable td strong,
+.tasksTable td b{
+  font-size: 15px !important;
+}
+
+.taskTable small,
+.tasksTable small{
+  font-size: 12px !important;
+}
+
+.taskTable .status,
+.tasksTable .status{
+  font-size: 12px !important;
+}
+
+.taskTable button,
+.tasksTable button{
+  font-size: 13px !important;
+}
+
+
+/* TASKS — SECOND TYPOGRAPHY BOOST */
+
+.taskTable,
+.tasksTable{
+  font-size: 15px !important;
+}
+
+.taskTable td,
+.tasksTable td{
+  font-size: 15px !important;
+}
+
+.taskTable th,
+.tasksTable th{
+  font-size: 14px !important;
+}
+
+.taskTable td strong,
+.taskTable td b,
+.tasksTable td strong,
+.tasksTable td b{
+  font-size: 16px !important;
+}
+
+.taskTable small,
+.tasksTable small{
+  font-size: 13px !important;
+}
+
+.taskTable button,
+.tasksTable button{
+  font-size: 14px !important;
+}
+
