@@ -1636,6 +1636,106 @@ if(pathname==='/api/volunteer/tasks' && req.method==='GET'){
    });
   }
 
+
+   // Volunteer hours API
+
+   if(pathname==='/api/volunteer/hours' && req.method==='GET'){
+    const token=parseCookies(req).rouh_volunteer_session;
+
+    if(!token)
+     return send(res,401,{error:'يجب تسجيل الدخول'});
+
+    const volunteer=db.prepare(`
+     SELECT v.id,v.name,v.department
+     FROM volunteer_sessions s
+     JOIN volunteers v ON v.id=s.volunteer_id
+     WHERE s.token=?
+       AND s.expires_at>CURRENT_TIMESTAMP
+       AND v.active=1
+       AND v.deleted_at IS NULL
+    `).get(token);
+
+    if(!volunteer)
+     return send(res,401,{error:'انتهت الجلسة'});
+
+    const items=db.prepare(`
+     SELECT id,hours,activity,description,status,
+            created_at,approved_at
+     FROM volunteer_hours
+     WHERE volunteer_id=?
+     ORDER BY id DESC
+    `).all(volunteer.id);
+
+    const totals=db.prepare(`
+     SELECT
+      COALESCE(SUM(CASE WHEN status='approved' THEN hours ELSE 0 END),0) approved,
+      COALESCE(SUM(CASE WHEN status='pending' THEN hours ELSE 0 END),0) pending
+     FROM volunteer_hours
+     WHERE volunteer_id=?
+    `).get(volunteer.id);
+
+    return send(res,200,{
+     items,
+     totals:{
+      approved:Number(totals.approved||0),
+      pending:Number(totals.pending||0)
+     }
+    });
+   }
+
+   if(pathname==='/api/volunteer/hours' && req.method==='POST'){
+    const token=parseCookies(req).rouh_volunteer_session;
+
+    if(!token)
+     return send(res,401,{error:'يجب تسجيل الدخول'});
+
+    const volunteer=db.prepare(`
+     SELECT v.id,v.name,v.department
+     FROM volunteer_sessions s
+     JOIN volunteers v ON v.id=s.volunteer_id
+     WHERE s.token=?
+       AND s.expires_at>CURRENT_TIMESTAMP
+       AND v.active=1
+       AND v.deleted_at IS NULL
+    `).get(token);
+
+    if(!volunteer)
+     return send(res,401,{error:'انتهت الجلسة'});
+
+    const b=await body(req);
+
+    const hours=Number(b.hours);
+    const activity=String(b.activity||'').trim();
+    const description=String(b.description||'').trim();
+
+    if(!Number.isFinite(hours) || hours<=0 || hours>24)
+     return send(res,400,{error:'عدد الساعات يجب أن يكون بين 0 و24'});
+
+    if(!activity)
+     return send(res,400,{error:'اكتب اسم النشاط'});
+
+    if(activity.length>200 || description.length>2000)
+     return send(res,400,{error:'البيانات أطول من الحد المسموح'});
+
+    const r=db.prepare(`
+     INSERT INTO volunteer_hours
+      (volunteer_id,department,hours,activity,description,status,created_by)
+     VALUES(?,?,?,?,?,'pending',NULL)
+    `).run(
+     volunteer.id,
+     volunteer.department||'',
+     hours,
+     activity,
+     description
+    );
+
+    return send(res,201,{
+     ok:true,
+     id:Number(r.lastInsertRowid)
+    });
+   }
+
+
   if(pathname.startsWith('/api/admin/')){
    const user=requireUser(req,res); if(!user) return;
 
@@ -2458,104 +2558,6 @@ ${message}`;
     );
 
     return send(res,200,{ok:true,status:action});
-   }
-
-   // Volunteer hours API
-
-   if(pathname==='/api/volunteer/hours' && req.method==='GET'){
-    const token=parseCookies(req).rouh_volunteer_session;
-
-    if(!token)
-     return send(res,401,{error:'يجب تسجيل الدخول'});
-
-    const volunteer=db.prepare(`
-     SELECT v.id,v.name,v.department
-     FROM volunteer_sessions s
-     JOIN volunteers v ON v.id=s.volunteer_id
-     WHERE s.token=?
-       AND s.expires_at>CURRENT_TIMESTAMP
-       AND v.active=1
-       AND v.deleted_at IS NULL
-    `).get(token);
-
-    if(!volunteer)
-     return send(res,401,{error:'انتهت الجلسة'});
-
-    const items=db.prepare(`
-     SELECT id,hours,activity,description,status,
-            created_at,approved_at
-     FROM volunteer_hours
-     WHERE volunteer_id=?
-     ORDER BY id DESC
-    `).all(volunteer.id);
-
-    const totals=db.prepare(`
-     SELECT
-      COALESCE(SUM(CASE WHEN status='approved' THEN hours ELSE 0 END),0) approved,
-      COALESCE(SUM(CASE WHEN status='pending' THEN hours ELSE 0 END),0) pending
-     FROM volunteer_hours
-     WHERE volunteer_id=?
-    `).get(volunteer.id);
-
-    return send(res,200,{
-     items,
-     totals:{
-      approved:Number(totals.approved||0),
-      pending:Number(totals.pending||0)
-     }
-    });
-   }
-
-   if(pathname==='/api/volunteer/hours' && req.method==='POST'){
-    const token=parseCookies(req).rouh_volunteer_session;
-
-    if(!token)
-     return send(res,401,{error:'يجب تسجيل الدخول'});
-
-    const volunteer=db.prepare(`
-     SELECT v.id,v.name,v.department
-     FROM volunteer_sessions s
-     JOIN volunteers v ON v.id=s.volunteer_id
-     WHERE s.token=?
-       AND s.expires_at>CURRENT_TIMESTAMP
-       AND v.active=1
-       AND v.deleted_at IS NULL
-    `).get(token);
-
-    if(!volunteer)
-     return send(res,401,{error:'انتهت الجلسة'});
-
-    const b=await body(req);
-
-    const hours=Number(b.hours);
-    const activity=String(b.activity||'').trim();
-    const description=String(b.description||'').trim();
-
-    if(!Number.isFinite(hours) || hours<=0 || hours>24)
-     return send(res,400,{error:'عدد الساعات يجب أن يكون بين 0 و24'});
-
-    if(!activity)
-     return send(res,400,{error:'اكتب اسم النشاط'});
-
-    if(activity.length>200 || description.length>2000)
-     return send(res,400,{error:'البيانات أطول من الحد المسموح'});
-
-    const r=db.prepare(`
-     INSERT INTO volunteer_hours
-      (volunteer_id,department,hours,activity,description,status,created_by)
-     VALUES(?,?,?,?,?,'pending',NULL)
-    `).run(
-     volunteer.id,
-     volunteer.department||'',
-     hours,
-     activity,
-     description
-    );
-
-    return send(res,201,{
-     ok:true,
-     id:Number(r.lastInsertRowid)
-    });
    }
 
       // Volunteer hours - admin review

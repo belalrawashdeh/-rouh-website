@@ -1600,6 +1600,10 @@ async function loadVolunteerHours(){
   document.getElementById('approvedHours').textContent=
    Number(data.totals?.approved||0);
 
+  const dashboardHours=document.getElementById('dashboardHours');
+  if(dashboardHours)
+   dashboardHours.textContent=Number(data.totals?.approved||0);
+
   document.getElementById('pendingHours').textContent=
    Number(data.totals?.pending||0);
 
