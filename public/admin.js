@@ -183,7 +183,6 @@ async function renderDepartmentBar(){
   'الأكاديمي',
   'العلاقات العامة',
   'التقني',
-  'رواق',
   'الإعلامي',
   'التيسير'
  ];
@@ -3566,7 +3565,6 @@ window.userForm=(u={})=>{
        <option value="الأكاديمي" ${u.department==='الأكاديمي'?'selected':''}>الأكاديمي</option>
        <option value="العلاقات العامة" ${u.department==='العلاقات العامة'?'selected':''}>العلاقات العامة</option>
        <option value="التقني" ${u.department==='التقني'?'selected':''}>التقني</option>
-       <option value="رواق" ${u.department==='رواق'?'selected':''}>رواق</option>
        <option value="الإعلامي" ${u.department==='الإعلامي'?'selected':''}>الإعلامي</option>
        <option value="التيسير" ${u.department==='التيسير'?'selected':''}>التيسير</option>
       </select>
@@ -6677,7 +6675,6 @@ async function openVolunteerWhatsApp(v){
   'الأكاديمي':'https://chat.whatsapp.com/ENASFRdtXWu7KXOja2eZNq?s=sw&p=i&mlu=4',
   'العلاقات العامة':'https://chat.whatsapp.com/GrAuXBNMXPu40IWR4r2CJw?s=sw&p=i&mlu=4',
   'التقني':'https://chat.whatsapp.com/CqLWTkhVzPW0vsIMr2Xgar?s=sw&p=i&mlu=4',
-  'رواق':'https://chat.whatsapp.com/EuiNNbPQedBErniuShpYue?s=sw&p=i&mlu=4',
   'الإعلامي':'https://chat.whatsapp.com/If0dpI1IF2B8mdYot3UlsB?s=sw&p=i&mlu=4',
   'التيسير':'https://chat.whatsapp.com/HyCISufWvtC50xMfqDHppJ?s=sw&p=i&mlu=4'
  };
@@ -6776,7 +6773,6 @@ async function changeVolunteerDepartment(v){
   '3 - الأكاديمي\n'+
   '4 - العلاقات العامة\n'+
   '5 - التقني\n'+
-  '6 - رواق\n'+
   '7 - الإعلامي\n'+
   '8 - التيسير'
  );
@@ -6789,7 +6785,6 @@ async function changeVolunteerDepartment(v){
   '3':'الأكاديمي',
   '4':'العلاقات العامة',
   '5':'التقني',
-  '6':'رواق',
   '7':'الإعلامي',
   '8':'التيسير'
  };
@@ -6819,7 +6814,6 @@ async function changeVolunteerDepartment(v){
   'الأكاديمي':'https://chat.whatsapp.com/ENASFRdtXWu7KXOja2eZNq?s=sw&p=i&mlu=4',
   'العلاقات العامة':'https://chat.whatsapp.com/GrAuXBNMXPu40IWR4r2CJw?s=sw&p=i&mlu=4',
   'التقني':'https://chat.whatsapp.com/CqLWTkhVzPW0vsIMr2Xgar?s=sw&p=i&mlu=4',
-  'رواق':'https://chat.whatsapp.com/EuiNNbPQedBErniuShpYue?s=sw&p=i&mlu=4',
   'الإعلامي':'https://chat.whatsapp.com/If0dpI1IF2B8mdYot3UlsB?s=sw&p=i&mlu=4',
   'التيسير':'https://chat.whatsapp.com/HyCISufWvtC50xMfqDHppJ?s=sw&p=i&mlu=4'
  };
@@ -7457,8 +7451,7 @@ async function updateVolunteer(id,status){
    '3':'الأكاديمي',
    '4':'العلاقات العامة',
    '5':'التقني',
-   '6':'رواق',
-   '7':'الإعلامي',
+    '7':'الإعلامي',
    '8':'التيسير',
    '7':'الإعلامي',
    '8':'التيسير'
@@ -7471,7 +7464,6 @@ async function updateVolunteer(id,status){
    '3 - الأكاديمي\n' +
    '4 - العلاقات العامة\n' +
    '5 - التقني\n' +
-   '6 - رواق 💡\n' +
    '7 - الإعلامي 🎬\n' +
    '8 - التيسير 🤝\n\n' +
    'اكتب رقم القسم:'
@@ -9272,7 +9264,6 @@ async function departmentWork(){
   'الأكاديمي',
   'العلاقات العامة',
   'التقني',
-  'رواق',
   'الإعلامي',
   'التيسير'
  ];
@@ -9809,7 +9800,6 @@ window.departmentContentForm=item=>{
   'الأكاديمي',
   'العلاقات العامة',
   'التقني',
-  'رواق',
   'الإعلامي',
   'التيسير'
  ];
