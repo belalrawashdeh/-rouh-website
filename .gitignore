@@ -11,3 +11,12 @@ data/*.db-wal
 
 # Local temporary / backup files
 *.bak
+
+# Local database and sensitive data
+data/
+
+# Local backup files
+*.bak
+*.backup
+*.backup-*
+*.before-effects.html.backup
