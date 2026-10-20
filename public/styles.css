@@ -21533,3 +21533,210 @@ body.complaintDrawerOpen{
   }
 }
 
+
+/* ==========================================
+   ROUH AI READABILITY V2
+   ========================================== */
+
+/* Smart shortcuts sidebar */
+.rouhAiSidebar {
+  gap: 12px;
+}
+
+.rouhAiSideHead > span {
+  font-size: 11px !important;
+  letter-spacing: 1px;
+}
+
+.rouhAiSideHead h3 {
+  font-size: 25px !important;
+  line-height: 1.6;
+}
+
+.rouhAiQuick {
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  min-height: 76px;
+}
+
+.rouhAiQuickIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 17px !important;
+}
+
+.rouhAiQuick strong {
+  font-size: 15px !important;
+  line-height: 1.8;
+}
+
+.rouhAiQuick small {
+  font-size: 12px !important;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.rouhAiQuick b {
+  font-size: 18px !important;
+}
+
+.rouhAiServices {
+  padding: 15px;
+  gap: 10px;
+  font-size: 15px !important;
+  line-height: 1.8;
+  border-radius: 13px;
+}
+
+.rouhAiServices span {
+  font-size: 20px;
+}
+
+.rouhAiPrivacy {
+  gap: 12px;
+  padding: 15px;
+  border-radius: 13px;
+  line-height: 1.9;
+}
+
+.rouhAiPrivacy > span {
+  font-size: 17px !important;
+}
+
+.rouhAiPrivacy strong {
+  font-size: 14px !important;
+  line-height: 1.8;
+}
+
+.rouhAiPrivacy small {
+  font-size: 12px !important;
+  line-height: 1.9;
+}
+
+/* Conversation area */
+.rouhAiChatShell {
+  grid-template-rows: auto minmax(300px, 1fr) auto;
+}
+
+.rouhAiChat {
+  min-height: 300px;
+  max-height: 620px;
+  padding: 24px;
+  gap: 18px;
+}
+
+.rouhAiWelcome {
+  max-width: 560px;
+  padding: 28px 20px;
+}
+
+.rouhAiWelcome > span {
+  font-size: 11px !important;
+}
+
+.rouhAiWelcome h3 {
+  font-size: 27px !important;
+  line-height: 1.8;
+}
+
+.rouhAiWelcome p {
+  font-size: 16px !important;
+  line-height: 2;
+}
+
+.rouhAiBubble {
+  font-size: 15px !important;
+  line-height: 2;
+}
+
+.rouhAiMessageName {
+  font-size: 11px !important;
+}
+
+/* Input area */
+.rouhAiComposer {
+  padding: 15px 18px;
+}
+
+.rouhAiInputWrap {
+  padding: 9px;
+  gap: 12px;
+}
+
+.rouhAiInputWrap textarea {
+  font-size: 16px !important;
+  min-height: 44px;
+  padding: 10px;
+}
+
+.rouhAiInputWrap button {
+  width: 44px;
+  height: 44px;
+}
+
+.rouhAiInputWrap button span {
+  font-size: 20px;
+}
+
+.rouhAiComposerMeta {
+  font-size: 11px !important;
+}
+
+/* Main admin sidebar */
+.adminBody .menu button {
+  font-size: 16px;
+  line-height: 1.8;
+  padding: 15px 16px;
+  margin: 6px 0;
+}
+
+/* Responsive layout */
+@media (max-width: 850px) {
+  .rouhAiQuick {
+    min-height: 70px;
+  }
+
+  .rouhAiChat {
+    min-height: 260px;
+    max-height: 60vh;
+    padding: 16px;
+  }
+
+  .rouhAiWelcome h3 {
+    font-size: 23px !important;
+  }
+
+  .rouhAiWelcome p {
+    font-size: 15px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .rouhAiSideHead h3 {
+    font-size: 22px !important;
+  }
+
+  .rouhAiQuick strong {
+    font-size: 14px !important;
+  }
+
+  .rouhAiQuick small {
+    font-size: 12px !important;
+  }
+
+  .rouhAiServices {
+    font-size: 14px !important;
+  }
+
+  .rouhAiWelcome {
+    padding: 24px 12px;
+  }
+
+  .rouhAiWelcome h3 {
+    font-size: 21px !important;
+  }
+}
+
