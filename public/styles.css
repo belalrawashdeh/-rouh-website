@@ -21303,3 +21303,233 @@ body.complaintDrawerOpen{
   }
 
 }
+
+/* ==========================================
+   ROUH UI READABILITY IMPROVEMENTS V1
+   Assistant + Volunteer Applications
+   ========================================== */
+
+/* Volunteer applications and hours tables */
+.volunteerTableWrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.volunteerTable {
+  font-size: 15px;
+}
+
+.volunteerTable th {
+  font-size: 15px;
+  font-weight: 800;
+  padding: 16px 14px;
+}
+
+.volunteerTable td {
+  font-size: 15px;
+  line-height: 1.9;
+  padding: 19px 14px;
+}
+
+.volunteerTable .rowActions .btn {
+  font-size: 14px;
+  min-height: 42px;
+  padding: 10px 15px;
+}
+
+.volunteerTable .notice {
+  font-size: 14px;
+}
+
+/* AI assistant header */
+.rouhAiChatHeader {
+  padding: 16px 20px;
+  gap: 14px;
+}
+
+.rouhAiAssistantIdentity {
+  gap: 12px;
+}
+
+.rouhAiMiniOrb {
+  width: 42px;
+  height: 42px;
+  font-size: 19px;
+}
+
+.rouhAiAssistantIdentity strong {
+  font-size: 16px;
+}
+
+.rouhAiAssistantIdentity span {
+  font-size: 12px;
+  gap: 7px;
+}
+
+.rouhAiAssistantIdentity i {
+  width: 7px;
+  height: 7px;
+}
+
+.rouhAiMode {
+  font-size: 11px;
+  padding: 8px 12px;
+  letter-spacing: 0.4px;
+}
+
+/* AI conversation */
+.rouhAiChat {
+  gap: 20px;
+  padding: 24px;
+  max-height: 650px;
+}
+
+.rouhAiWelcome {
+  max-width: 540px;
+  padding: 42px 24px;
+}
+
+.rouhAiWelcomeIcon {
+  width: 60px;
+  height: 60px;
+  font-size: 25px;
+  margin-bottom: 16px;
+}
+
+.rouhAiWelcome > span {
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.rouhAiWelcome h3 {
+  font-size: 25px;
+  line-height: 1.6;
+  margin-top: 10px;
+}
+
+.rouhAiWelcome p {
+  font-size: 16px;
+  line-height: 2;
+  max-width: 480px;
+}
+
+.rouhAiMessage {
+  gap: 12px;
+  max-width: 92%;
+}
+
+.rouhAiMessageAvatar {
+  width: 38px;
+  height: 38px;
+  font-size: 13px;
+  border-radius: 12px;
+}
+
+.rouhAiMessage.assistant .rouhAiMessageAvatar {
+  font-size: 17px;
+}
+
+.rouhAiBubble {
+  min-width: 120px;
+  padding: 15px 18px;
+  font-size: 15px;
+  line-height: 2;
+  border-radius: 8px 18px 18px 18px;
+}
+
+.rouhAiMessage.assistant .rouhAiBubble {
+  border-radius: 18px 8px 18px 18px;
+}
+
+.rouhAiMessageName {
+  font-size: 11px;
+  margin-bottom: 7px;
+  letter-spacing: 0.3px;
+}
+
+/* AI assistant composer */
+.rouhAiComposer {
+  padding: 16px 20px;
+}
+
+.rouhAiInputWrap textarea {
+  font-size: 16px;
+  line-height: 1.8;
+  min-height: 48px;
+  padding: 12px 15px;
+}
+
+.rouhAiComposerMeta {
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* AI assistant privacy notice */
+.rouhAiPrivacy {
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.rouhAiPrivacy strong {
+  font-size: 15px;
+}
+
+.rouhAiPrivacy small {
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+/* Mobile adjustments */
+@media (max-width: 700px) {
+  .volunteerTable {
+    min-width: 900px;
+  }
+
+  .volunteerTable th,
+  .volunteerTable td {
+    font-size: 14px;
+    padding: 14px 12px;
+  }
+
+  .rouhAiChat {
+    padding: 14px;
+    max-height: 60vh;
+  }
+
+  .rouhAiWelcome {
+    padding: 28px 12px;
+  }
+
+  .rouhAiWelcome h3 {
+    font-size: 21px;
+  }
+
+  .rouhAiWelcome p {
+    font-size: 15px;
+  }
+
+  .rouhAiMessage {
+    max-width: 100%;
+  }
+
+  .rouhAiBubble {
+    font-size: 14px;
+    padding: 12px 14px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .rouhAiAssistantIdentity strong {
+    font-size: 15px;
+  }
+
+  .rouhAiAssistantIdentity span {
+    font-size: 11px;
+  }
+
+  .rouhAiMode {
+    font-size: 9px;
+  }
+}
+
