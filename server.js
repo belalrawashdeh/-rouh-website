@@ -164,6 +164,27 @@ try {
  if (!String(e.message).includes("duplicate column name")) throw e;
 }
 
+
+// Migration: add username to existing volunteers
+try {
+ const volunteerColumns = db.prepare(
+  'PRAGMA table_info(volunteers)'
+ ).all();
+
+ if (!volunteerColumns.some(c => c.name === 'username')) {
+  db.exec('ALTER TABLE volunteers ADD COLUMN username TEXT');
+  console.log('Database migration: volunteers.username added');
+ }
+
+ db.exec(`
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_volunteers_username
+  ON volunteers(username)
+  WHERE username IS NOT NULL AND username != ''
+ `);
+} catch(e) {
+ console.error('Volunteer username migration error:', e);
+}
+
 try {
  db.exec("ALTER TABLE volunteer_applications ADD COLUMN department TEXT DEFAULT ''");
 } catch(e) {
@@ -2359,6 +2380,82 @@ ${message}`;
      last_activity:stats.last_activity||null
     };
 
+    // Volunteer activity timeline
+    const activity = [];
+
+    const notifications = db.prepare(`
+     SELECT id,title,message,type,created_at
+     FROM volunteer_notifications
+     WHERE volunteer_id=?
+     ORDER BY id DESC
+     LIMIT 40
+    `).all(id);
+
+    for(const n of notifications){
+     activity.push({
+      id:'notification-'+n.id,
+      title:n.title,
+      description:n.message,
+      type:n.type==='hours'?'hours':'notification',
+      created_at:n.created_at
+     });
+    }
+
+    const taskEvents = db.prepare(`
+     SELECT id,title,started_at,submitted_at
+     FROM volunteer_tasks
+     WHERE volunteer_id=?
+    `).all(id);
+
+    for(const task of taskEvents){
+     if(task.started_at){
+      activity.push({
+       id:'task-start-'+task.id,
+       title:'بدأ تنفيذ المهمة',
+       description:task.title,
+       type:'started',
+       created_at:task.started_at
+      });
+     }
+
+     if(task.submitted_at){
+      activity.push({
+       id:'task-submit-'+task.id,
+       title:'تم تسليم المهمة',
+       description:task.title,
+       type:'submitted',
+       created_at:task.submitted_at
+      });
+     }
+    }
+
+    activity.sort((a,b)=>
+     String(b.created_at||'').localeCompare(String(a.created_at||''))
+    );
+
+    volunteer.activity=activity.slice(0,50);
+
+    // Volunteer profile task details
+    volunteer.tasks=db.prepare(`
+     SELECT
+      id,title,description,department,due_date,status,
+      created_at,updated_at,started_at,submitted_at,
+      completed_at,submission_note,submission_url,
+      submission_file_name,revision_note
+     FROM volunteer_tasks
+     WHERE volunteer_id=?
+     ORDER BY
+      CASE status
+       WHEN 'submitted' THEN 1
+       WHEN 'revision_requested' THEN 2
+       WHEN 'in_progress' THEN 3
+       WHEN 'new' THEN 4
+       WHEN 'completed' THEN 5
+       ELSE 6
+      END,
+      id DESC
+    `).all(id);
+
     return send(res,200,{volunteer});
    }
 
@@ -2633,9 +2730,15 @@ ${message}`;
     if(!item)
      return send(res,404,{error:'طلب الساعات غير موجود'});
 
-    if(user.role==='admin' &&
-       user.department!=='إدارة الموارد البشرية (HR)' &&
-       item.department!==user.department)
+    const isHRAdmin =
+     user.role==='admin' &&
+     user.department==='إدارة الموارد البشرية (HR)';
+
+    if(
+     !isOwnerOrDeputy(user) &&
+     !isHRAdmin &&
+     item.department!==user.department
+    )
      return send(res,403,{error:'لا يمكنك مراجعة ساعات قسم آخر'});
 
     if(item.status!=='pending')

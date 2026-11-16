@@ -1,5 +1,14 @@
 const $=s=>document.querySelector(s), content=$('#content'); let me=null, needsSetup=false, current='dashboard';
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const safeHttpUrl=value=>{
+ try{
+  const url=new URL(String(value??'').trim());
+  return ['http:','https:'].includes(url.protocol)?url.href:'';
+ }catch{
+  return '';
+ }
+};
+
 async function api(url,opt={}){opt.headers={...(opt.headers||{}),'Content-Type':'application/json'};const r=await fetch(url,opt);const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'حدث خطأ');return d}
 function flash(t,err=false){$('#msg').innerHTML=`<div class="notice ${err?'error':''}">${esc(t)}</div>`;setTimeout(()=>$('#msg').innerHTML='',3500)}
 async function init(){
@@ -904,6 +913,10 @@ async function dashboard(){
   </div>
 
  `;
+
+ if(window.rouhDashboardMotion){
+  window.rouhDashboardMotion();
+ }
 
 }
 const cfg={events:{title:'فعالية',date:'event_date',fields:[['title','اسم الفعالية'],['summary','وصف مختصر'],['description','الوصف الكامل'],['event_date','التاريخ','date'],['event_time','الوقت','time'],['location','المكان'],['registration_url','رابط التسجيل'],['event_state','الحالة الظاهرة']],image:'cover_image'},achievements:{title:'إنجاز',date:'achievement_date',fields:[['title','عنوان الإنجاز'],['summary','وصف مختصر'],['description','الوصف الكامل'],['achievement_date','التاريخ','date'],['volunteers','عدد المتطوعين','number'],['beneficiaries','عدد المستفيدين','number'],['volunteer_hours','الساعات التطوعية','number']],image:'cover_image'}};
@@ -5162,11 +5175,6 @@ async function volunteers(){
   rejected:'مرفوض'
  };
 
- if(!items.length){
-  content.innerHTML='<div class="panel"><h3>طلبات المتطوعين</h3><p class="muted">لا توجد طلبات متطوعين حتى الآن.</p></div>';
-  return;
- }
-
  const volunteerStats={
   total:items.length,
   review:items.filter(v=>
@@ -5298,9 +5306,34 @@ async function volunteers(){
       <span>طلب</span>
      </div>
 
+     <button type="button"
+      class="volunteerPreviewButton"
+      id="volunteerPreviewButton"
+      onclick="toggleVolunteerPreview()">
+      ◉ معاينة تجريبية
+     </button>
+
     </div>
 
-    <div class="volunteerTableWrap">
+    <div class="volunteerTableWrap ${items.length ? '' : 'is-empty'}">
+     ${items.length ? '' : `
+      <div class="volunteerEmptyState">
+       <div class="volunteerEmptyVisual">
+        <span class="emptyOrbit emptyOrbitOne"></span>
+        <span class="emptyOrbit emptyOrbitTwo"></span>
+        <span class="emptyMainIcon">♧</span>
+        <span class="emptySpark emptySparkOne">✦</span>
+        <span class="emptySpark emptySparkTwo">✧</span>
+       </div>
+       <span class="volunteerEmptyCode">ROUH / VOLUNTEER CENTER</span>
+       <h3>رحلة تطوع جديدة تبدأ من هنا</h3>
+       <p>لا توجد طلبات متطوعين حاليًا. ستظهر الطلبات هنا فور وصولها.</p>
+       <div class="volunteerEmptyFooter">
+        <span><i></i> النظام يعمل</span>
+        <span>بانتظار أول طلب تطوع</span>
+       </div>
+      </div>
+     `}
     <table class="volunteerTable">
      <thead>
       <tr>
@@ -5992,11 +6025,11 @@ function openTaskSubmissionReview(id,readOnly=false){
 
 
      ${
-      task.submission_url
+      safeHttpUrl(task.submission_url)
        ? `
         <a
          class="submissionBlock submissionLink"
-         href="${esc(task.submission_url)}"
+         href="${esc(safeHttpUrl(task.submission_url))}"
          target="_blank"
          rel="noopener noreferrer"
         >
@@ -6400,6 +6433,144 @@ async function viewVolunteerProfile(id){
       ${esc(st.last_activity||'لا يوجد نشاط بعد')}
      </p>
 
+    </div>
+
+    <div class="profileSection volunteerTasksSection">
+     <div class="activityHeading">
+      <div>
+       <h3>📋 مهام المتطوع</h3>
+       <p class="muted">المهام المسندة وتفاصيل تقدمها</p>
+      </div>
+      <span class="activityCount">${(v.tasks||[]).length} مهمة</span>
+     </div>
+
+     ${
+      (v.tasks||[]).length
+      ? `<div class="volunteerProfileTasks">
+         ${(v.tasks||[]).map(task=>{
+          const statusMap={
+           new:{label:'جديدة',className:'new',icon:'🆕'},
+           in_progress:{label:'قيد التنفيذ',className:'progress',icon:'⚙️'},
+           submitted:{label:'بانتظار المراجعة',className:'submitted',icon:'📥'},
+           revision_requested:{label:'مطلوب تعديل',className:'revision',icon:'↩️'},
+           completed:{label:'مكتملة',className:'completed',icon:'✅'},
+           not_completed:{label:'لم يتم إنهاؤها',className:'failed',icon:'❌'}
+          };
+          const status=statusMap[task.status]||{
+           label:task.status||'غير محددة',
+           className:'new',
+           icon:'📌'
+          };
+          const dateValue=value=>value
+           ? new Date(String(value).replace(' ','T')+'Z').toLocaleString('ar-JO')
+           : '—';
+
+          return `
+           <article class="volunteerTaskCard">
+            <div class="volunteerTaskTop">
+             <div class="volunteerTaskTitle">
+              <span class="volunteerTaskIcon">${status.icon}</span>
+              <div>
+               <h4>${esc(task.title||'مهمة بدون عنوان')}</h4>
+               <small>${esc(task.department||v.department||'')}</small>
+              </div>
+             </div>
+             <span class="volunteerTaskStatus ${status.className}">
+              ${status.label}
+             </span>
+            </div>
+
+            ${task.description
+             ? `<p class="volunteerTaskDescription">${esc(task.description)}</p>`
+             : ''}
+
+            <div class="volunteerTaskDates">
+             <div><span>📅 تاريخ الإسناد</span><b>${esc(dateValue(task.created_at))}</b></div>
+             <div><span>⏳ الموعد النهائي</span><b>${esc(task.due_date||'غير محدد')}</b></div>
+             <div><span>🚀 بدء التنفيذ</span><b>${esc(dateValue(task.started_at))}</b></div>
+             <div><span>📤 تاريخ التسليم</span><b>${esc(dateValue(task.submitted_at))}</b></div>
+             <div><span>✅ تاريخ الإنجاز</span><b>${esc(dateValue(task.completed_at))}</b></div>
+            </div>
+
+            ${task.submission_note
+             ? `<div class="volunteerTaskNote">
+                 <strong>📝 ملاحظة التسليم</strong>
+                 <p>${esc(task.submission_note)}</p>
+                </div>`
+             : ''}
+
+            ${task.revision_note
+             ? `<div class="volunteerTaskNote revisionNote">
+                 <strong>↩️ ملاحظة الإدارة والتعديل</strong>
+                 <p>${esc(task.revision_note)}</p>
+                </div>`
+             : ''}
+
+            ${(task.submission_file_name || safeHttpUrl(task.submission_url))
+             ? `<div class="volunteerTaskAttachment">
+                 ${task.submission_file_name
+                  ? `<a class="btn light" href="/api/tasks/${Number(task.id)}/submission-file" target="_blank" rel="noopener">📎 عرض ملف التسليم</a>`
+                  : ''}
+                 ${safeHttpUrl(task.submission_url)
+                  ? `<a class="btn light" href="${esc(task.submission_url)}" target="_blank" rel="noopener">🔗 رابط التسليم</a>`
+                  : ''}
+                </div>`
+             : ''}
+           </article>
+          `;
+         }).join('')}
+        </div>`
+      : `<div class="activityEmpty">
+          <span>📋</span>
+          <strong>لا توجد مهام مسندة لهذا المتطوع</strong>
+          <p>ستظهر المهام هنا عند إسنادها.</p>
+         </div>`
+     }
+    </div>
+
+    <div class="profileSection activitySection">
+     <div class="activityHeading">
+      <div>
+       <h3>🕘 سجل نشاط المتطوع</h3>
+       <p class="muted">آخر الأحداث والمهام المسجلة</p>
+      </div>
+      <span class="activityCount">${(v.activity||[]).length} نشاط</span>
+     </div>
+
+     ${
+      (v.activity||[]).length
+      ? `<div class="activityTimeline">
+         ${(v.activity||[]).map(item=>{
+          const icon =
+           item.type==='started' ? '🚀' :
+           item.type==='submitted' ? '📤' :
+           item.type==='hours' ? '⏱️' :
+           '📋';
+
+          const date = item.created_at
+           ? new Date(item.created_at.replace(' ','T')+'Z').toLocaleString('ar-JO')
+           : 'تاريخ غير متوفر';
+
+          return `
+           <div class="activityItem">
+            <div class="activityIcon">${icon}</div>
+            <div class="activityContent">
+             <div class="activityItemTop">
+              <strong>${esc(item.title||'نشاط')}</strong>
+              <time>${esc(date)}</time>
+             </div>
+             <p>${esc(item.description||'')}</p>
+            </div>
+           </div>
+          `;
+         }).join('')}
+        </div>`
+      : `<div class="activityEmpty">
+          <span>🗂️</span>
+          <strong>لا يوجد نشاط مسجل بعد</strong>
+          <p>ستظهر هنا أنشطة المتطوع عند تسجيلها.</p>
+         </div>`
+     }
     </div>
 
    </div>
@@ -11968,3 +12139,405 @@ window.addEventListener(
  closeVolunteerActionMenus,
  true
 );
+
+
+
+/* =====================================================
+   ROUH ADMIN — PAGE MOTION ENGINE
+   Replays entrance animations after each tab render.
+   ===================================================== */
+
+(() => {
+  const target = document.getElementById('content');
+  if (!target) return;
+
+  const reduceMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  );
+
+  let frame = 0;
+
+  function animateAdminPage() {
+    if (reduceMotion.matches) return;
+
+    cancelAnimationFrame(frame);
+
+    target.classList.remove('adminMotionEnter');
+
+    const animatedItems = target.querySelectorAll(
+      '.panel, .executiveStat, .executiveQuickAction,' +
+      '.executiveActivity, .accessCard, .statCard,' +
+      '.taskCard, .volunteerCard, .accessHero,' +
+      '.accessStat, .accessToolbar, .accessUserRow,' +
+      '.accessTableWrap, .accessEditorHero,' +
+      '.accessEditorPanel, .accessSettingsPanel'
+    );
+
+    animatedItems.forEach((item, index) => {
+      item.style.setProperty('--motion-index', Math.min(index, 8));
+    });
+
+    void target.offsetWidth;
+
+    frame = requestAnimationFrame(() => {
+      target.classList.add('adminMotionEnter');
+    });
+  }
+
+  const observer = new MutationObserver(records => {
+    if (records.some(record => record.addedNodes.length)) {
+      animateAdminPage();
+    }
+  });
+
+  observer.observe(target, {
+    childList: true
+  });
+
+  window.addEventListener('pageshow', animateAdminPage);
+
+  window.rouhAdminAnimate = animateAdminPage;
+})();
+
+
+
+
+/* ==================================================
+   ROUH — SAFE VOLUNTEER TABLE PREVIEW
+   Demo only. No API calls or database changes.
+   ================================================== */
+
+function toggleVolunteerPreview(){
+
+ const wrap=document.querySelector(
+  '.volunteerManagementPanel .volunteerTableWrap'
+ );
+
+ const button=document.getElementById(
+  'volunteerPreviewButton'
+ );
+
+ const count=document.getElementById(
+  'volunteerVisibleCount'
+ );
+
+ if(!wrap || !button)return;
+
+ if(!window.__rouhVolunteerPreview){
+
+  window.__rouhVolunteerPreview={
+   originalHTML:wrap.innerHTML,
+   originalClass:wrap.className,
+   originalSearch:document.getElementById('volunteerSearch')?.value || '',
+   originalFilter:document.getElementById('volunteerStatusFilter')?.value || 'all'
+  };
+
+  const demoRows=[
+   {
+    name:'أحمد الخطيب',
+    phone:'0790000001',
+    email:'ahmad.demo@example.com',
+    major:'علم الحاسوب',
+    level:'الثالث',
+    city:'إربد',
+    department:'التكنولوجيا',
+    state:'review',
+    status:'قيد المراجعة'
+   },
+   {
+    name:'سارة العزام',
+    phone:'0790000002',
+    email:'sara.demo@example.com',
+    major:'الأمن السيبراني',
+    level:'الرابع',
+    city:'عمّان',
+    department:'الأمن السيبراني',
+    state:'contacted',
+    status:'تم التواصل معه'
+   },
+   {
+    name:'محمد الرواشدة',
+    phone:'0790000003',
+    email:'mohammad.demo@example.com',
+    major:'هندسة البرمجيات',
+    level:'الثاني',
+    city:'إربد',
+    department:'التكنولوجيا',
+    state:'department',
+    status:'بانتظار موافقة القسم'
+   },
+   {
+    name:'ليان الشريدة',
+    phone:'0790000004',
+    email:'layan.demo@example.com',
+    major:'التصميم الجرافيكي',
+    level:'الثالث',
+    city:'جرش',
+    department:'الإعلام',
+    state:'accepted',
+    status:'مقبول من القسم'
+   },
+   {
+    name:'عمر بني خالد',
+    phone:'0790000005',
+    email:'omar.demo@example.com',
+    major:'إدارة الأعمال',
+    level:'الرابع',
+    city:'المفرق',
+    department:'الموارد البشرية',
+    state:'accepted',
+    status:'مقبول من القسم'
+   }
+  ];
+
+  const escDemo=value=>String(value).replace(/[&<>"']/g,ch=>({
+   '&':'&amp;',
+   '<':'&lt;',
+   '>':'&gt;',
+   '"':'&quot;',
+   "'":'&#39;'
+  }[ch]));
+
+  const rows=demoRows.map(v=>`
+   <tr data-volunteer-state="${v.state}"
+       data-volunteer-search="${escDemo([
+        v.name,v.phone,v.email,v.major,v.level,
+        v.city,v.department,v.status
+       ].join(' ').toLowerCase())}">
+
+    <td class="volunteerNameCell">
+     <div class="volunteerNameButton">
+      <span class="volunteerMiniAvatar">${escDemo(v.name.charAt(0))}</span>
+      <span class="volunteerIdentityText">
+       <strong>${escDemo(v.name)}</strong>
+       <small>معاينة تجريبية</small>
+      </span>
+     </div>
+    </td>
+
+    <td>
+     <div class="volunteerContactCell">
+      <strong>${escDemo(v.phone)}</strong>
+      <span>${escDemo(v.email)}</span>
+      <small>${escDemo(v.city)}</small>
+     </div>
+    </td>
+
+    <td>
+     <div class="volunteerStudyCell">
+      <strong>${escDemo(v.major)}</strong>
+      <span>المستوى ${escDemo(v.level)}</span>
+     </div>
+    </td>
+
+    <td>
+     <span class="volunteerStatusBadge ${v.state}">
+      <i></i>${escDemo(v.status)}
+     </span>
+    </td>
+
+    <td>
+     <span class="volunteerDepartmentBadge">
+      ${escDemo(v.department)}
+     </span>
+    </td>
+
+    <td class="volunteerActionsCell">
+     <div class="volunteerActionMenuWrap">
+      <button type="button"
+       class="volunteerActionTrigger"
+       aria-label="إجراءات تجريبية"
+       onclick="this.nextElementSibling.classList.toggle('previewMenuOpen')">
+       <span>•••</span>
+      </button>
+      <div class="volunteerActionMenu previewDemoMenu">
+       <div class="volunteerActionMenuHead">
+        <span>DEMO ACTIONS</span>
+        <strong>${escDemo(v.name)}</strong>
+       </div>
+       <div class="volunteerActionMenuBody">
+        <span class="volunteerNoActions">هذه معاينة فقط — لا توجد إجراءات فعلية.</span>
+       </div>
+      </div>
+     </div>
+    </td>
+   </tr>
+  `).join('');
+
+  wrap.classList.remove('is-empty');
+  wrap.innerHTML=`
+   <div class="volunteerPreviewNotice">
+    <span>◉</span>
+    وضع المعاينة التجريبية — البيانات الظاهرة افتراضية وليست محفوظة.
+   </div>
+   <table class="volunteerTable">
+    <thead>
+     <tr>
+      <th>المتطوع</th>
+      <th>معلومات التواصل</th>
+      <th>الدراسة</th>
+      <th>الحالة</th>
+      <th>القسم</th>
+      <th class="volunteerActionsHeading">الإجراءات</th>
+     </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+   </table>
+  `;
+
+  const demoSearch=document.getElementById('volunteerSearch');
+  const demoFilter=document.getElementById('volunteerStatusFilter');
+
+  if(demoSearch)demoSearch.value='';
+  if(demoFilter)demoFilter.value='all';
+
+  button.classList.add('active');
+  button.innerHTML='× إغلاق المعاينة';
+
+ }else{
+
+  const previousPreviewState=window.__rouhVolunteerPreview;
+
+  wrap.innerHTML=previousPreviewState.originalHTML;
+  wrap.className=previousPreviewState.originalClass;
+
+  const restoredSearch=document.getElementById('volunteerSearch');
+  const restoredFilter=document.getElementById('volunteerStatusFilter');
+
+  if(restoredSearch)restoredSearch.value=previousPreviewState.originalSearch;
+  if(restoredFilter)restoredFilter.value=previousPreviewState.originalFilter;
+
+  delete window.__rouhVolunteerPreview;
+
+  button.classList.remove('active');
+  button.innerHTML='◉ معاينة تجريبية';
+ }
+
+ const search=document.getElementById('volunteerSearch');
+ const filter=document.getElementById('volunteerStatusFilter');
+
+ if(search)search.dispatchEvent(new Event('input',{bubbles:true}));
+ if(filter)filter.dispatchEvent(new Event('change',{bubbles:true}));
+}
+
+
+
+
+/* =====================================================
+   ROUH DASHBOARD MOTION V2
+   Count-up + accessible dashboard interactions
+   ===================================================== */
+
+(() => {
+  const reduceMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  );
+
+  let activeRun = 0;
+
+  function animateDashboardCounters() {
+    const root = document.querySelector(
+      '#content .executiveDashboard'
+    );
+
+    if (!root) return;
+
+    const run = ++activeRun;
+    const counters = root.querySelectorAll(
+      '.executiveStats .executiveStat > strong'
+    );
+
+    counters.forEach((counter, index) => {
+      const raw = counter.textContent.trim();
+      const target = Number(raw.replace(/,/g, ''));
+
+      if (!Number.isFinite(target)) return;
+
+      counter.dataset.countTarget = String(target);
+
+      if (reduceMotion.matches || target === 0) {
+        counter.textContent = target.toLocaleString('en-US');
+        return;
+      }
+
+      const duration = 850 + Math.min(index, 5) * 100;
+      const start = performance.now();
+
+      counter.textContent = '0';
+
+      function tick(now) {
+        if (run !== activeRun || !counter.isConnected) return;
+
+        const progress = Math.min(
+          (now - start) / duration,
+          1
+        );
+
+        const eased = 1 - Math.pow(1 - progress, 4);
+        const current = Math.round(target * eased);
+
+        counter.textContent = current.toLocaleString('en-US');
+
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          counter.textContent = target.toLocaleString('en-US');
+        }
+      }
+
+      requestAnimationFrame(tick);
+    });
+  }
+
+  function enableDashboardCardMotion() {
+    const cards = document.querySelectorAll(
+      '#content .executiveStat'
+    );
+
+    const finePointer = window.matchMedia(
+      '(hover: hover) and (pointer: fine)'
+    ).matches;
+
+    if (!finePointer || reduceMotion.matches) return;
+
+    cards.forEach(card => {
+      if (card.dataset.motionReady === 'true') return;
+      card.dataset.motionReady = 'true';
+
+      card.addEventListener('pointermove', event => {
+        const rect = card.getBoundingClientRect();
+
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+
+        const rotateY = (x - .5) * 5;
+        const rotateX = (.5 - y) * 5;
+
+        card.style.setProperty(
+          '--card-rotate-x',
+          `${rotateX.toFixed(2)}deg`
+        );
+
+        card.style.setProperty(
+          '--card-rotate-y',
+          `${rotateY.toFixed(2)}deg`
+        );
+
+        card.classList.add('dashboardCardTilt');
+      });
+
+      card.addEventListener('pointerleave', () => {
+        card.classList.remove('dashboardCardTilt');
+        card.style.setProperty('--card-rotate-x', '0deg');
+        card.style.setProperty('--card-rotate-y', '0deg');
+      });
+    });
+  }
+
+  window.rouhDashboardMotion = () => {
+    animateDashboardCounters();
+    enableDashboardCardMotion();
+  };
+
+})();
+

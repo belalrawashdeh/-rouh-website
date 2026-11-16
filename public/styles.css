@@ -21740,3 +21740,6924 @@ body.complaintDrawerOpen{
   }
 }
 
+
+/* =========================================
+   ROUH MOTION EXPERIENCE
+   Premium Homepage Animations
+========================================= */
+
+:root {
+  --rouh-glow: rgba(111, 130, 111, .22);
+  --rouh-ease: cubic-bezier(.22, 1, .36, 1);
+}
+
+/* Smooth page experience */
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
+/* Hero atmosphere */
+
+.hero {
+  isolation: isolate;
+}
+
+.heroContent {
+  position: relative;
+  isolation: isolate;
+}
+
+.heroContent::before {
+  content: "";
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(147, 165, 143, .25),
+    transparent 70%
+  );
+  filter: blur(25px);
+  z-index: -1;
+  top: 10%;
+  right: -15%;
+  pointer-events: none;
+  animation: rouhGlow 9s ease-in-out infinite alternate;
+}
+
+@keyframes rouhGlow {
+  0% {
+    transform: translate(0, 0) scale(.85);
+  }
+  100% {
+    transform: translate(-45px, 35px) scale(1.2);
+  }
+}
+
+/* Hero entrance */
+
+.hero .kicker {
+  animation: rouhFadeUp .9s var(--rouh-ease) both;
+}
+
+.hero h1 {
+  animation: rouhFadeUp 1s .12s var(--rouh-ease) both;
+}
+
+.hero h2 {
+  animation: rouhFadeUp 1s .24s var(--rouh-ease) both;
+}
+
+.heroContent > p {
+  animation: rouhFadeUp 1s .36s var(--rouh-ease) both;
+}
+
+.hero .actions {
+  animation: rouhFadeUp 1s .5s var(--rouh-ease) both;
+}
+
+@keyframes rouhFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Navigation */
+
+.nav {
+  transition:
+    background .35s ease,
+    box-shadow .35s ease;
+}
+
+.links a {
+  position: relative;
+  transition: color .3s ease;
+}
+
+.links a::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  right: 0;
+  width: 0;
+  height: 2px;
+  background: var(--green2);
+  transition: width .35s var(--rouh-ease);
+}
+
+.links a:hover {
+  color: var(--green);
+}
+
+.links a:hover::after {
+  width: 100%;
+}
+
+/* Buttons */
+
+.btn {
+  transition:
+    transform .35s var(--rouh-ease),
+    box-shadow .35s ease,
+    background .3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(38,55,71,.13);
+}
+
+.btn:active {
+  transform: scale(.97);
+}
+
+/* Scroll reveal */
+
+.rouh-reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity .8s var(--rouh-ease),
+    transform .8s var(--rouh-ease);
+}
+
+.rouh-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger cards */
+
+.grid > .rouh-reveal:nth-child(2) {
+  transition-delay: .1s;
+}
+
+.grid > .rouh-reveal:nth-child(3) {
+  transition-delay: .2s;
+}
+
+.grid > .rouh-reveal:nth-child(4) {
+  transition-delay: .3s;
+}
+
+/* Interactive cards */
+
+.card {
+  transition:
+    transform .4s var(--rouh-ease),
+    box-shadow .4s ease,
+    border-color .4s ease;
+}
+
+.grid > .card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 22px 45px rgba(38,55,71,.11);
+  border-color: rgba(111,130,111,.35);
+}
+
+.featureIcon {
+  display: inline-block;
+  transition: transform .4s var(--rouh-ease);
+}
+
+.card:hover .featureIcon {
+  transform: scale(1.18) rotate(-8deg);
+}
+
+/* Statistics */
+
+.stat {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform .4s var(--rouh-ease),
+    box-shadow .4s ease;
+}
+
+.stat::before {
+  content: "";
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.07);
+  top: -80px;
+  left: -50px;
+  transition: transform .5s ease;
+}
+
+.stat:hover {
+  transform: translateY(-7px);
+  box-shadow: 0 18px 35px rgba(38,55,71,.15);
+}
+
+.stat:hover::before {
+  transform: scale(1.7);
+}
+
+.stat b {
+  transition: color .3s ease;
+}
+
+/* Section titles */
+
+.sectionTitle h2 {
+  transition: color .3s ease;
+}
+
+/* Join section */
+
+.join {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.join::after {
+  content: "";
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.3);
+  filter: blur(35px);
+  top: -140px;
+  left: -80px;
+  z-index: -1;
+  animation: rouhGlow 10s ease-in-out infinite alternate;
+}
+
+/* FAQ */
+
+.faq summary {
+  transition: color .3s ease;
+}
+
+.faq summary:hover {
+  color: var(--green);
+}
+
+.faq[open] {
+  animation: rouhFadeUp .35s ease both;
+}
+
+/* Footer */
+
+.footer a {
+  transition: color .25s ease, padding .25s ease;
+}
+
+.footer a:hover {
+  color: #d8c69d;
+  padding-right: 5px;
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+
+  .rouh-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 620px) {
+  .heroContent::before {
+    width: 230px;
+    height: 230px;
+  }
+
+  .grid > .card:hover,
+  .stat:hover {
+    transform: none;
+  }
+}
+
+
+/* ==========================================
+   ROUH PREMIUM MOTION - PHASE 1
+========================================== */
+
+:root {
+  --rouh-motion-ease: cubic-bezier(.22, 1, .36, 1);
+}
+
+/* Scroll reveal */
+.rouh-reveal {
+  opacity: 0;
+  transform: translateY(45px) scale(.985);
+  filter: blur(5px);
+  transition:
+    opacity .9s var(--rouh-motion-ease),
+    transform .9s var(--rouh-motion-ease),
+    filter .9s var(--rouh-motion-ease);
+  will-change: opacity, transform, filter;
+}
+
+.rouh-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* Staggered split sections */
+.split.is-visible > * {
+  animation: rouhSlideIn 1s var(--rouh-motion-ease) both;
+}
+
+.split.is-visible > *:nth-child(2) {
+  animation-delay: .18s;
+}
+
+.split.is-visible > *:nth-child(3) {
+  animation-delay: .32s;
+}
+
+@keyframes rouhSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hero cinematic entrance */
+.heroContent > * {
+  animation: rouhHeroEnter 1.1s var(--rouh-motion-ease) both;
+}
+
+.heroContent > *:nth-child(2) {
+  animation-delay: .15s;
+}
+
+.heroContent > *:nth-child(3) {
+  animation-delay: .3s;
+}
+
+@keyframes rouhHeroEnter {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Premium card hover */
+.card {
+  transition:
+    transform .45s var(--rouh-motion-ease),
+    box-shadow .45s ease,
+    border-color .45s ease;
+}
+
+.card:hover {
+  transform: translateY(-9px);
+  box-shadow: 0 22px 45px rgba(35, 54, 65, .12);
+}
+
+/* Soft gold glow */
+.sectionTitle,
+h2 {
+  text-wrap: balance;
+}
+
+.hero,
+.join {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(190, 158, 100, .13),
+    transparent 70%
+  );
+  top: -160px;
+  left: -130px;
+  pointer-events: none;
+  animation: rouhAmbient 9s ease-in-out infinite alternate;
+}
+
+@keyframes rouhAmbient {
+  from {
+    transform: translate(0, 0) scale(.85);
+  }
+  to {
+    transform: translate(90px, 65px) scale(1.2);
+  }
+}
+
+/* Buttons */
+button,
+.btn,
+a.button {
+  transition:
+    transform .3s var(--rouh-motion-ease),
+    box-shadow .3s ease,
+    background-color .3s ease;
+}
+
+button:hover,
+.btn:hover,
+a.button:hover {
+  transform: translateY(-3px);
+}
+
+/* Stats */
+.stat b {
+  display: inline-block;
+  transition: transform .35s ease;
+}
+
+.stat:hover b {
+  transform: scale(1.12);
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .rouh-reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+
+/* ROUH 3D INTERACTIVE CARDS */
+.card.rouh-tilt {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition:
+    transform .18s ease-out,
+    box-shadow .3s ease;
+}
+
+.card.rouh-tilt:hover {
+  transform:
+    perspective(900px)
+    rotateX(var(--rouh-rotate-x, 0deg))
+    rotateY(var(--rouh-rotate-y, 0deg))
+    translateY(-7px);
+  box-shadow:
+    0 25px 50px rgba(35, 54, 65, .15),
+    0 0 25px rgba(190, 158, 100, .10);
+}
+
+.card.rouh-tilt > * {
+  transform: translateZ(12px);
+}
+
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .card.rouh-tilt,
+  .card.rouh-tilt:hover {
+    transform: none;
+  }
+
+  .card.rouh-tilt > * {
+    transform: none;
+  }
+}
+
+
+
+/* =========================================
+   ROUH LIVING ATMOSPHERE
+========================================= */
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.rouh-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.hero > :not(.rouh-atmosphere) {
+  position: relative;
+  z-index: 2;
+}
+
+.rouh-atmosphere::before {
+  content: "";
+  position: absolute;
+  width: 550px;
+  height: 550px;
+  left: var(--rouh-pointer-x, 50%);
+  top: var(--rouh-pointer-y, 45%);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(112, 145, 119, .20) 0%,
+    rgba(112, 145, 119, .08) 35%,
+    transparent 70%
+  );
+  filter: blur(35px);
+  transition: left .7s ease-out, top .7s ease-out;
+}
+
+.rouh-atmosphere::after {
+  content: "";
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  right: -120px;
+  bottom: -160px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(196, 163, 104, .17),
+    transparent 70%
+  );
+  filter: blur(30px);
+  animation: rouhGoldFloat 12s ease-in-out infinite alternate;
+}
+
+@keyframes rouhGoldFloat {
+  from {
+    transform: translate(0, 0) scale(.9);
+  }
+  to {
+    transform: translate(-100px, -70px) scale(1.2);
+  }
+}
+
+.rouh-atmosphere canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: .65;
+}
+
+@media (max-width: 768px) {
+  .rouh-atmosphere::before {
+    width: 320px;
+    height: 320px;
+  }
+
+  .rouh-atmosphere::after {
+    width: 260px;
+    height: 260px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rouh-atmosphere::after {
+    animation: none;
+  }
+
+  .rouh-atmosphere::before {
+    transition: none;
+  }
+}
+
+
+/* ==========================================
+   ROUH CINEMATIC HERO EXPERIENCE
+   Final visual layer
+========================================== */
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(251,247,242,.97) 0%,
+      rgba(251,247,242,.88) 38%,
+      rgba(251,247,242,.48) 70%,
+      rgba(251,247,242,.25) 100%
+    ),
+    url('/assets/rouh-cover.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Cinematic overlay */
+.hero::before {
+  background:
+    radial-gradient(
+      ellipse at 75% 30%,
+      rgba(190,158,100,.18),
+      transparent 48%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(251,247,242,.97),
+      rgba(251,247,242,.78) 48%,
+      rgba(251,247,242,.28)
+    );
+}
+
+/* Hero content */
+.heroContent {
+  max-width: 680px;
+  perspective: 1000px;
+}
+
+/* Staggered entrance */
+.heroContent > .kicker {
+  animation: rouhCinematicIn 1s .1s both;
+}
+
+.heroContent > h1 {
+  animation: rouhCinematicIn 1.2s .25s both;
+}
+
+.heroContent > h2 {
+  animation: rouhCinematicIn 1.2s .42s both;
+}
+
+.heroContent > p:nth-of-type(1) {
+  animation: rouhCinematicIn 1.1s .58s both;
+}
+
+.heroContent > p:nth-of-type(2) {
+  animation: rouhCinematicIn 1.1s .7s both;
+}
+
+.heroContent > .actions {
+  animation: rouhCinematicIn 1.1s .85s both;
+}
+
+@keyframes rouhCinematicIn {
+  from {
+    opacity: 0;
+    transform: translateY(38px) scale(.98);
+    filter: blur(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Title highlight */
+.hero h1 {
+  position: relative;
+  text-shadow:
+    0 5px 20px rgba(38,55,71,.08),
+    0 15px 45px rgba(111,130,111,.10);
+}
+
+/* Kicker */
+.hero .kicker {
+  transition:
+    transform .4s ease,
+    box-shadow .4s ease;
+}
+
+.hero .kicker:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(190,158,100,.18);
+}
+
+/* Buttons */
+.hero .actions .btn {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform .4s cubic-bezier(.22,1,.36,1),
+    box-shadow .4s ease;
+}
+
+.hero .actions .btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255,255,255,.28) 50%,
+    transparent 80%
+  );
+  transform: translateX(-120%);
+  transition: transform .7s ease;
+  pointer-events: none;
+}
+
+.hero .actions .btn:hover::before {
+  transform: translateX(120%);
+}
+
+.hero .actions .btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 35px rgba(38,55,71,.15);
+}
+
+/* Mobile */
+@media (max-width: 620px) {
+  .hero {
+    background-position: 60% center;
+  }
+
+  .heroContent {
+    padding-top: 80px;
+    padding-bottom: 100px;
+  }
+
+  .hero::before {
+    background: linear-gradient(
+      90deg,
+      rgba(251,247,242,.94),
+      rgba(251,247,242,.80)
+    );
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .heroContent > * {
+    animation: none !important;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
+
+
+/* ==========================================
+   ROUH INTERACTIVE EXPERIENCE PHASE 6
+========================================== */
+
+/* Floating leaves */
+.rouh-floating-leaves {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.rouh-leaf {
+  position: absolute;
+  width: 15px;
+  height: 27px;
+  border-radius: 2px 100% 2px 100%;
+  background: linear-gradient(
+    145deg,
+    rgba(111,130,111,.32),
+    rgba(190,158,100,.18)
+  );
+  box-shadow: 0 0 18px rgba(111,130,111,.10);
+  animation: rouhLeafFloat var(--leaf-duration, 14s) ease-in-out infinite;
+  animation-delay: var(--leaf-delay, 0s);
+  opacity: 0;
+}
+
+.rouh-leaf::after {
+  content: "";
+  position: absolute;
+  width: 1px;
+  height: 75%;
+  background: rgba(255,255,255,.45);
+  left: 50%;
+  top: 12%;
+  transform: rotate(-20deg);
+}
+
+@keyframes rouhLeafFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 35px, 0) rotate(0deg);
+  }
+  15% {
+    opacity: .7;
+  }
+  50% {
+    transform: translate3d(35px, -45px, 0) rotate(100deg);
+  }
+  85% {
+    opacity: .5;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-20px, -130px, 0) rotate(220deg);
+  }
+}
+
+/* Hero parallax */
+.heroContent {
+  transform:
+    translate3d(
+      var(--rouh-parallax-x, 0px),
+      var(--rouh-parallax-y, 0px),
+      0
+    );
+  transition: transform .25s ease-out;
+  will-change: transform;
+}
+
+/* Interactive button light */
+.rouh-ripple {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: rgba(255,255,255,.38);
+  transform: scale(0);
+  animation: rouhRipple .65s ease-out forwards;
+}
+
+@keyframes rouhRipple {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Statistics highlight */
+.stat {
+  position: relative;
+  transition:
+    transform .4s cubic-bezier(.22,1,.36,1),
+    box-shadow .4s ease;
+}
+
+.stat.is-visible {
+  animation: rouhStatEnter .8s cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes rouhStatEnter {
+  from {
+    opacity: .4;
+    transform: translateY(18px) scale(.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.stat:hover {
+  box-shadow: 0 15px 35px rgba(111,130,111,.13);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .rouh-leaf {
+    animation: none !important;
+    display: none;
+  }
+
+  .heroContent {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .rouh-ripple {
+    display: none;
+  }
+}
+
+
+/* FIX: Arabic Hero Heading Typography */
+.hero h1 {
+  letter-spacing: 0 !important;
+  word-spacing: 8px !important;
+  line-height: 1.2 !important;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+}
+
+
+/* ==========================================
+   ROUH PREMIUM SECTIONS - PHASE 7
+========================================== */
+
+/* Section headings */
+.sectionTitle {
+  position: relative;
+}
+
+.sectionTitle .kicker {
+  display: inline-block;
+  color: var(--gold);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  transition: letter-spacing .4s ease;
+}
+
+.sectionTitle:hover .kicker {
+  letter-spacing: 3px;
+}
+
+.sectionTitle h2 {
+  position: relative;
+  display: inline-block;
+  line-height: 1.5;
+}
+
+/* Fields and values cards */
+#fields .card,
+#values .card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  min-height: 235px;
+  border: 1px solid rgba(200,167,108,.20);
+  background: linear-gradient(145deg,#fff,#fbf8f2);
+  transition:
+    transform .5s cubic-bezier(.22,1,.36,1),
+    box-shadow .5s ease,
+    border-color .4s ease;
+}
+
+#fields .card::before,
+#values .card::before {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(111,130,111,.13),
+    transparent 70%
+  );
+  left: -75px;
+  bottom: -85px;
+  z-index: -1;
+  transition: transform .6s ease;
+}
+
+#fields .card:hover,
+#values .card:hover {
+  transform: translateY(-10px);
+  border-color: rgba(200,167,108,.55);
+  box-shadow: 0 25px 55px rgba(38,55,71,.12);
+}
+
+#fields .card:hover::before,
+#values .card:hover::before {
+  transform: scale(1.7);
+}
+
+#fields .featureIcon,
+#values .featureIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: rgba(111,130,111,.10);
+  font-size: 29px;
+  margin-bottom: 16px;
+  transition:
+    transform .5s cubic-bezier(.22,1,.36,1),
+    background .4s ease;
+}
+
+#fields .card:hover .featureIcon,
+#values .card:hover .featureIcon {
+  transform: translateY(-5px) rotate(-7deg) scale(1.1);
+  background: rgba(200,167,108,.17);
+}
+
+#fields .card h3,
+#values .card h3 {
+  font-size: 21px;
+  margin-bottom: 12px;
+}
+
+#fields .card p,
+#values .card p {
+  color: var(--muted);
+  line-height: 1.95;
+}
+
+/* Events and achievements */
+#events .mediaCard,
+#achievements .mediaCard {
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: #fff;
+  transition:
+    transform .5s cubic-bezier(.22,1,.36,1),
+    box-shadow .5s ease;
+}
+
+#events .mediaCard:hover,
+#achievements .mediaCard:hover {
+  transform: translateY(-9px);
+  box-shadow: 0 25px 55px rgba(38,55,71,.14);
+}
+
+#events .mediaCard > img,
+#achievements .mediaCard > img {
+  width: 100%;
+  height: 245px;
+  object-fit: cover;
+  display: block;
+  transition: transform .8s cubic-bezier(.22,1,.36,1);
+}
+
+#events .mediaCard:hover > img,
+#achievements .mediaCard:hover > img {
+  transform: scale(1.07);
+}
+
+#events .mediaCard .body,
+#achievements .mediaCard .body {
+  padding: 25px;
+}
+
+#events .mediaCard h3,
+#achievements .mediaCard h3 {
+  font-size: 21px;
+  line-height: 1.6;
+  margin: 13px 0;
+}
+
+#events .mediaCard .badge {
+  background: #edf3ec;
+  color: #526b53;
+  border: 1px solid rgba(111,130,111,.15);
+  padding: 6px 13px;
+}
+
+#events .mediaCard .meta,
+#achievements .mediaCard .meta {
+  line-height: 2;
+}
+
+#events .mediaCard .btn {
+  margin-top: 12px;
+}
+
+/* Achievements special treatment */
+#achievements .mediaCard {
+  background: linear-gradient(160deg,#fff,#fbf7f0);
+}
+
+#achievements .mediaCard .body {
+  position: relative;
+}
+
+#achievements .mediaCard .body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 25px;
+  width: 42px;
+  height: 3px;
+  background: var(--gold);
+  border-radius: 10px;
+}
+
+/* Statistics */
+#statsSection .stats {
+  gap: 20px;
+}
+
+#statsSection .stat {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 25px;
+  padding: 32px 18px;
+  background: linear-gradient(145deg,#263b49,#526d61);
+  box-shadow: 0 15px 35px rgba(38,55,71,.12);
+  transition:
+    transform .45s ease,
+    box-shadow .45s ease;
+}
+
+#statsSection .stat::before {
+  content: "";
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.10);
+  top: -85px;
+  right: -65px;
+  transition: transform .6s ease;
+}
+
+#statsSection .stat:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px rgba(38,55,71,.20);
+}
+
+#statsSection .stat:hover::before {
+  transform: scale(1.5);
+}
+
+#statsSection .stat b {
+  color: #e8d4a7;
+  font-size: clamp(34px,4vw,48px);
+  margin-bottom: 8px;
+}
+
+/* Join section */
+#join .join {
+  border: 1px solid rgba(200,167,108,.20);
+  background: linear-gradient(125deg,#f2eadf,#e2e9df);
+  transition: box-shadow .5s ease;
+}
+
+#join .join:hover {
+  box-shadow: 0 25px 65px rgba(38,55,71,.12);
+}
+
+#joinReasons .card {
+  background: rgba(255,255,255,.75);
+  border-color: rgba(255,255,255,.8);
+  transition:
+    transform .4s ease,
+    background .4s ease;
+}
+
+#joinReasons .card:hover {
+  transform: translateY(-6px);
+  background: white;
+}
+
+/* Public FAQ */
+#faqList {
+  padding: 12px 28px;
+  border: 1px solid rgba(200,167,108,.20);
+  border-radius: 26px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 15px 45px rgba(38,55,71,.05);
+}
+
+#faqList .faq {
+  padding: 21px 5px;
+  border-bottom: 1px solid rgba(232,222,209,.8);
+}
+
+#faqList .faq summary {
+  position: relative;
+  list-style: none;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.8;
+  padding-left: 42px;
+  transition: color .3s ease;
+}
+
+#faqList .faq summary::-webkit-details-marker {
+  display: none;
+}
+
+#faqList .faq summary::after {
+  content: "+";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--green);
+  background: rgba(111,130,111,.10);
+  font-size: 22px;
+  transition:
+    transform .35s ease,
+    background .35s ease,
+    color .35s ease;
+}
+
+#faqList .faq[open] summary {
+  color: var(--green);
+}
+
+#faqList .faq[open] summary::after {
+  content: "−";
+  transform: translateY(-50%) rotate(180deg);
+  color: white;
+  background: var(--green);
+}
+
+#faqList .faq p {
+  margin: 15px 0 0;
+  padding: 16px 20px;
+  line-height: 2;
+  color: var(--muted);
+  background: #faf8f3;
+  border-radius: 14px;
+  animation: rouhFaqReveal .4s ease both;
+}
+
+@keyframes rouhFaqReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Empty states */
+#eventsGrid > .empty,
+#achievementsGrid > .empty {
+  border-radius: 24px;
+  padding: 55px 25px;
+  background: linear-gradient(145deg,#fff,#f5f2eb);
+  border: 1px dashed rgba(200,167,108,.45);
+  line-height: 2;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  #fields .card,
+  #values .card {
+    min-height: auto;
+  }
+
+  #events .mediaCard > img,
+  #achievements .mediaCard > img {
+    height: 210px;
+  }
+
+  #faqList {
+    padding: 8px 17px;
+  }
+
+  #faqList .faq summary {
+    font-size: 15px;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  #fields .card,
+  #values .card,
+  #events .mediaCard,
+  #achievements .mediaCard,
+  #events .mediaCard > img,
+  #achievements .mediaCard > img,
+  #statsSection .stat {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+
+
+
+/* =====================================================
+   ROUH ADMIN — EXECUTIVE DASHBOARD PREMIUM V3
+   Visual improvements only — no application logic
+   ===================================================== */
+
+.adminBody {
+  background: #f4f6f2;
+}
+
+.adminMain {
+  min-width: 0;
+  background:
+    radial-gradient(ellipse at 90% 0%, rgba(126,150,119,.07), transparent 35%),
+    #f4f6f2;
+}
+
+/* Dashboard spacing */
+
+.executiveDashboard {
+  gap: 20px;
+}
+
+/* Executive hero */
+
+.executiveHero {
+  min-height: 220px;
+  padding: 38px 40px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 25px;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(196,181,137,.17), transparent 30%),
+    radial-gradient(circle at 12% 100%, rgba(130,158,128,.15), transparent 35%),
+    linear-gradient(125deg, #1c3039 0%, #304940 58%, #596953 100%);
+  box-shadow: 0 20px 45px rgba(30,49,54,.13);
+}
+
+.executiveCode {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #d9c397;
+}
+
+.executiveHero h1 {
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.executiveHero p {
+  margin-top: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,.75);
+}
+
+.executiveIdentity {
+  margin-top: 22px;
+}
+
+.executiveIdentity > span {
+  padding: 8px 13px;
+  font-size: 10px;
+}
+
+/* Command emblem */
+
+.executiveCommandRing {
+  width: 115px;
+  height: 115px;
+  border-color: rgba(220,205,163,.25);
+  box-shadow:
+    0 0 0 12px rgba(255,255,255,.025),
+    0 0 0 25px rgba(255,255,255,.018);
+}
+
+.executiveCommandRing > div {
+  width: 78px;
+  height: 78px;
+  background: rgba(255,255,255,.075);
+}
+
+.executiveCommandRing span {
+  font-size: 35px;
+}
+
+.executiveCommand > strong {
+  font-size: 10px;
+}
+
+.executiveCommand > small {
+  font-size: 8px;
+}
+
+/* Statistics */
+
+.executiveStats {
+  gap: 13px;
+}
+
+.executiveStat {
+  min-height: 132px;
+  padding: 19px;
+  border-radius: 18px;
+  border-color: #e9ede7;
+  box-shadow: 0 7px 22px rgba(37,55,45,.035);
+}
+
+.executiveStatTop > span {
+  font-size: 9px;
+  letter-spacing: 1.1px;
+  color: #89948d;
+}
+
+.executiveStatTop i {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  font-size: 14px;
+}
+
+.executiveStat > strong {
+  margin-top: 13px;
+  font-size: 31px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+}
+
+.executiveStat > small {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #78847c;
+}
+
+/* Dashboard panels */
+
+.executiveMainGrid {
+  gap: 16px;
+}
+
+.executiveQuickPanel,
+.executiveActivityPanel {
+  padding: 25px;
+  border: 1px solid #e8ece6;
+  border-radius: 21px;
+  box-shadow: 0 9px 28px rgba(37,55,45,.04);
+}
+
+.executiveSectionHead {
+  margin-bottom: 20px;
+}
+
+.executiveSectionHead > div > span {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+}
+
+.executiveSectionHead h2 {
+  margin-top: 7px;
+  font-size: 19px;
+  color: #344940;
+}
+
+.executiveSectionHead p {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #89938c;
+}
+
+.executiveSectionHead > b {
+  min-width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* Quick actions */
+
+.executiveQuickGrid {
+  gap: 11px;
+}
+
+.executiveQuickAction {
+  min-height: 94px;
+  grid-template-columns: 46px minmax(0,1fr) auto;
+  gap: 13px;
+  padding: 15px;
+  border-color: #e7ece5;
+  border-radius: 16px;
+  background: linear-gradient(145deg,#fff,#fafbf9);
+}
+
+.executiveQuickAction:hover {
+  transform: translateY(-3px);
+  border-color: #cbd8c9;
+  background: #f6f9f4;
+  box-shadow: 0 12px 25px rgba(50,69,60,.075);
+}
+
+.executiveQuickIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  font-size: 18px;
+}
+
+.executiveQuickText small {
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+
+.executiveQuickText strong {
+  margin-top: 5px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.executiveQuickText i {
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.executiveQuickAction > b {
+  font-size: 15px;
+}
+
+/* Activity */
+
+.executiveActivityPanel {
+  max-height: 480px;
+}
+
+.executiveTimeline {
+  max-height: 335px;
+}
+
+.activityPulse {
+  padding: 7px 10px;
+  font-size: 8px;
+}
+
+/* Responsive */
+
+@media (max-width: 950px) {
+  .executiveHero {
+    padding: 30px;
+  }
+
+  .executiveMainGrid.hasAudit {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .executiveHero {
+    padding: 25px 21px;
+    border-radius: 20px;
+  }
+
+  .executiveHero h1 {
+    font-size: 24px;
+  }
+
+  .executiveHero p {
+    font-size: 12px;
+  }
+
+  .executiveStats {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 9px;
+  }
+
+  .executiveStat {
+    min-height: 115px;
+    padding: 14px;
+  }
+
+  .executiveStat > strong {
+    font-size: 26px;
+  }
+
+  .executiveQuickPanel,
+  .executiveActivityPanel {
+    padding: 17px;
+  }
+
+  .executiveQuickGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .executiveStatTop > span {
+    font-size: 7px;
+  }
+
+  .executiveStat > small {
+    font-size: 10px;
+  }
+
+  .executiveQuickText strong {
+    font-size: 12px;
+  }
+}
+
+
+
+
+
+/* =====================================================
+   ROUH ADMIN — PREMIUM MOTION ENGINE V1
+   Owner / Deputy / HR / Department Admin
+   ===================================================== */
+
+.adminBody {
+  --motion-ease: cubic-bezier(.16, 1, .3, 1);
+}
+
+/* Full page entrance */
+
+#content.adminMotionEnter {
+  animation: rouhAdminPageEnter .72s var(--motion-ease) both;
+}
+
+@keyframes rouhAdminPageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(.992);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Staggered cards */
+
+#content.adminMotionEnter .panel,
+#content.adminMotionEnter .executiveStat,
+#content.adminMotionEnter .executiveQuickAction,
+#content.adminMotionEnter .executiveActivity,
+#content.adminMotionEnter .accessCard,
+#content.adminMotionEnter .statCard,
+#content.adminMotionEnter .taskCard,
+#content.adminMotionEnter .volunteerCard {
+  animation: rouhAdminItemEnter .65s var(--motion-ease) both;
+  animation-delay: calc(var(--motion-index, 0) * 65ms);
+}
+
+@keyframes rouhAdminItemEnter {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(.975);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Dashboard hero cinematic entrance */
+
+#content.adminMotionEnter .executiveHero {
+  animation:
+    rouhHeroEnter .95s var(--motion-ease) both,
+    rouhHeroGlow 7s ease-in-out 1s infinite alternate;
+}
+
+@keyframes rouhHeroEnter {
+  from {
+    opacity: 0;
+    transform: translateY(25px) scale(.97);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes rouhHeroGlow {
+  from {
+    box-shadow: 0 20px 45px rgba(30,49,54,.13);
+  }
+  to {
+    box-shadow:
+      0 25px 65px rgba(30,49,54,.2),
+      0 0 28px rgba(151,174,137,.12);
+  }
+}
+
+/* Dashboard statistics */
+
+#content.adminMotionEnter .executiveStat {
+  transition:
+    transform .35s var(--motion-ease),
+    box-shadow .35s ease,
+    border-color .35s ease;
+}
+
+#content.adminMotionEnter .executiveStat:hover {
+  transform: translateY(-7px) scale(1.025);
+  border-color: rgba(111,139,108,.3);
+  box-shadow: 0 18px 38px rgba(38,55,71,.1);
+}
+
+/* Quick action interaction */
+
+#content .executiveQuickAction {
+  position: relative;
+  overflow: hidden;
+}
+
+#content .executiveQuickAction::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    110deg,
+    transparent 25%,
+    rgba(255,255,255,.65) 48%,
+    transparent 70%
+  );
+  transform: translateX(130%);
+  transition: transform .7s ease;
+}
+
+#content .executiveQuickAction:hover::after {
+  transform: translateX(-130%);
+}
+
+/* Sidebar interaction */
+
+.adminBody .sidebar .brand {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,.09);
+}
+
+.adminBody #userBox {
+  position: relative;
+  z-index: 1;
+  margin: 18px 0;
+  padding: 15px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px;
+  background: rgba(255,255,255,.055);
+  line-height: 1.9;
+}
+
+.adminBody #userBox b {
+  color: #fff;
+  font-size: 14px;
+}
+
+.adminBody #userBox .muted {
+  color: #b8c8bd;
+  font-size: 11px;
+}
+
+.adminBody #menu button {
+  position: relative;
+  overflow: hidden;
+  min-height: 48px;
+  border: 1px solid transparent;
+  transition:
+    transform .3s var(--motion-ease),
+    background .3s ease,
+    border-color .3s ease,
+    box-shadow .3s ease;
+}
+
+.adminBody #menu button:hover {
+  transform: translateX(-5px);
+  background: rgba(255,255,255,.09);
+  border-color: rgba(255,255,255,.08);
+}
+
+.adminBody #menu button.active {
+  background: linear-gradient(
+    110deg,
+    rgba(143,166,132,.25),
+    rgba(255,255,255,.09)
+  );
+  border-color: rgba(177,198,163,.18);
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+
+.adminBody #menu button.active::before {
+  width: 4px;
+  background: linear-gradient(#d6c18f,#91aa8b);
+  box-shadow: 0 0 17px rgba(192,204,157,.55);
+}
+
+/* Header entrance */
+
+.adminPageIdentity {
+  animation: rouhHeaderEnter .65s var(--motion-ease) both;
+}
+
+.adminTopActions {
+  animation: rouhHeaderEnter .75s var(--motion-ease) both;
+}
+
+@keyframes rouhHeaderEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Buttons */
+
+.adminBody .adminMain button,
+.adminBody .adminMain .btn {
+  transition:
+    transform .25s var(--motion-ease),
+    box-shadow .25s ease,
+    filter .25s ease;
+}
+
+.adminBody .adminMain button:hover,
+.adminBody .adminMain .btn:hover {
+  filter: brightness(1.025);
+}
+
+.adminBody .adminMain button:active,
+.adminBody .adminMain .btn:active {
+  transform: scale(.975);
+}
+
+/* Mobile motion */
+
+@media (max-width: 700px) {
+  #content.adminMotionEnter {
+    animation-duration: .5s;
+  }
+
+  #content.adminMotionEnter .panel,
+  #content.adminMotionEnter .executiveStat,
+  #content.adminMotionEnter .executiveQuickAction {
+    animation-duration: .5s;
+  }
+
+  .adminBody #menu button:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  .adminBody *,
+  .adminBody *::before,
+  .adminBody *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+
+
+/* =====================================================
+   ROUH ADMIN — PREMIUM SIDEBAR V2
+   ===================================================== */
+
+.adminShell {
+  grid-template-columns: 278px minmax(0, 1fr);
+}
+
+.adminBody .sidebar {
+  position: sticky !important;
+  top: 0;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  padding: 27px 19px;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background:
+    radial-gradient(circle at 15% 5%, rgba(135,159,128,.16), transparent 30%),
+    linear-gradient(165deg, #172a33 0%, #203b3c 55%, #263a35 100%);
+  border-left: 1px solid rgba(255,255,255,.07);
+  box-shadow: -12px 0 35px rgba(24,43,43,.08);
+}
+
+.adminBody .sidebar::before {
+  top: 15%;
+  right: -170px;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(157,181,143,.14), transparent 68%);
+  animation: sidebarAtmosphere 12s ease-in-out infinite alternate;
+}
+
+@keyframes sidebarAtmosphere {
+  from { transform: translate3d(0,0,0) scale(.9); }
+  to { transform: translate3d(-25px,35px,0) scale(1.12); }
+}
+
+/* Brand */
+
+.adminBody .sidebar .brand {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 22px;
+  padding: 8px 7px 23px;
+  color: #fff;
+  font-size: 31px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.adminBody .sidebar .brand small {
+  display: block;
+  margin-top: 5px;
+  color: #c6b58b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+/* User identity */
+
+.adminBody #userBox {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 22px;
+  padding: 17px 15px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 17px;
+  background: linear-gradient(135deg, rgba(255,255,255,.09), rgba(255,255,255,.035));
+  box-shadow: 0 10px 25px rgba(0,0,0,.1);
+}
+
+.adminBody #userBox p {
+  margin: 0;
+  line-height: 2;
+}
+
+.adminBody #userBox b {
+  color: #fff;
+  font-size: 14px;
+}
+
+.adminBody #userBox .muted {
+  display: inline-block;
+  margin-top: 4px;
+  color: #c3d0c4;
+  font-size: 11px;
+}
+
+/* Menu */
+
+.adminBody #menu {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 5px;
+  padding: 5px 0 30px !important;
+}
+
+.adminBody #menu button {
+  width: 100%;
+  min-height: 49px;
+  margin: 0;
+  padding: 12px 15px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  color: #d1dcda;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  background: transparent;
+  transition:
+    background .3s ease,
+    color .3s ease,
+    transform .35s cubic-bezier(.16,1,.3,1),
+    border-color .3s ease,
+    box-shadow .3s ease;
+}
+
+.adminBody #menu button:hover {
+  transform: translateX(-5px);
+  color: #fff;
+  background: rgba(255,255,255,.075);
+  border-color: rgba(255,255,255,.08);
+}
+
+.adminBody #menu button.active {
+  color: #fff;
+  background: linear-gradient(105deg, rgba(147,169,132,.25), rgba(255,255,255,.075));
+  border-color: rgba(190,204,165,.2);
+  box-shadow: 0 8px 22px rgba(0,0,0,.13);
+}
+
+.adminBody #menu button.active::before {
+  right: -1px;
+  width: 4px;
+  height: 60%;
+  border-radius: 8px;
+  background: linear-gradient(#e0d0a5, #9db58f);
+  box-shadow: 0 0 15px rgba(198,205,157,.55);
+}
+
+/* Logout */
+
+.adminBody #logoutBtn {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 10px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 13px;
+  color: #f0e8dd;
+  background: rgba(255,255,255,.055);
+  transition: .3s ease;
+}
+
+.adminBody #logoutBtn:hover {
+  color: #fff;
+  border-color: rgba(222,163,151,.35);
+  background: rgba(164,85,75,.2);
+  transform: translateY(-2px);
+}
+
+/* Mobile */
+
+@media (max-width: 900px) {
+  .adminShell {
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .adminBody .sidebar {
+    position: relative !important;
+    top: auto;
+    height: auto !important;
+    max-height: none !important;
+    padding: 19px;
+    overflow: visible !important;
+  }
+
+  .adminBody .sidebar .brand {
+    margin-bottom: 12px;
+    padding-bottom: 14px;
+  }
+
+  .adminBody #userBox {
+    margin-bottom: 12px;
+  }
+
+  .adminBody #menu {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 7px;
+    overflow-x: auto;
+    padding: 5px 0 13px !important;
+    scrollbar-width: thin;
+  }
+
+  .adminBody #menu button {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 43px;
+    white-space: nowrap;
+  }
+
+  .adminBody #logoutBtn {
+    width: auto;
+    min-width: 150px;
+  }
+
+  .adminMain {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adminBody .sidebar::before {
+    animation: none !important;
+  }
+}
+
+
+
+
+
+/* =====================================================
+   ROUH ACCESS CONTROL — PREMIUM V3
+   Visual only. Existing permissions and logic preserved.
+   ===================================================== */
+
+.accessCenter,
+.accessEditor {
+  gap: 21px;
+}
+
+/* HERO */
+
+.accessHero {
+  position: relative;
+  overflow: hidden;
+  min-height: 155px;
+  padding: 34px 38px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 23px;
+  background:
+    radial-gradient(circle at 12% 15%, rgba(89,197,144,.2), transparent 30%),
+    radial-gradient(circle at 90% 100%, rgba(196,181,137,.13), transparent 32%),
+    linear-gradient(125deg,#172e36,#24483e 65%,#526b52);
+  box-shadow: 0 18px 42px rgba(25,54,46,.13);
+}
+
+.accessHero::after {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  left: -90px;
+  bottom: -200px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 25px rgba(255,255,255,.025),
+    0 0 0 55px rgba(255,255,255,.018);
+  pointer-events: none;
+}
+
+.accessHero > div,
+.accessHero button {
+  position: relative;
+  z-index: 1;
+}
+
+.accessHero h2 {
+  font-size: 29px;
+  line-height: 1.5;
+}
+
+.accessHero p {
+  font-size: 13px !important;
+}
+
+.accessAddBtn {
+  padding: 14px 21px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 13px;
+  background: linear-gradient(135deg,#39bd85,#168b63);
+  box-shadow: 0 8px 20px rgba(13,117,79,.22);
+  font-size: 12px !important;
+  transition: transform .3s, box-shadow .3s, filter .3s;
+}
+
+.accessAddBtn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 13px 28px rgba(13,117,79,.3);
+  filter: brightness(1.06);
+}
+
+/* STATISTICS */
+
+.accessStats {
+  gap: 13px;
+}
+
+.accessStat {
+  position: relative;
+  overflow: hidden;
+  min-height: 118px;
+  padding: 20px;
+  border: 1px solid #e6ece6;
+  border-radius: 18px;
+  background: linear-gradient(145deg,#fff,#fbfcfa);
+  box-shadow: 0 7px 22px rgba(36,57,46,.035);
+  transition: transform .35s cubic-bezier(.16,1,.3,1),
+              box-shadow .35s,
+              border-color .35s;
+  animation: accessStatEnter .65s cubic-bezier(.16,1,.3,1) both;
+}
+
+.accessStat:nth-child(2) { animation-delay: 70ms; }
+.accessStat:nth-child(3) { animation-delay: 140ms; }
+.accessStat:nth-child(4) { animation-delay: 210ms; }
+
+@keyframes accessStatEnter {
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.accessStat::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  height: 45%;
+  border-radius: 5px 0 0 5px;
+  background: linear-gradient(#9ab596,#4d8062);
+}
+
+.accessStat:hover {
+  transform: translateY(-5px);
+  border-color: #cbdccf;
+  box-shadow: 0 15px 32px rgba(36,57,46,.09);
+}
+
+.accessStat span {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+}
+
+.accessStat strong {
+  margin: 9px 0 5px;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.accessStat small {
+  font-size: 11px !important;
+}
+
+/* SEARCH AND FILTERS */
+
+.accessToolbar {
+  gap: 11px;
+  padding: 13px;
+  border: 1px solid #e7ece7;
+  border-radius: 17px;
+  background: rgba(255,255,255,.8);
+  box-shadow: 0 6px 20px rgba(36,57,46,.025);
+}
+
+.accessSearch {
+  min-height: 47px;
+  border-color: #e3eae4;
+  transition: border-color .25s, box-shadow .25s;
+}
+
+.accessSearch:focus-within {
+  border-color: #8eaa91;
+  box-shadow: 0 0 0 4px rgba(117,151,119,.1);
+}
+
+.accessSearch > span {
+  color: #78917d;
+  font-size: 21px;
+}
+
+.accessSearch input,
+.accessToolbar select {
+  font-size: 12px !important;
+  color: #344a40;
+}
+
+.accessToolbar select {
+  height: 47px;
+  border-color: #e3eae4;
+  cursor: pointer;
+  transition: border-color .25s, box-shadow .25s;
+}
+
+.accessToolbar select:focus {
+  border-color: #8eaa91;
+  box-shadow: 0 0 0 4px rgba(117,151,119,.1);
+}
+
+/* USERS TABLE */
+
+.accessTableWrap {
+  border-color: #e5ebe5;
+  border-radius: 19px;
+  box-shadow: 0 9px 28px rgba(36,57,46,.04);
+}
+
+.accessTable {
+  min-width: 780px;
+}
+
+.accessTable th {
+  padding: 17px;
+  background: linear-gradient(180deg,#f7faf6,#f2f6f1);
+  color: #687c70;
+  font-size: 10px !important;
+  font-weight: 900;
+}
+
+.accessTable td {
+  padding: 17px;
+  font-size: 11px !important;
+  transition: background .2s;
+}
+
+.accessUserRow {
+  transition: opacity .25s, background .25s;
+}
+
+.accessUserRow:hover td {
+  background: #f7faf6;
+}
+
+.accessPerson {
+  gap: 12px;
+}
+
+.accessAvatar {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+  border: 2px solid rgba(255,255,255,.8);
+  border-radius: 14px;
+  background: linear-gradient(145deg,#345d4c,#183c34);
+  box-shadow: 0 5px 13px rgba(28,65,49,.15);
+  font-size: 15px;
+  transition: transform .3s, box-shadow .3s;
+}
+
+.accessUserRow:hover .accessAvatar {
+  transform: rotate(-5deg) scale(1.07);
+  box-shadow: 0 8px 18px rgba(28,65,49,.2);
+}
+
+.accessAvatar.owner {
+  background: linear-gradient(145deg,#d0ad65,#96702e);
+}
+
+.accessPerson strong,
+.accessContact strong {
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.accessPerson small,
+.accessContact small {
+  font-size: 9px !important;
+}
+
+/* ROLE BADGES */
+
+.accessRole,
+.accessStatus,
+.accessDepartment {
+  padding: 7px 11px;
+  border: 1px solid transparent;
+  font-size: 10px;
+}
+
+.role-owner {
+  border-color: #f1dfb8;
+  background: #fff8e9;
+  color: #927027;
+}
+
+.role-deputy {
+  border-color: #dce6f4;
+  background: #eff4fc;
+  color: #466b9e;
+}
+
+.role-admin {
+  border-color: #d9eee3;
+  background: #eff8f2;
+  color: #237c5d;
+}
+
+.accessDepartment {
+  border-color: #e8ece8;
+  background: #f7f9f7;
+  color: #65766d;
+}
+
+/* STATUS */
+
+.accessStatus.isActive {
+  border-color: #d8eee2;
+}
+
+.accessStatus.isStopped {
+  border-color: #eddddd;
+}
+
+.accessStatus.isActive i {
+  box-shadow: 0 0 0 4px rgba(32,184,120,.11);
+}
+
+.accessStatus.isStopped i {
+  box-shadow: 0 0 0 4px rgba(196,108,108,.1);
+}
+
+/* ACTIONS */
+
+.accessEditBtn {
+  padding: 9px 15px;
+  border-radius: 10px;
+  font-size: 10px !important;
+  transition: transform .25s, background .25s, box-shadow .25s;
+}
+
+.accessEditBtn:hover {
+  transform: translateY(-2px);
+  border-color: #bdd4c6;
+  background: #edf6ef;
+  box-shadow: 0 6px 14px rgba(40,95,81,.09);
+}
+
+.accessOwnerLock {
+  padding: 7px 11px;
+  border: 1px solid #eee6d4;
+  border-radius: 9px;
+  background: #fcf8ef;
+  font-size: 10px;
+}
+
+/* EMPTY STATE */
+
+.accessNoResults {
+  padding: 55px 20px;
+  animation: accessStatEnter .4s ease both;
+}
+
+.accessNoResults strong {
+  font-size: 16px;
+}
+
+.accessNoResults p {
+  font-size: 11px !important;
+}
+
+/* EDITOR */
+
+.accessEditorHero {
+  position: relative;
+  overflow: hidden;
+  padding: 30px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 85% 10%,rgba(100,173,127,.17),transparent 30%),
+    linear-gradient(130deg,#172e36,#24483e 70%,#526b52);
+  box-shadow: 0 14px 35px rgba(25,54,46,.1);
+}
+
+.accessEditorHero h2 {
+  font-size: 27px;
+}
+
+.accessEditorHero p {
+  font-size: 12px !important;
+}
+
+.accessEditorPanel,
+.accessSettingsPanel {
+  padding: 25px;
+  border-color: #e5ebe5;
+  border-radius: 19px;
+  box-shadow: 0 8px 25px rgba(36,57,46,.035);
+  animation: accessStatEnter .6s cubic-bezier(.16,1,.3,1) both;
+}
+
+.accessEditorHead h3,
+.accessSettingsPanel h3 {
+  font-size: 17px !important;
+}
+
+.accessEditorHead p,
+.accessSettingsPanel > p {
+  font-size: 11px !important;
+}
+
+.accessEditorHead > span {
+  width: 37px;
+  height: 37px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+
+.accessField {
+  gap: 9px;
+  margin-top: 17px;
+}
+
+.accessField > span {
+  font-size: 11px;
+}
+
+.accessField input,
+.accessField select {
+  min-height: 46px;
+  padding: 12px 14px;
+  border-color: #e0e9e2;
+  border-radius: 12px;
+  background: #fcfdfb;
+  font-size: 12px !important;
+  transition: border-color .25s, box-shadow .25s, background .25s;
+}
+
+.accessField input:focus,
+.accessField select:focus {
+  border-color: #8eaa91;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(117,151,119,.1);
+}
+
+.accessSettingsPanel {
+  top: 25px;
+}
+
+.accessSettingsCode {
+  font-size: 9px;
+}
+
+.accessSecurityNote {
+  padding: 14px;
+  border: 1px solid #e8eee8;
+  border-radius: 12px;
+  background: #f7faf6;
+}
+
+.accessSecurityNote strong {
+  font-size: 10px;
+}
+
+.accessSecurityNote p {
+  font-size: 10px !important;
+  line-height: 1.8;
+}
+
+.accessSaveBtn,
+.accessCancelBtn {
+  min-height: 46px;
+  font-size: 12px !important;
+  transition: transform .25s, box-shadow .25s, filter .25s;
+}
+
+.accessSaveBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 20px rgba(22,150,106,.2);
+  filter: brightness(1.05);
+}
+
+.accessCancelBtn:hover {
+  background: #f5f8f5;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+  .accessHero {
+    padding: 25px;
+  }
+
+  .accessTableWrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .accessEditorForm {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .accessHero {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 17px;
+    padding: 23px 19px;
+  }
+
+  .accessHero h2 {
+    font-size: 23px;
+  }
+
+  .accessAddBtn {
+    width: 100%;
+  }
+
+  .accessStats {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 9px;
+  }
+
+  .accessStat {
+    min-height: 105px;
+    padding: 14px;
+  }
+
+  .accessStat strong {
+    font-size: 25px;
+  }
+
+  .accessToolbar {
+    padding: 10px;
+  }
+
+  .accessEditorHero {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 22px 18px;
+  }
+
+  .accessEditorPanel,
+  .accessSettingsPanel {
+    padding: 18px;
+  }
+
+  .accessEditorGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .accessFieldFull {
+    grid-column: auto;
+  }
+}
+
+/* ACCESS PAGE MOTION */
+
+@media (prefers-reduced-motion: no-preference) {
+  #content.adminMotionEnter .accessHero {
+    animation: rouhHeroEnter .8s cubic-bezier(.16,1,.3,1) both;
+  }
+
+  #content.adminMotionEnter .accessTableWrap {
+    animation: rouhAdminItemEnter .65s .16s cubic-bezier(.16,1,.3,1) both;
+  }
+
+  #content.adminMotionEnter .accessUserRow {
+    animation: accessRowEnter .45s cubic-bezier(.16,1,.3,1) both;
+  }
+
+  #content.adminMotionEnter .accessUserRow:nth-child(2) { animation-delay: 55ms; }
+  #content.adminMotionEnter .accessUserRow:nth-child(3) { animation-delay: 110ms; }
+  #content.adminMotionEnter .accessUserRow:nth-child(4) { animation-delay: 165ms; }
+  #content.adminMotionEnter .accessUserRow:nth-child(5) { animation-delay: 220ms; }
+  #content.adminMotionEnter .accessUserRow:nth-child(n+6) { animation-delay: 260ms; }
+
+  @keyframes accessRowEnter {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+
+
+
+
+/* ================================================
+   ROUH ACCESS CONTROL — CINEMATIC MOTION V3
+   ================================================ */
+
+#content.adminMotionEnter .accessHero {
+  animation:
+    accessHeroReveal .95s cubic-bezier(.16,1,.3,1) both,
+    accessHeroAtmosphere 6s ease-in-out 1s infinite alternate;
+}
+
+#content.adminMotionEnter .accessStat,
+#content.adminMotionEnter .accessToolbar,
+#content.adminMotionEnter .accessTableWrap,
+#content.adminMotionEnter .accessUserRow,
+#content.adminMotionEnter .accessEditorHero,
+#content.adminMotionEnter .accessEditorPanel,
+#content.adminMotionEnter .accessSettingsPanel {
+  animation: accessItemReveal .75s cubic-bezier(.16,1,.3,1) both;
+  animation-delay: calc(var(--motion-index, 0) * 75ms);
+}
+
+@keyframes accessHeroReveal {
+  from {
+    opacity: 0;
+    transform: translateY(35px) scale(.96);
+    filter: blur(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes accessHeroAtmosphere {
+  from {
+    box-shadow: 0 15px 35px rgba(7,28,34,.12);
+  }
+  to {
+    box-shadow:
+      0 25px 65px rgba(7,28,34,.23),
+      0 0 30px rgba(43,185,128,.12);
+  }
+}
+
+@keyframes accessItemReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(.975);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Statistics interaction */
+
+.accessStat {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform .35s cubic-bezier(.16,1,.3,1),
+    box-shadow .35s ease,
+    border-color .35s ease;
+}
+
+.accessStat:hover {
+  transform: translateY(-7px) scale(1.025);
+  border-color: rgba(43,185,128,.35);
+  box-shadow: 0 18px 38px rgba(25,55,45,.11);
+}
+
+.accessStat::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 25%,
+    rgba(255,255,255,.65) 50%,
+    transparent 75%
+  );
+  transform: translateX(120%);
+  transition: transform .8s ease;
+}
+
+.accessStat:hover::after {
+  transform: translateX(-120%);
+}
+
+/* Table row interaction */
+
+.accessUserRow {
+  transition: background .25s ease;
+}
+
+.accessUserRow:hover {
+  background: #f4faf6;
+}
+
+.accessAvatar {
+  transition:
+    transform .35s cubic-bezier(.16,1,.3,1),
+    box-shadow .35s ease;
+}
+
+.accessUserRow:hover .accessAvatar {
+  transform: rotate(-7deg) scale(1.12);
+  box-shadow: 0 7px 18px rgba(30,90,65,.18);
+}
+
+/* Add and edit buttons */
+
+.accessAddBtn,
+.accessEditBtn,
+.accessSaveBtn {
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    filter .25s ease;
+}
+
+.accessAddBtn:hover,
+.accessSaveBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(22,150,106,.22);
+  filter: brightness(1.06);
+}
+
+.accessEditBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 16px rgba(40,95,81,.12);
+}
+
+/* Form focus */
+
+.accessField input,
+.accessField select {
+  transition:
+    border-color .25s ease,
+    box-shadow .25s ease,
+    background .25s ease;
+}
+
+.accessField input:focus,
+.accessField select:focus {
+  border-color: #36a77d;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(43,185,128,.10);
+}
+
+/* Reduced motion accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  #content.adminMotionEnter .accessHero,
+  #content.adminMotionEnter .accessStat,
+  #content.adminMotionEnter .accessToolbar,
+  #content.adminMotionEnter .accessTableWrap,
+  #content.adminMotionEnter .accessUserRow,
+  #content.adminMotionEnter .accessEditorHero,
+  #content.adminMotionEnter .accessEditorPanel,
+  #content.adminMotionEnter .accessSettingsPanel {
+    animation: none !important;
+  }
+
+  .accessStat,
+  .accessAvatar,
+  .accessAddBtn,
+  .accessEditBtn,
+  .accessSaveBtn {
+    transition: none !important;
+  }
+}
+
+
+
+
+/* ================================================
+   ROUH ACCESS EDITOR — PREMIUM EXPERIENCE V4
+   ================================================ */
+
+#content.adminMotionEnter .accessEditorHero {
+  animation: editorHeroEnter 1s cubic-bezier(.16,1,.3,1) both;
+}
+
+#content.adminMotionEnter .accessEditorPanel {
+  animation: editorPanelEnter .9s .12s cubic-bezier(.16,1,.3,1) both;
+}
+
+#content.adminMotionEnter .accessSettingsPanel {
+  animation: editorPanelEnter .9s .25s cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes editorHeroEnter {
+  from {
+    opacity: 0;
+    transform: translateY(35px) scale(.97);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes editorPanelEnter {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(.975);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Form fields entrance */
+
+#content.adminMotionEnter .accessField {
+  animation: editorFieldEnter .65s cubic-bezier(.16,1,.3,1) both;
+}
+
+#content.adminMotionEnter .accessEditorGrid .accessField:nth-child(1) {
+  animation-delay: .25s;
+}
+
+#content.adminMotionEnter .accessEditorGrid .accessField:nth-child(2) {
+  animation-delay: .34s;
+}
+
+#content.adminMotionEnter .accessEditorGrid .accessField:nth-child(3) {
+  animation-delay: .43s;
+}
+
+#content.adminMotionEnter .accessEditorGrid .accessField:nth-child(4) {
+  animation-delay: .52s;
+}
+
+#content.adminMotionEnter .accessSettingsPanel .accessField {
+  animation-delay: .4s;
+}
+
+@keyframes editorFieldEnter {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Form panel atmosphere */
+
+.accessEditorPanel,
+.accessSettingsPanel {
+  transition:
+    box-shadow .35s ease,
+    border-color .35s ease,
+    transform .35s cubic-bezier(.16,1,.3,1);
+}
+
+.accessEditorPanel:hover,
+.accessSettingsPanel:hover {
+  border-color: rgba(43,185,128,.2);
+  box-shadow: 0 18px 42px rgba(25,55,45,.07);
+}
+
+/* Focus glow */
+
+.accessField input:focus,
+.accessField select:focus {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 4px rgba(43,185,128,.10),
+    0 8px 20px rgba(43,185,128,.07);
+}
+
+/* Permission card */
+
+.accessSettingsPanel {
+  position: sticky;
+  overflow: hidden;
+}
+
+.accessSettingsPanel::before {
+  content: "";
+  position: absolute;
+  top: -90px;
+  left: -90px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(43,185,128,.09),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* Save button */
+
+.accessSaveBtn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(110deg,#138b68,#20a77a);
+  box-shadow: 0 7px 18px rgba(22,150,106,.15);
+}
+
+.accessSaveBtn::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255,255,255,.3) 50%,
+    transparent 80%
+  );
+  transform: translateX(120%);
+  transition: transform .7s ease;
+}
+
+.accessSaveBtn:hover::after {
+  transform: translateX(-120%);
+}
+
+.accessSaveBtn:active {
+  transform: scale(.98);
+}
+
+.accessSaveBtn:disabled {
+  opacity: .65;
+  cursor: wait;
+  transform: none;
+}
+
+/* Back and cancel buttons */
+
+.accessBackBtn,
+.accessCancelBtn {
+  transition:
+    transform .25s ease,
+    background .25s ease,
+    box-shadow .25s ease;
+}
+
+.accessBackBtn:hover,
+.accessCancelBtn:hover {
+  transform: translateY(-2px);
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  #content.adminMotionEnter .accessEditorHero,
+  #content.adminMotionEnter .accessEditorPanel,
+  #content.adminMotionEnter .accessSettingsPanel,
+  #content.adminMotionEnter .accessField {
+    animation: none !important;
+  }
+}
+
+
+
+
+/* ==========================================================
+   ROUH VOLUNTEERS — PREMIUM TABLE EXPERIENCE V4
+   Visual only — preserves all existing functionality
+   ========================================================== */
+
+.volunteersV2 {
+  gap: 20px;
+}
+
+/* Hero */
+.volunteerSectionHero {
+  min-height: 145px;
+  padding: 30px 32px;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 18px 45px rgba(30,48,55,.16);
+}
+
+.volunteerHeroText h2 {
+  font-size: clamp(22px, 2.2vw, 29px);
+  letter-spacing: 0;
+}
+
+.volunteerHeroText p {
+  font-size: 12px;
+  line-height: 2;
+}
+
+.volunteerHeroFlow span {
+  transition: background .25s, transform .25s, border-color .25s;
+}
+
+.volunteerHeroFlow span:hover {
+  transform: translateY(-3px);
+  background: rgba(255,255,255,.13);
+  border-color: rgba(255,255,255,.22);
+}
+
+/* Statistics */
+.volunteerStatCard {
+  position: relative;
+  overflow: hidden;
+  min-height: 100px;
+  border-radius: 18px;
+  transition: transform .3s cubic-bezier(.2,.8,.2,1),
+              box-shadow .3s,
+              border-color .3s;
+}
+
+.volunteerStatCard::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: linear-gradient(90deg, #91a88b, #d2b87e);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform .35s ease;
+}
+
+.volunteerStatCard:hover {
+  transform: translateY(-5px);
+  border-color: rgba(105,135,105,.25);
+  box-shadow: 0 18px 35px rgba(38,55,71,.09);
+}
+
+.volunteerStatCard:hover::after {
+  transform: scaleX(1);
+}
+
+.statMiniIcon {
+  transition: transform .3s cubic-bezier(.2,.8,.2,1);
+}
+
+.volunteerStatCard:hover .statMiniIcon {
+  transform: rotate(-8deg) scale(1.1);
+}
+
+/* Toolbar */
+.volunteerToolbar {
+  padding: 18px 20px;
+  gap: 12px;
+  background: linear-gradient(180deg,#fff,#fbfcfa);
+}
+
+.volunteerSearchBox,
+.volunteerFilterSelect {
+  min-height: 45px;
+  border-radius: 12px;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+
+.volunteerFilterSelect:focus {
+  border-color: #91a88b;
+  box-shadow: 0 0 0 3px rgba(111,130,111,.09);
+}
+
+/* Table container */
+.volunteerManagementPanel {
+  border: 1px solid #e6ebe6;
+  border-radius: 20px;
+  box-shadow: 0 12px 35px rgba(38,55,71,.045);
+}
+
+.volunteerManagementPanel .volunteerTable thead th {
+  padding: 16px 13px;
+  color: #687970;
+  font-size: 10px;
+  font-weight: 900;
+  background: #f6f8f5;
+}
+
+.volunteerManagementPanel .volunteerTable tbody tr {
+  border-bottom: 1px solid #edf0ed;
+  transition: background .22s, box-shadow .22s;
+}
+
+.volunteerManagementPanel .volunteerTable tbody tr:hover {
+  background: #f7faf6;
+  box-shadow: inset -3px 0 #91a88b;
+}
+
+.volunteerManagementPanel .volunteerTable tbody td {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+/* Volunteer identity */
+.volunteerNameButton {
+  gap: 11px;
+  border-radius: 12px;
+  transition: background .2s, transform .2s;
+}
+
+.volunteerNameButton:hover {
+  background: #f1f5ef;
+  transform: translateX(-2px);
+}
+
+.volunteerMiniAvatar {
+  width: 42px;
+  height: 42px;
+  border: 2px solid #fff;
+  box-shadow: 0 3px 12px rgba(38,55,71,.12);
+  background: linear-gradient(145deg,#38584c,#789078);
+  transition: transform .25s, box-shadow .25s;
+}
+
+.volunteerNameButton:hover .volunteerMiniAvatar {
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(38,55,71,.16);
+}
+
+.volunteerIdentityText strong {
+  color: #2d433b;
+  font-size: 11px;
+}
+
+.volunteerIdentityText small {
+  font-size: 9px;
+}
+
+/* Contact and study */
+.volunteerContactCell strong,
+.volunteerStudyCell strong {
+  color: #354b43;
+  font-size: 10px;
+}
+
+.volunteerContactCell > span,
+.volunteerStudyCell span {
+  font-size: 8px;
+}
+
+/* Status badges */
+.volunteerStatusBadge {
+  padding: 7px 11px;
+  font-size: 9px;
+  border: 1px solid transparent;
+  transition: transform .2s, box-shadow .2s;
+}
+
+.volunteerStatusBadge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(38,55,71,.07);
+}
+
+.volunteerStatusBadge.review {
+  border-color: #eee1c8;
+}
+
+.volunteerStatusBadge.contacted {
+  border-color: #d8e5ec;
+}
+
+.volunteerStatusBadge.department {
+  border-color: #e2d9ed;
+}
+
+.volunteerStatusBadge.accepted {
+  border-color: #d7e6d5;
+}
+
+/* Department */
+.volunteerDepartmentBadge {
+  padding: 7px 10px;
+  border: 1px solid #e5ebe3;
+  font-size: 9px;
+  transition: background .2s, transform .2s;
+}
+
+.volunteerDepartmentBadge:hover {
+  background: #e7efe5;
+  transform: translateY(-2px);
+}
+
+/* Actions */
+.volunteerActionTrigger {
+  width: 40px;
+  height: 38px;
+  border-radius: 12px;
+  background: #f5f8f4;
+}
+
+.volunteerActionTrigger:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 8px 18px rgba(38,55,71,.12);
+}
+
+.volunteerActionMenu {
+  border-color: #dfe8e1;
+  box-shadow: 0 24px 70px rgba(24,42,34,.24);
+}
+
+.volunteerActionMenuBody .btn {
+  transition: transform .18s, filter .18s;
+}
+
+.volunteerActionMenuBody .btn:hover {
+  transform: translateX(-3px);
+  filter: brightness(.97);
+}
+
+/* Row entrance */
+#content.adminMotionEnter .volunteerManagementPanel tbody tr {
+  animation: rouhVolunteerRowEnter .48s cubic-bezier(.16,1,.3,1) both;
+}
+
+#content.adminMotionEnter .volunteerManagementPanel tbody tr:nth-child(1) { animation-delay: .04s; }
+#content.adminMotionEnter .volunteerManagementPanel tbody tr:nth-child(2) { animation-delay: .08s; }
+#content.adminMotionEnter .volunteerManagementPanel tbody tr:nth-child(3) { animation-delay: .12s; }
+#content.adminMotionEnter .volunteerManagementPanel tbody tr:nth-child(4) { animation-delay: .16s; }
+#content.adminMotionEnter .volunteerManagementPanel tbody tr:nth-child(5) { animation-delay: .20s; }
+#content.adminMotionEnter .volunteerManagementPanel tbody tr:nth-child(6) { animation-delay: .24s; }
+#content.adminMotionEnter .volunteerManagementPanel tbody tr:nth-child(7) { animation-delay: .28s; }
+#content.adminMotionEnter .volunteerManagementPanel tbody tr:nth-child(8) { animation-delay: .32s; }
+
+@keyframes rouhVolunteerRowEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile */
+@media(max-width:900px) {
+  .volunteerSectionHero {
+    padding: 23px 20px;
+  }
+
+  .volunteerHeroFlow {
+    flex-wrap: nowrap;
+  }
+
+  .volunteerStatCard {
+    min-height: 88px;
+  }
+}
+
+@media(max-width:560px) {
+  .volunteerStatsGrid {
+    gap: 9px;
+  }
+
+  .volunteerStatCard {
+    padding: 12px;
+    gap: 9px;
+  }
+
+  .statMiniIcon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .volunteerToolbar {
+    padding: 13px;
+  }
+}
+
+/* Accessibility */
+@media(prefers-reduced-motion:reduce) {
+  .volunteersV2 *,
+  .volunteersV2 *::before,
+  .volunteersV2 *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+
+
+
+/* ROUH — VOLUNTEER EMPTY STATE */
+.volunteerTableWrap.is-empty {
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  padding: 35px 20px;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(133,158,126,.10), transparent 58%),
+    linear-gradient(145deg,#fff,#fafcf9);
+}
+
+.volunteerTableWrap.is-empty > table {
+  display: none;
+}
+
+.volunteerEmptyState {
+  width: min(100%, 520px);
+  text-align: center;
+  padding: 15px;
+  animation: rouhEmptyAppear .7s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.volunteerEmptyVisual {
+  width: 112px;
+  height: 112px;
+  margin: 0 auto 20px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, #edf4eb 0 40%, rgba(237,244,235,.25) 70%);
+}
+
+.emptyMainIcon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 30px;
+  background: linear-gradient(145deg,#36594b,#789578);
+  box-shadow: 0 12px 28px rgba(54,89,75,.22);
+  transform: rotate(-7deg);
+}
+
+.emptyOrbit {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(111,143,105,.28);
+  border-radius: 50%;
+  animation: rouhOrbit 12s linear infinite;
+}
+
+.emptyOrbitTwo {
+  inset: -7px;
+  border-style: dashed;
+  animation-direction: reverse;
+  animation-duration: 20s;
+}
+
+.emptySpark {
+  position: absolute;
+  color: #b49b62;
+  font-size: 19px;
+  animation: rouhSpark 2.5s ease-in-out infinite;
+}
+
+.emptySparkOne { top: 8px; right: 8px; }
+.emptySparkTwo { bottom: 7px; left: 9px; animation-delay: .8s; }
+
+.volunteerEmptyCode {
+  color: #a18d5e;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.volunteerEmptyState h3 {
+  margin: 11px 0 8px;
+  color: #30443b;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.volunteerEmptyState p {
+  margin: 0;
+  color: #87918b;
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.volunteerEmptyFooter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  margin-top: 22px;
+  color: #87918b;
+  font-size: 10px;
+}
+
+.volunteerEmptyFooter span:first-child {
+  color: #66866b;
+  font-weight: 800;
+}
+
+.volunteerEmptyFooter i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: #78a77b;
+  box-shadow: 0 0 0 4px rgba(120,167,123,.12);
+}
+
+@keyframes rouhEmptyAppear {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rouhOrbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rouhSpark {
+  50% { opacity: .45; transform: scale(.8) translateY(-3px); }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .volunteerEmptyState,
+  .emptyOrbit,
+  .emptySpark {
+    animation: none !important;
+  }
+}
+
+
+
+/* ROUH — VOLUNTEER PREVIEW MODE */
+.volunteerPreviewButton {
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid #dce7dc;
+  border-radius: 11px;
+  background: #f3f8f1;
+  color: #45634e;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: .25s ease;
+}
+
+.volunteerPreviewButton:hover,
+.volunteerPreviewButton.active {
+  color: #fff;
+  background: #466b55;
+  border-color: #466b55;
+  transform: translateY(-2px);
+  box-shadow: 0 7px 18px rgba(55,91,66,.16);
+}
+
+.volunteerPreviewNotice {
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border: 1px solid #eadfbd;
+  border-radius: 11px;
+  background: #fffaf0;
+  color: #887346;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.volunteerPreviewNotice span {
+  margin-left: 7px;
+  color: #b89a55;
+}
+
+.volunteerManagementPanel .volunteerTable tbody tr {
+  animation: rouhVolunteerRowEnter .4s ease both;
+}
+
+.previewDemoMenu {
+  display: none;
+}
+
+.previewDemoMenu.previewMenuOpen {
+  display: block;
+}
+
+.previewDemoMenu .volunteerNoActions {
+  display: block;
+  padding: 10px;
+  line-height: 1.8;
+  font-size: 10px;
+}
+
+
+
+
+/* ==================================================
+   ROUH VOLUNTEERS — MOBILE RESPONSIVE EXPERIENCE
+   ================================================== */
+
+.volunteerManagementPanel {
+  min-width: 0;
+  overflow: visible;
+}
+
+.volunteerToolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.volunteerSearchBox {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.volunteerSearchBox input {
+  min-width: 0;
+  width: 100%;
+}
+
+.volunteerTableWrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.volunteerTableWrap .volunteerTable {
+  min-width: 760px;
+}
+
+.volunteerPreviewButton {
+  flex-shrink: 0;
+}
+
+/* Tablets */
+@media (max-width: 900px) {
+  .volunteersV2 {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .volunteerSectionHero {
+    gap: 18px;
+  }
+
+  .volunteerHeroFlow {
+    flex-wrap: wrap;
+  }
+
+  .volunteerStatsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .volunteerManagementPanel {
+    width: 100%;
+  }
+}
+
+/* Phones */
+@media (max-width: 600px) {
+  .volunteersV2 {
+    gap: 13px;
+    padding: 0;
+  }
+
+  .volunteerSectionHero {
+    min-height: auto;
+    padding: 22px 17px;
+    border-radius: 17px;
+  }
+
+  .volunteerHeroText h2 {
+    font-size: 21px;
+    line-height: 1.5;
+  }
+
+  .volunteerHeroText p {
+    font-size: 11px;
+    line-height: 1.9;
+  }
+
+  .volunteerHeroFlow {
+    gap: 6px;
+    justify-content: flex-start;
+  }
+
+  .volunteerHeroFlow span {
+    font-size: 9px;
+    padding: 7px 9px;
+  }
+
+  .volunteerStatsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .volunteerStatCard {
+    min-width: 0;
+    min-height: 83px;
+    padding: 11px;
+    border-radius: 14px;
+  }
+
+  .volunteerStatCard small {
+    font-size: 9px;
+  }
+
+  .volunteerStatCard strong {
+    font-size: 20px;
+  }
+
+  .volunteerManagementPanel {
+    padding: 0;
+    border-radius: 16px;
+  }
+
+  .volunteerToolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .volunteerSearchBox {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 45px;
+  }
+
+  .volunteerSearchBox input {
+    font-size: 12px;
+  }
+
+  .volunteerFilterSelect {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    font-size: 11px;
+  }
+
+  .volunteerResultCount {
+    min-height: 42px;
+    justify-content: center;
+  }
+
+  .volunteerPreviewButton {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 44px;
+    font-size: 11px;
+  }
+
+  .volunteerTableWrap {
+    width: 100%;
+    border-radius: 0 0 16px 16px;
+    padding-bottom: 8px;
+  }
+
+  .volunteerTableWrap .volunteerTable {
+    min-width: 760px;
+  }
+
+  .volunteerPreviewNotice {
+    margin: 10px;
+    line-height: 1.8;
+    font-size: 10px;
+  }
+
+  .volunteerEmptyState {
+    padding: 12px 5px;
+  }
+
+  .volunteerEmptyState h3 {
+    font-size: 17px;
+  }
+
+  .volunteerEmptyState p {
+    font-size: 11px;
+  }
+
+  .volunteerEmptyFooter {
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+
+  .volunteerActionMenu {
+    max-width: calc(100vw - 35px);
+  }
+}
+
+/* Small phones */
+@media (max-width: 380px) {
+  .volunteerStatsGrid {
+    gap: 7px;
+  }
+
+  .volunteerStatCard {
+    padding: 9px;
+  }
+
+  .volunteerStatCard small {
+    font-size: 8px;
+  }
+
+  .volunteerHeroText h2 {
+    font-size: 19px;
+  }
+
+  .volunteerHeroFlow i {
+    display: none;
+  }
+}
+
+
+
+
+/* =====================================================
+   ROUH DASHBOARD MOTION V2
+   ===================================================== */
+
+/* Count-up number emphasis */
+.executiveStat > strong {
+  display: block;
+  font-variant-numeric: tabular-nums;
+  transform-origin: right center;
+}
+
+/* Staggered dashboard cards */
+#content.adminMotionEnter .executiveStats .executiveStat {
+  animation:
+    rouhDashboardStatReveal .75s cubic-bezier(.16,1,.3,1) both;
+  animation-delay:
+    calc(var(--dash-index, 0) * 85ms);
+}
+
+@keyframes rouhDashboardStatReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(.94);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Interactive 3D tilt — desktop only */
+@media (hover: hover) and (pointer: fine) {
+  #content .executiveStat {
+    transform-style: preserve-3d;
+    perspective: 800px;
+    will-change: transform;
+  }
+
+  #content .executiveStat.dashboardCardTilt {
+    transform:
+      perspective(800px)
+      rotateX(var(--card-rotate-x, 0deg))
+      rotateY(var(--card-rotate-y, 0deg))
+      translateY(-5px);
+    box-shadow: 0 19px 38px rgba(38,55,71,.12);
+    border-color: rgba(111,139,108,.32);
+  }
+
+  #content .executiveStatTop > i {
+    transition: transform .35s cubic-bezier(.16,1,.3,1);
+  }
+
+  #content .executiveStat:hover .executiveStatTop > i {
+    transform: rotate(-9deg) scale(1.12);
+  }
+}
+
+/* Live indicators */
+#content .executiveOnline i,
+#content .activityPulse i,
+#content .executiveFooterDot {
+  animation: rouhDashboardLivePulse 2.2s ease-in-out infinite;
+}
+
+@keyframes rouhDashboardLivePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(105,155,111,.22);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(105,155,111,0);
+  }
+}
+
+/* Mobile: preserve smooth touch scrolling */
+@media (max-width: 700px) {
+  #content .executiveStat {
+    transform: none;
+    perspective: none;
+    will-change: auto;
+  }
+
+  #content .executiveStat.dashboardCardTilt {
+    transform: none;
+  }
+
+  #content .executiveStats {
+    gap: 10px;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  #content .executiveStat,
+  #content .executiveStat > strong,
+  #content .executiveOnline i,
+  #content .activityPulse i,
+  #content .executiveFooterDot {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+
+
+
+/* =====================================================
+   ROUH DASHBOARD INTERACTIONS V3
+   Quick Actions + Live Activity
+   ===================================================== */
+
+#content .executiveQuickAction {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    transform .35s cubic-bezier(.16,1,.3,1),
+    border-color .3s ease,
+    background .3s ease,
+    box-shadow .35s ease;
+}
+
+#content .executiveQuickAction::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -60%;
+  left: -75%;
+  width: 45%;
+  height: 220%;
+  transform: rotate(22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.75),
+    transparent
+  );
+  transition: left .65s cubic-bezier(.16,1,.3,1);
+  pointer-events: none;
+}
+
+#content .executiveQuickAction:hover::before {
+  left: 135%;
+}
+
+#content .executiveQuickAction:hover {
+  transform: translateY(-4px) scale(1.012);
+  border-color: #c5d5c2;
+  box-shadow: 0 15px 30px rgba(39,65,48,.09);
+}
+
+#content .executiveQuickIcon {
+  transition:
+    transform .4s cubic-bezier(.16,1,.3,1),
+    background .3s ease,
+    box-shadow .3s ease;
+}
+
+#content .executiveQuickAction:hover .executiveQuickIcon {
+  transform: scale(1.09) rotate(-5deg);
+  background: #dfeadd;
+  box-shadow: 0 5px 13px rgba(65,91,67,.10);
+}
+
+#content .executiveQuickAction > b {
+  transition:
+    transform .35s cubic-bezier(.16,1,.3,1),
+    color .25s ease;
+}
+
+#content .executiveQuickAction:hover > b {
+  transform: translateX(-5px);
+  color: #66836a;
+}
+
+#content .executiveQuickAction:focus-visible,
+#content .executiveViewAudit:focus-visible {
+  outline: 3px solid rgba(111,145,111,.45);
+  outline-offset: 4px;
+}
+
+/* Live activity timeline */
+
+#content .executiveTimeline {
+  position: relative;
+  isolation: isolate;
+}
+
+#content .executiveTimeline::before {
+  background: linear-gradient(
+    180deg,
+    #8da98a 0%,
+    #dce6da 45%,
+    #e6e9e5 100%
+  );
+  background-size: 100% 220%;
+  animation: rouhTimelineFlow 5s ease-in-out infinite;
+}
+
+@keyframes rouhTimelineFlow {
+  0%, 100% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 0 100%;
+  }
+}
+
+#content .executiveActivity {
+  border-radius: 10px;
+  transition:
+    background .3s ease,
+    transform .3s cubic-bezier(.16,1,.3,1),
+    padding .3s ease;
+}
+
+#content .executiveActivity:hover {
+  background: #f8faf7;
+  transform: translateX(-3px);
+}
+
+#content .activityDot {
+  transition:
+    transform .3s ease,
+    box-shadow .3s ease,
+    background .3s ease;
+}
+
+#content .executiveActivity:hover .activityDot {
+  transform: scale(1.35);
+  background: #607e63;
+  box-shadow: 0 0 0 4px rgba(112,139,114,.13);
+}
+
+#content .executiveActivity:first-child .activityDot {
+  box-shadow:
+    0 0 0 3px #e7ece5,
+    0 0 0 6px rgba(112,139,114,.09);
+}
+
+#content .executiveViewAudit {
+  transition:
+    transform .3s ease,
+    border-color .3s ease,
+    background .3s ease,
+    box-shadow .3s ease;
+}
+
+#content .executiveViewAudit:hover {
+  transform: translateY(-2px);
+  border-color: #cbd8c9;
+  background: #f0f5ee;
+  box-shadow: 0 7px 16px rgba(50,69,60,.06);
+}
+
+#content .executiveViewAudit span {
+  display: inline-block;
+  transition: transform .3s ease;
+}
+
+#content .executiveViewAudit:hover span {
+  transform: translateX(-4px);
+}
+
+/* Mobile and touch devices */
+
+@media (max-width: 700px), (hover: none) {
+  #content .executiveQuickAction:hover {
+    transform: none;
+  }
+
+  #content .executiveQuickAction:hover .executiveQuickIcon {
+    transform: none;
+  }
+
+  #content .executiveActivity:hover {
+    transform: none;
+  }
+
+  #content .executiveQuickAction::before {
+    display: none;
+  }
+}
+
+/* Reduced motion accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  #content .executiveQuickAction,
+  #content .executiveQuickIcon,
+  #content .executiveQuickAction > b,
+  #content .executiveActivity,
+  #content .activityDot,
+  #content .executiveViewAudit,
+  #content .executiveViewAudit span {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  #content .executiveTimeline::before {
+    animation: none !important;
+  }
+
+  #content .executiveQuickAction::before {
+    display: none !important;
+  }
+}
+
+
+
+/* =====================================================
+   ROUH SIDEBAR MOTION V3
+   Premium navigation interactions
+   ===================================================== */
+
+.adminBody #adminView:not(.hidden) .sidebar .brand {
+  animation: rouhSidebarBrandIn .7s cubic-bezier(.16,1,.3,1) both;
+}
+
+.adminBody #adminView:not(.hidden) .sidebar #userBox {
+  animation: rouhSidebarUserIn .7s cubic-bezier(.16,1,.3,1) .08s both;
+}
+
+.adminBody #adminView:not(.hidden) #menu button {
+  animation: rouhSidebarItemIn .55s cubic-bezier(.16,1,.3,1) both;
+  animation-delay: calc(.12s + var(--sidebar-index, 0) * 35ms);
+}
+
+@keyframes rouhSidebarBrandIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rouhSidebarUserIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes rouhSidebarItemIn {
+  from {
+    opacity: 0;
+    transform: translateX(13px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Navigation button sheen */
+.adminBody #menu button {
+  isolation: isolate;
+}
+
+.adminBody #menu button::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -50%;
+  left: -85%;
+  width: 45%;
+  height: 200%;
+  pointer-events: none;
+  transform: rotate(22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.10),
+    transparent
+  );
+  transition: left .6s cubic-bezier(.16,1,.3,1);
+}
+
+.adminBody #menu button:hover::after {
+  left: 140%;
+}
+
+/* Active navigation */
+.adminBody #menu button.active {
+  position: relative;
+  background:
+    linear-gradient(
+      105deg,
+      rgba(147,169,132,.29),
+      rgba(255,255,255,.09)
+    );
+  border-color: rgba(190,204,165,.25);
+  box-shadow:
+    inset 0 0 18px rgba(255,255,255,.025),
+    0 8px 22px rgba(0,0,0,.13);
+}
+
+.adminBody #menu button.active::before {
+  animation: rouhSidebarActiveGlow 2.8s ease-in-out infinite;
+}
+
+@keyframes rouhSidebarActiveGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(198,205,157,.3);
+  }
+  50% {
+    box-shadow: 0 0 17px rgba(198,205,157,.7);
+  }
+}
+
+/* Keyboard navigation */
+.adminBody #menu button:focus-visible,
+.adminBody #logoutBtn:focus-visible {
+  outline: 2px solid rgba(224,208,165,.85);
+  outline-offset: 3px;
+}
+
+/* Touch devices */
+@media (hover: none) {
+  .adminBody #menu button::after {
+    display: none;
+  }
+
+  .adminBody #menu button:hover {
+    transform: none;
+  }
+}
+
+/* Mobile navigation */
+@media (max-width: 900px) {
+  .adminBody #menu button {
+    flex: 0 0 auto;
+    animation-duration: .4s;
+  }
+
+  .adminBody #menu button.active {
+    box-shadow: 0 5px 15px rgba(0,0,0,.12);
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .adminBody #adminView .sidebar .brand,
+  .adminBody #adminView .sidebar #userBox,
+  .adminBody #menu button,
+  .adminBody #menu button.active::before {
+    animation: none !important;
+  }
+
+  .adminBody #menu button::after {
+    display: none !important;
+  }
+}
+
+
+
+/* =====================================================
+   ROUH PAGE TRANSITION POLISH V2
+   Refines the existing adminMotionEnter engine
+   ===================================================== */
+
+/* Main page entrance */
+#content.adminMotionEnter {
+  animation:
+    rouhAdminPageEnter .62s cubic-bezier(.16,1,.3,1) both;
+}
+
+/* Refined staggered entrance */
+#content.adminMotionEnter > .entityCenter,
+#content.adminMotionEnter > .volunteersV2,
+#content.adminMotionEnter > .accessCenter,
+#content.adminMotionEnter > .executiveDashboard {
+  animation: rouhPageSurfaceEnter .65s cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes rouhPageSurfaceEnter {
+  from {
+    opacity: 0;
+    transform: translateY(11px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Section headings */
+#content.adminMotionEnter .executiveSectionHead,
+#content.adminMotionEnter .entityHeroContent,
+#content.adminMotionEnter .volunteerSectionHero,
+#content.adminMotionEnter .accessHero {
+  animation: rouhPageHeadingEnter .65s cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes rouhPageHeadingEnter {
+  from {
+    opacity: 0;
+    transform: translateY(13px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Interactive page surfaces */
+#content .panel,
+#content .entityHero,
+#content .executiveQuickPanel,
+#content .executiveActivityPanel {
+  transition:
+    box-shadow .3s ease,
+    border-color .3s ease;
+}
+
+/* Loading placeholder */
+#content > .panel:has(+ *) {
+  animation: none;
+}
+
+/* Mobile tuning */
+@media (max-width: 700px) {
+  #content.adminMotionEnter {
+    animation-duration: .45s;
+  }
+
+  #content.adminMotionEnter > .entityCenter,
+  #content.adminMotionEnter > .volunteersV2,
+  #content.adminMotionEnter > .accessCenter,
+  #content.adminMotionEnter > .executiveDashboard {
+    animation-duration: .45s;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  #content.adminMotionEnter,
+  #content.adminMotionEnter *,
+  #content.adminMotionEnter::before,
+  #content.adminMotionEnter::after {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+  }
+}
+
+
+
+/* =====================================================
+   ROUH VOLUNTEER EXPERIENCE V5
+   Premium visual refinement — CSS only
+   ===================================================== */
+
+/* Statistics entrance */
+#content.adminMotionEnter .volunteerStatsGrid .volunteerStatCard {
+  animation: rouhVolunteerStatReveal .65s cubic-bezier(.16,1,.3,1) both;
+}
+
+#content.adminMotionEnter .volunteerStatsGrid .volunteerStatCard:nth-child(1) {
+  animation-delay: .06s;
+}
+#content.adminMotionEnter .volunteerStatsGrid .volunteerStatCard:nth-child(2) {
+  animation-delay: .13s;
+}
+#content.adminMotionEnter .volunteerStatsGrid .volunteerStatCard:nth-child(3) {
+  animation-delay: .20s;
+}
+#content.adminMotionEnter .volunteerStatsGrid .volunteerStatCard:nth-child(4) {
+  animation-delay: .27s;
+}
+
+@keyframes rouhVolunteerStatReveal {
+  from {
+    opacity: 0;
+    transform: translateY(17px) scale(.96);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Volunteer journey */
+.volunteerHeroFlow span {
+  position: relative;
+  transition:
+    transform .3s cubic-bezier(.16,1,.3,1),
+    background .3s ease,
+    border-color .3s ease,
+    box-shadow .3s ease;
+}
+
+.volunteerHeroFlow span:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+}
+
+.volunteerHeroFlow i {
+  transition: transform .3s ease;
+}
+
+.volunteerHeroFlow span:hover + i {
+  transform: translateX(-3px);
+}
+
+/* Table rows */
+.volunteerManagementPanel .volunteerTable tbody tr {
+  transition:
+    background .25s ease,
+    box-shadow .25s ease;
+}
+
+.volunteerManagementPanel .volunteerTable tbody tr:hover {
+  background: #f4f8f2;
+  box-shadow: inset -3px 0 #829b7d;
+}
+
+.volunteerManagementPanel .volunteerTable tbody tr:hover td {
+  color: #344b40;
+}
+
+/* Action trigger feedback */
+.volunteerActionTrigger {
+  transition:
+    transform .25s cubic-bezier(.16,1,.3,1),
+    background .25s ease,
+    box-shadow .25s ease;
+}
+
+.volunteerActionTrigger:active {
+  transform: scale(.94);
+}
+
+.volunteerActionMenuBody .btn:active {
+  transform: scale(.98);
+}
+
+/* Search and filter focus */
+.volunteerSearchBox:focus-within {
+  border-color: #91a88b;
+  box-shadow: 0 0 0 3px rgba(111,130,111,.09);
+}
+
+/* Keyboard accessibility */
+.volunteerActionTrigger:focus-visible,
+.volunteerNameButton:focus-visible,
+.volunteerPreviewButton:focus-visible {
+  outline: 3px solid rgba(111,145,111,.4);
+  outline-offset: 3px;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  #content.adminMotionEnter .volunteerStatsGrid .volunteerStatCard {
+    animation-duration: .45s;
+  }
+
+  .volunteerManagementPanel .volunteerTable tbody tr:hover {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .volunteerHeroFlow span:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #content.adminMotionEnter .volunteerStatsGrid .volunteerStatCard {
+    animation: none !important;
+  }
+
+  .volunteerHeroFlow span,
+  .volunteerHeroFlow i,
+  .volunteerManagementPanel .volunteerTable tbody tr,
+  .volunteerActionTrigger,
+  .volunteerActionMenuBody .btn {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+
+
+/* =====================================================
+   ROUH VOLUNTEER MOBILE EXPERIENCE V2
+   Safari / iPhone responsive refinements
+   ===================================================== */
+
+@media (max-width: 600px) {
+
+  .volunteersV2 {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .volunteerSectionHero,
+  .volunteerManagementPanel,
+  .volunteerStatsGrid,
+  .volunteerToolbar {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* Statistics */
+  .volunteerStatsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .volunteerStatCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .volunteerStatCard > div {
+    min-width: 0;
+  }
+
+  .volunteerStatCard small {
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+
+  /* Toolbar */
+  .volunteerToolbar {
+    grid-template-columns: minmax(0, 1fr) minmax(95px, auto);
+  }
+
+  .volunteerSearchBox {
+    min-width: 0;
+  }
+
+  .volunteerSearchBox input {
+    min-width: 0;
+    width: 100%;
+    text-overflow: ellipsis;
+  }
+
+  .volunteerFilterSelect {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Horizontal table scrolling */
+  .volunteerTableWrap {
+    position: relative;
+    max-width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #91a88b #edf1eb;
+  }
+
+  .volunteerTableWrap::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .volunteerTableWrap::-webkit-scrollbar-track {
+    background: #edf1eb;
+    border-radius: 20px;
+  }
+
+  .volunteerTableWrap::-webkit-scrollbar-thumb {
+    background: #91a88b;
+    border-radius: 20px;
+  }
+
+  .volunteerTableWrap .volunteerTable {
+    min-width: 760px;
+    width: 760px;
+  }
+
+  /* Touch targets */
+  .volunteerActionTrigger {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .volunteerPreviewButton,
+  .volunteerFilterSelect {
+    min-height: 44px;
+  }
+
+  /* Action menu */
+  .volunteerActionMenu {
+    max-width: calc(100vw - 28px);
+    max-height: min(70vh, 480px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .volunteerActionMenuBody .btn {
+    min-height: 42px;
+  }
+
+  /* Empty state */
+  .volunteerEmptyState {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Extra-small screens */
+@media (max-width: 380px) {
+
+  .volunteerSectionHero {
+    padding: 18px 13px;
+  }
+
+  .volunteerStatsGrid {
+    gap: 7px;
+  }
+
+  .volunteerStatCard {
+    gap: 5px;
+    padding: 9px 7px;
+  }
+
+  .volunteerStatCard strong {
+    font-size: 19px;
+  }
+
+  .volunteerToolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .volunteerSearchBox,
+  .volunteerFilterSelect,
+  .volunteerResultCount,
+  .volunteerPreviewButton {
+    grid-column: 1;
+    width: 100%;
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .volunteerTableWrap {
+    scroll-behavior: auto;
+  }
+}
+
+
+
+/* =====================================================
+   ROUH DASHBOARD MOTION V4
+   Quick Actions + Activity + Command Ring
+   Visual only — no business logic changes
+   ===================================================== */
+
+#content .executiveQuickAction {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    transform .38s cubic-bezier(.16,1,.3,1),
+    border-color .3s ease,
+    background .3s ease,
+    box-shadow .38s ease;
+}
+
+#content .executiveQuickAction::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 15%,
+    rgba(145,168,139,.13) 50%,
+    transparent 85%
+  );
+  transform: translateX(110%);
+  transition:
+    transform .65s cubic-bezier(.16,1,.3,1),
+    opacity .25s ease;
+  pointer-events: none;
+}
+
+#content .executiveQuickAction:hover::before {
+  opacity: 1;
+  transform: translateX(-110%);
+}
+
+#content .executiveQuickIcon {
+  transition:
+    transform .4s cubic-bezier(.16,1,.3,1),
+    background .3s ease,
+    box-shadow .3s ease;
+}
+
+#content .executiveQuickAction:hover .executiveQuickIcon {
+  transform: translateY(-2px) rotate(-7deg) scale(1.08);
+  background: #e1ebdf;
+  box-shadow: 0 7px 16px rgba(70,105,75,.12);
+}
+
+#content .executiveQuickAction > b {
+  transition:
+    transform .35s cubic-bezier(.16,1,.3,1),
+    color .25s ease;
+}
+
+#content .executiveQuickAction:hover > b {
+  transform: translateX(-5px);
+  color: #718b70;
+}
+
+#content .executiveQuickText strong {
+  transition: color .25s ease;
+}
+
+#content .executiveQuickAction:hover .executiveQuickText strong {
+  color: #52745b;
+}
+
+#content .executiveQuickAction:focus-visible {
+  outline: 3px solid rgba(126,158,119,.35);
+  outline-offset: 3px;
+}
+
+/* Quick action entrance */
+#content.adminMotionEnter .executiveQuickGrid .executiveQuickAction {
+  animation: rouhQuickActionV4 .65s cubic-bezier(.16,1,.3,1) both;
+  animation-delay: calc(var(--quick-index, 0) * 75ms + 120ms);
+}
+
+@keyframes rouhQuickActionV4 {
+  from {
+    opacity: 0;
+    transform: translateY(17px) scale(.97);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Activity timeline reveal */
+#content.adminMotionEnter .executiveTimeline .executiveActivity {
+  animation: rouhActivityV4 .55s cubic-bezier(.16,1,.3,1) both;
+  animation-delay: calc(var(--activity-index, 0) * 100ms + 180ms);
+}
+
+@keyframes rouhActivityV4 {
+  from {
+    opacity: 0;
+    transform: translateX(13px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+#content .executiveActivity .activityDot {
+  transition:
+    transform .3s ease,
+    box-shadow .3s ease;
+}
+
+#content .executiveActivity:hover .activityDot {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 4px rgba(128,148,127,.13);
+}
+
+/* Command ring */
+#content .executiveCommandRing {
+  transition:
+    transform .6s cubic-bezier(.16,1,.3,1),
+    filter .4s ease;
+}
+
+#content .executiveHero:hover .executiveCommandRing {
+  transform: rotate(8deg) scale(1.045);
+  filter: drop-shadow(0 9px 16px rgba(190,205,169,.16));
+}
+
+#content .executiveCommandRing > div {
+  transition: transform .5s cubic-bezier(.16,1,.3,1);
+}
+
+#content .executiveHero:hover .executiveCommandRing > div {
+  transform: rotate(-8deg);
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  #content .executiveQuickAction {
+    transition:
+      background .2s ease,
+      border-color .2s ease;
+  }
+
+  #content .executiveQuickAction:hover {
+    transform: none;
+  }
+
+  #content .executiveQuickAction:hover .executiveQuickIcon {
+    transform: none;
+  }
+
+  #content .executiveHero:hover .executiveCommandRing {
+    transform: none;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  #content .executiveQuickAction,
+  #content .executiveQuickIcon,
+  #content .executiveQuickAction > b,
+  #content .executiveCommandRing,
+  #content .executiveCommandRing > div,
+  #content .executiveActivity .activityDot {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  #content .executiveQuickAction::before {
+    display: none !important;
+  }
+}
+
+
+
+/* =====================================================
+   ROUH PAGE TRANSITIONS V3
+   Cinematic navigation — CSS only
+   ===================================================== */
+
+/* Smooth page entrance */
+#content.adminMotionEnter {
+  animation: rouhPageV3Enter .58s cubic-bezier(.16,1,.3,1) both;
+  transform-origin: top center;
+}
+
+@keyframes rouhPageV3Enter {
+  0% {
+    opacity: .65;
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* Page surfaces */
+#content.adminMotionEnter > .entityCenter,
+#content.adminMotionEnter > .volunteersV2,
+#content.adminMotionEnter > .accessCenter,
+#content.adminMotionEnter > .executiveDashboard {
+  animation: rouhPageV3Surface .72s cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes rouhPageV3Surface {
+  from {
+    opacity: 0;
+    transform: translateY(17px) scale(.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Staggered content reveal */
+#content.adminMotionEnter .accessCard,
+#content.adminMotionEnter .statCard,
+#content.adminMotionEnter .taskCard,
+#content.adminMotionEnter .volunteerCard,
+#content.adminMotionEnter .accessUserRow,
+#content.adminMotionEnter .accessEditorPanel,
+#content.adminMotionEnter .accessSettingsPanel {
+  animation: rouhPageV3Item .58s cubic-bezier(.16,1,.3,1) both;
+  animation-delay: calc(var(--motion-index, 0) * 55ms);
+}
+
+@keyframes rouhPageV3Item {
+  from {
+    opacity: 0;
+    transform: translateY(13px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Refined hover on page panels */
+#content .accessCard,
+#content .taskCard,
+#content .volunteerCard,
+#content .accessEditorPanel,
+#content .accessSettingsPanel {
+  transition:
+    transform .3s cubic-bezier(.16,1,.3,1),
+    box-shadow .3s ease,
+    border-color .3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #content .accessCard:hover,
+  #content .taskCard:hover,
+  #content .volunteerCard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(38,55,71,.075);
+  }
+}
+
+/* Mobile performance */
+@media (max-width: 700px) {
+  #content.adminMotionEnter {
+    animation-duration: .4s;
+  }
+
+  #content.adminMotionEnter > .entityCenter,
+  #content.adminMotionEnter > .volunteersV2,
+  #content.adminMotionEnter > .accessCenter,
+  #content.adminMotionEnter > .executiveDashboard {
+    animation-duration: .48s;
+  }
+
+  #content.adminMotionEnter .accessCard,
+  #content.adminMotionEnter .statCard,
+  #content.adminMotionEnter .taskCard,
+  #content.adminMotionEnter .volunteerCard,
+  #content.adminMotionEnter .accessUserRow {
+    animation-duration: .42s;
+    animation-delay: 0ms;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  #content.adminMotionEnter,
+  #content.adminMotionEnter > *,
+  #content.adminMotionEnter .accessCard,
+  #content.adminMotionEnter .statCard,
+  #content.adminMotionEnter .taskCard,
+  #content.adminMotionEnter .volunteerCard,
+  #content.adminMotionEnter .accessUserRow {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+}
+
+
+
+/* =====================================================
+   ROUH VOLUNTEER MANAGEMENT V6
+   Premium interaction and visual refinement
+   CSS only — preserves all workflows
+   ===================================================== */
+
+#content .volunteersV2 {
+  isolation: isolate;
+}
+
+/* Hero refinement */
+#content .volunteerSectionHero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+#content .volunteerSectionHero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 230px;
+  height: 230px;
+  left: -95px;
+  top: -125px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 24px rgba(255,255,255,.035),
+    0 0 0 50px rgba(255,255,255,.025);
+  pointer-events: none;
+}
+
+/* Stats interaction */
+#content .volunteerStatCard {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform .35s cubic-bezier(.16,1,.3,1),
+    box-shadow .35s ease,
+    border-color .3s ease;
+}
+
+#content .volunteerStatCard::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  opacity: .0;
+  background: linear-gradient(90deg, transparent, #91a88b, transparent);
+  transition: opacity .3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #content .volunteerStatCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(38,55,71,.09);
+    border-color: rgba(126,153,121,.28);
+  }
+
+  #content .volunteerStatCard:hover::after {
+    opacity: 1;
+  }
+
+  #content .volunteerStatCard .statMiniIcon {
+    transition: transform .35s cubic-bezier(.16,1,.3,1);
+  }
+
+  #content .volunteerStatCard:hover .statMiniIcon {
+    transform: scale(1.1) rotate(-7deg);
+  }
+}
+
+/* Toolbar */
+#content .volunteerToolbar {
+  gap: 12px;
+}
+
+#content .volunteerSearchBox,
+#content .volunteerFilterSelect {
+  transition:
+    border-color .25s ease,
+    box-shadow .25s ease,
+    background .25s ease;
+}
+
+#content .volunteerSearchBox:focus-within {
+  border-color: #91a88b;
+  box-shadow: 0 0 0 4px rgba(145,168,139,.13);
+  background: #fff;
+}
+
+#content .volunteerSearchBox input {
+  min-width: 0;
+}
+
+#content .volunteerFilterSelect:focus-visible,
+#content .volunteerPreviewButton:focus-visible {
+  outline: 3px solid rgba(126,158,119,.3);
+  outline-offset: 3px;
+}
+
+#content .volunteerPreviewButton {
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    background .25s ease;
+}
+
+#content .volunteerPreviewButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(60,83,65,.12);
+}
+
+/* Result count */
+#content .volunteerResultCount {
+  transition: background .25s ease;
+}
+
+/* Table refinement */
+#content .volunteerTableWrap {
+  border-radius: 0 0 16px 16px;
+  scrollbar-gutter: stable;
+}
+
+#content .volunteerTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  backdrop-filter: blur(12px);
+}
+
+#content .volunteerManagementPanel .volunteerTable tbody tr {
+  transition:
+    background .25s ease,
+    box-shadow .25s ease;
+}
+
+#content .volunteerManagementPanel .volunteerTable tbody tr td {
+  transition: background .25s ease;
+}
+
+#content .volunteerManagementPanel .volunteerTable tbody tr:focus-within {
+  outline: 2px solid rgba(126,158,119,.3);
+  outline-offset: -2px;
+}
+
+/* Empty state */
+#content .volunteerEmptyVisual {
+  transition: transform .5s cubic-bezier(.16,1,.3,1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #content .volunteerEmptyState:hover .volunteerEmptyVisual {
+    transform: translateY(-4px) scale(1.025);
+  }
+}
+
+/* Mobile refinement */
+@media (max-width: 700px) {
+  #content .volunteerSectionHero::after {
+    width: 150px;
+    height: 150px;
+    left: -85px;
+    top: -85px;
+  }
+
+  #content .volunteerToolbar {
+    gap: 10px;
+  }
+
+  #content .volunteerSearchBox,
+  #content .volunteerFilterSelect,
+  #content .volunteerPreviewButton {
+    min-height: 44px;
+  }
+
+  #content .volunteerStatCard {
+    min-width: 0;
+  }
+
+  #content .volunteerTableWrap {
+    border-radius: 0 0 14px 14px;
+    scrollbar-gutter: auto;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #content .volunteerStatCard,
+  #content .volunteerStatCard::after,
+  #content .volunteerStatCard .statMiniIcon,
+  #content .volunteerSearchBox,
+  #content .volunteerFilterSelect,
+  #content .volunteerPreviewButton,
+  #content .volunteerEmptyVisual,
+  #content .volunteerManagementPanel .volunteerTable tbody tr,
+  #content .volunteerManagementPanel .volunteerTable tbody tr td {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+
+
+/* =====================================================
+   ROUH VOLUNTEER DETAILS V7
+   Identity + Status + Action Menu
+   CSS only — preserves existing actions and permissions
+   ===================================================== */
+
+/* Volunteer identity */
+#content .volunteerNameButton {
+  transition:
+    transform .28s cubic-bezier(.16,1,.3,1),
+    background .25s ease;
+}
+
+#content .volunteerNameButton:hover {
+  transform: translateX(-2px);
+}
+
+#content .volunteerMiniAvatar {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform .3s cubic-bezier(.16,1,.3,1),
+    box-shadow .3s ease;
+}
+
+#content .volunteerNameButton:hover .volunteerMiniAvatar {
+  transform: scale(1.07);
+  box-shadow: 0 5px 13px rgba(55,80,62,.15);
+}
+
+#content .volunteerIdentityText strong {
+  transition: color .2s ease;
+}
+
+#content .volunteerNameButton:hover .volunteerIdentityText strong {
+  color: #668269;
+}
+
+/* Contact and study information */
+#content .volunteerContactCell,
+#content .volunteerStudyCell {
+  line-height: 1.8;
+}
+
+#content .volunteerContactCell strong,
+#content .volunteerStudyCell strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+#content .volunteerContactCell > span {
+  display: block;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#content .volunteerContactCell small {
+  display: inline-block;
+  margin-top: 3px;
+  color: #87938b;
+}
+
+/* Status badge */
+#content .volunteerStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 29px;
+  line-height: 1.5;
+  white-space: normal;
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    filter .25s ease;
+}
+
+#content .volunteerStatusBadge i {
+  flex: 0 0 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px currentColor;
+  opacity: .22;
+}
+
+#content .volunteerStatusBadge:hover {
+  filter: saturate(1.12);
+}
+
+/* Department badge */
+#content .volunteerDepartmentBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 29px;
+  max-width: 155px;
+  line-height: 1.6;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Action trigger */
+#content .volunteerActionTrigger {
+  position: relative;
+  isolation: isolate;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  transition:
+    transform .3s cubic-bezier(.16,1,.3,1),
+    background .25s ease,
+    border-color .25s ease,
+    box-shadow .3s ease;
+}
+
+#content .volunteerActionTrigger::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  z-index: -1;
+  border-radius: 9px;
+  background: rgba(145,168,139,.13);
+  opacity: 0;
+  transform: scale(.7);
+  transition:
+    opacity .25s ease,
+    transform .3s ease;
+}
+
+#content .volunteerActionTrigger:hover::before,
+#content .volunteerActionTrigger[aria-expanded="true"]::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#content .volunteerActionTrigger:active {
+  transform: scale(.94);
+}
+
+#content .volunteerActionTrigger:focus-visible {
+  outline: 3px solid rgba(126,158,119,.35);
+  outline-offset: 3px;
+}
+
+/* Floating action menu */
+#content .volunteerActionMenu {
+  border: 1px solid rgba(112,139,113,.2);
+  border-radius: 17px;
+  box-shadow:
+    0 25px 65px rgba(28,42,35,.19),
+    0 5px 15px rgba(28,42,35,.07);
+  scrollbar-width: thin;
+  scrollbar-color: #a5b6a0 #f3f6f1;
+  overscroll-behavior: contain;
+}
+
+#content .volunteerActionMenu.open {
+  animation: rouhVolunteerMenuV7 .26s cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes rouhVolunteerMenuV7 {
+  from {
+    opacity: 0;
+    transform: translateY(-9px) scale(.965);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Menu header */
+#content .volunteerActionMenuHead {
+  padding: 14px 15px;
+  background: rgba(250,252,249,.97);
+  border-bottom-color: #e9eee7;
+}
+
+#content .volunteerActionMenuHead span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  letter-spacing: 1.7px;
+}
+
+#content .volunteerActionMenuHead span::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #91a88b;
+  box-shadow: 0 0 0 4px rgba(145,168,139,.13);
+}
+
+#content .volunteerActionMenuHead strong {
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+/* Menu buttons */
+#content .volunteerActionMenuBody {
+  gap: 7px;
+  padding: 11px;
+}
+
+#content .volunteerActionMenuBody .btn {
+  position: relative;
+  min-height: 41px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 9px;
+  transition:
+    transform .23s cubic-bezier(.16,1,.3,1),
+    box-shadow .23s ease,
+    filter .23s ease;
+}
+
+#content .volunteerActionMenuBody .btn:active {
+  transform: scale(.98);
+}
+
+#content .volunteerActionMenuBody .btn.danger {
+  border-color: rgba(166,102,96,.16);
+}
+
+#content .volunteerActionMenuBody .notice {
+  line-height: 1.8;
+}
+
+#content .volunteerNoActions {
+  padding: 22px 12px;
+  border-radius: 11px;
+  background: #f8faf7;
+}
+
+/* Account warning */
+#content .volunteerNameCell .accountWarning {
+  line-height: 1.7;
+  border: 1px solid rgba(177,141,80,.15);
+}
+
+/* Desktop menu hover */
+@media (hover: hover) and (pointer: fine) {
+  #content .volunteerActionMenuBody .btn:hover {
+    transform: translateX(-3px);
+    box-shadow: 0 5px 13px rgba(38,55,71,.07);
+  }
+
+  #content .volunteerActionMenuBody .btn.danger:hover {
+    box-shadow: 0 5px 13px rgba(166,102,96,.12);
+  }
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  #content .volunteerActionMenu {
+    width: min(290px, calc(100vw - 24px));
+    max-height: min(65vh, 480px);
+    border-radius: 15px;
+  }
+
+  #content .volunteerActionMenuBody .btn {
+    min-height: 44px;
+    font-size: 10px;
+  }
+
+  #content .volunteerActionTrigger {
+    width: 44px;
+    height: 44px;
+  }
+
+  #content .volunteerContactCell > span {
+    max-width: 150px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #content .volunteerNameButton,
+  #content .volunteerMiniAvatar,
+  #content .volunteerIdentityText strong,
+  #content .volunteerStatusBadge,
+  #content .volunteerDepartmentBadge,
+  #content .volunteerActionTrigger,
+  #content .volunteerActionMenu,
+  #content .volunteerActionMenuBody .btn {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  #content .volunteerActionTrigger::before {
+    display: none !important;
+  }
+}
+
+
+
+/* =====================================================
+   ROUH VOLUNTEER PROFILE V8
+   Premium profile experience — CSS only
+   ===================================================== */
+
+#content .volunteerProfile {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(16px, 3vw, 30px);
+  border: 1px solid rgba(115,139,113,.13);
+  border-radius: 23px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(220,233,215,.32), transparent 28%),
+    #fff;
+  box-shadow: 0 15px 45px rgba(38,55,71,.055);
+}
+
+/* Profile header */
+#content .profileHeader {
+  position: relative;
+  align-items: center;
+  padding: 8px 0 24px;
+  border-bottom: 1px solid #e9eee8;
+}
+
+#content .profileHeader > div {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+}
+
+#content .profileHeader h2 {
+  color: #344b40;
+  font-size: clamp(21px, 3vw, 29px);
+  font-weight: 900;
+  letter-spacing: -.5px;
+}
+
+#content .profileHeader .muted {
+  margin: 7px 0 0;
+  color: #829087;
+  font-size: 12px;
+}
+
+#content .profileHeader > .btn {
+  min-height: 42px;
+  border-radius: 12px;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+#content .profileHeader > .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 17px rgba(38,55,71,.09);
+}
+
+/* Personal information cards */
+#content .profileInfoGrid {
+  gap: 12px;
+  margin: 22px 0;
+}
+
+#content .profileInfo {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  padding: 17px;
+  border: 1px solid #e8eee6;
+  border-radius: 15px;
+  background: linear-gradient(145deg,#fbfcfa,#f5f8f3);
+  transition:
+    transform .3s cubic-bezier(.16,1,.3,1),
+    box-shadow .3s ease,
+    border-color .3s ease;
+}
+
+#content .profileInfo::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 15px;
+  bottom: 15px;
+  width: 3px;
+  border-radius: 4px 0 0 4px;
+  background: #91a88b;
+  opacity: .7;
+}
+
+#content .profileInfo span {
+  margin-bottom: 9px;
+  color: #89968d;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+#content .profileInfo b {
+  color: #3d5146;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #content .profileInfo:hover {
+    transform: translateY(-3px);
+    border-color: #d5e1d2;
+    box-shadow: 0 10px 24px rgba(45,70,51,.07);
+  }
+}
+
+/* Performance section */
+#content .profileSection {
+  margin-top: 18px;
+  padding: clamp(15px, 2.5vw, 24px);
+  border: 1px solid #e6ece4;
+  border-radius: 19px;
+  background: linear-gradient(145deg,#fafcf9,#f5f8f3);
+}
+
+#content .profileSection h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 19px;
+  color: #40574a;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+#content .profileStats {
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 11px;
+}
+
+#content .profileStat {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  padding: 18px 10px;
+  border: 1px solid #e9eee7;
+  border-radius: 14px;
+  background: #fff;
+  transition:
+    transform .3s cubic-bezier(.16,1,.3,1),
+    box-shadow .3s ease;
+}
+
+#content .profileStat::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg,transparent,#91a88b,transparent);
+  opacity: .65;
+}
+
+#content .profileStat strong {
+  color: #3d5947;
+  font-size: clamp(22px, 3vw, 29px);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+#content .profileStat span {
+  display: block;
+  color: #87938a;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #content .profileStat:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 11px 24px rgba(38,55,71,.075);
+  }
+}
+
+/* Completion progress */
+#content .completionBox {
+  margin-top: 19px;
+  padding: 17px;
+  border: 1px solid #e5ece2;
+  border-radius: 14px;
+  background: #fff;
+}
+
+#content .completionBox > div:first-child {
+  margin-bottom: 13px;
+}
+
+#content .completionBox b {
+  color: #566a5c;
+  font-size: 12px;
+}
+
+#content .completionBox strong {
+  color: #648366;
+  font-size: 20px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+#content .progressBar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #edf1eb;
+}
+
+#content .progressBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg,#a9bea0,#688b6c);
+  box-shadow: 0 0 12px rgba(104,139,108,.2);
+  animation: rouhProfileProgressV8 1.1s cubic-bezier(.16,1,.3,1) both;
+  transform-origin: right center;
+}
+
+@keyframes rouhProfileProgressV8 {
+  from { transform: scaleX(.05); }
+  to { transform: scaleX(1); }
+}
+
+/* Last activity */
+#content .profileSection > .muted {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #e8eee6;
+  border-radius: 11px;
+  background: rgba(255,255,255,.8);
+  color: #77867b;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+/* Entrance */
+#content.adminMotionEnter .volunteerProfile .profileInfo,
+#content.adminMotionEnter .volunteerProfile .profileStat {
+  animation: rouhProfileCardV8 .55s cubic-bezier(.16,1,.3,1) both;
+}
+
+#content.adminMotionEnter .volunteerProfile .profileInfo:nth-child(2),
+#content.adminMotionEnter .volunteerProfile .profileStat:nth-child(2) {
+  animation-delay: 55ms;
+}
+
+#content.adminMotionEnter .volunteerProfile .profileInfo:nth-child(3),
+#content.adminMotionEnter .volunteerProfile .profileStat:nth-child(3) {
+  animation-delay: 100ms;
+}
+
+#content.adminMotionEnter .volunteerProfile .profileInfo:nth-child(4),
+#content.adminMotionEnter .volunteerProfile .profileStat:nth-child(4) {
+  animation-delay: 145ms;
+}
+
+@keyframes rouhProfileCardV8 {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  #content .profileInfoGrid,
+  #content .profileStats {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  #content .volunteerProfile {
+    padding: 15px;
+    border-radius: 17px;
+  }
+
+  #content .profileHeader {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: 14px;
+  }
+
+  #content .profileHeader > div {
+    width: 100%;
+  }
+
+  #content .profileHeader > .btn {
+    width: 100%;
+  }
+
+  #content .profileInfoGrid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 9px;
+  }
+
+  #content .profileInfo {
+    padding: 13px 11px;
+  }
+
+  #content .profileInfo b {
+    font-size: 11px;
+  }
+
+  #content .profileStats {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 9px;
+  }
+
+  #content .profileStat {
+    padding: 15px 8px;
+  }
+
+  #content .profileSection {
+    padding: 14px;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  #content .volunteerProfile *,
+  #content .volunteerProfile *::before,
+  #content .volunteerProfile *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================
+   ROUH VOLUNTEER PROFILE V9
+   Premium Profile Experience
+========================================== */
+
+#content .volunteerProfile {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 26px;
+  padding: clamp(18px, 3vw, 32px);
+  background:
+    radial-gradient(ellipse at 90% 0%, rgba(99,102,241,.13), transparent 38%),
+    radial-gradient(ellipse at 0% 65%, rgba(16,185,129,.08), transparent 35%),
+    var(--panel, #fff);
+  border: 1px solid rgba(148,163,184,.16);
+  box-shadow: 0 18px 55px rgba(15,23,42,.07);
+}
+
+#content .volunteerProfile::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent, #6366f1, #10b981, #38bdf8, transparent);
+  opacity: .85;
+  pointer-events: none;
+}
+
+#content .profileHeader {
+  position: relative;
+  padding: 12px 0 25px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(148,163,184,.18);
+}
+
+#content .profileHeader h2 {
+  letter-spacing: -.045em;
+  font-weight: 850;
+  line-height: 1.2;
+  font-size: clamp(25px, 3vw, 36px);
+}
+
+#content .profileHeader .muted {
+  margin-top: 9px;
+  line-height: 1.8;
+}
+
+#content .profileHeader > .btn {
+  border-radius: 13px;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+#content .profileHeader > .btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 9px 22px rgba(99,102,241,.15);
+}
+
+#content .profileInfoGrid {
+  gap: 14px;
+  margin-bottom: 25px;
+}
+
+#content .profileInfo {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  padding: 20px;
+  border-radius: 19px;
+  border: 1px solid rgba(148,163,184,.17);
+  background: linear-gradient(145deg,
+    rgba(255,255,255,.9),
+    rgba(148,163,184,.045));
+  box-shadow: 0 5px 18px rgba(15,23,42,.035);
+  transition: transform .3s ease, border-color .3s ease,
+    box-shadow .3s ease;
+}
+
+#content .profileInfo::after {
+  content: "";
+  position: absolute;
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  inset: auto -35px -45px auto;
+  background: rgba(99,102,241,.055);
+  transition: transform .35s ease;
+  pointer-events: none;
+}
+
+#content .profileInfo:hover {
+  transform: translateY(-5px);
+  border-color: rgba(99,102,241,.28);
+  box-shadow: 0 15px 30px rgba(15,23,42,.075);
+}
+
+#content .profileInfo:hover::after {
+  transform: scale(1.7);
+}
+
+#content .profileSection {
+  position: relative;
+  padding: clamp(17px, 2.5vw, 25px);
+  margin-top: 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(148,163,184,.16);
+  background: rgba(148,163,184,.035);
+}
+
+#content .profileSection h3 {
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+
+#content .profileStats {
+  gap: 13px;
+  margin-top: 20px;
+}
+
+#content .profileStat {
+  position: relative;
+  overflow: hidden;
+  padding: 19px 15px;
+  min-width: 0;
+  border-radius: 17px;
+  border: 1px solid rgba(148,163,184,.17);
+  background: var(--panel, #fff);
+  box-shadow: 0 5px 17px rgba(15,23,42,.035);
+  transition: transform .25s ease, box-shadow .25s ease,
+    border-color .25s ease;
+}
+
+#content .profileStat:hover {
+  transform: translateY(-4px) scale(1.015);
+  border-color: rgba(99,102,241,.3);
+  box-shadow: 0 13px 25px rgba(15,23,42,.075);
+}
+
+#content .profileStat b,
+#content .profileStat strong {
+  font-variant-numeric: tabular-nums;
+}
+
+#content .completionBox {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  margin-top: 22px;
+  border-radius: 20px;
+  border: 1px solid rgba(16,185,129,.2);
+  background: linear-gradient(120deg,
+    rgba(16,185,129,.075),
+    rgba(59,130,246,.055));
+}
+
+#content .completionBox strong {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 900;
+  letter-spacing: -.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+#content .completionBox .progressBar {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 30px;
+  background: rgba(148,163,184,.2);
+}
+
+#content .completionBox .progressBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #10b981, #34d399, #38bdf8);
+  box-shadow: 0 0 15px rgba(16,185,129,.25);
+  transition: width 1.1s cubic-bezier(.2,.8,.2,1);
+}
+
+#content .volunteerProfile .profileInfo,
+#content .volunteerProfile .profileStat {
+  will-change: transform;
+}
+
+@media (max-width: 760px) {
+  #content .volunteerProfile {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  #content .profileHeader {
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  #content .profileInfoGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #content .profileInfo {
+    padding: 15px 12px;
+    border-radius: 15px;
+    overflow-wrap: anywhere;
+  }
+
+  #content .profileStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #content .profileStat {
+    padding: 15px 11px;
+    border-radius: 14px;
+  }
+
+  #content .profileSection {
+    padding: 16px 12px;
+    border-radius: 17px;
+  }
+
+  #content .completionBox {
+    padding: 17px 14px;
+  }
+
+  #content .profileHeader > .btn {
+    min-height: 43px;
+  }
+}
+
+@media (max-width: 380px) {
+  #content .profileInfoGrid,
+  #content .profileStats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (hover: none) {
+  #content .profileInfo:hover,
+  #content .profileStat:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #content .volunteerProfile *,
+  #content .volunteerProfile *::before,
+  #content .volunteerProfile *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* ==========================================
+   ROUH PROFILE V10
+   Analytics & Visual Intelligence
+========================================== */
+
+#content .volunteerProfile .profileSection {
+  position: relative;
+  isolation: isolate;
+}
+
+#content .volunteerProfile .profileSection h3 {
+  position: relative;
+  padding-bottom: 14px;
+}
+
+#content .volunteerProfile .profileSection h3::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 52px;
+  height: 3px;
+  border-radius: 10px;
+  background: linear-gradient(90deg,#10b981,#6366f1);
+}
+
+#content .volunteerProfile .profileStat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  min-height: 112px;
+}
+
+#content .volunteerProfile .profileStat:nth-child(1) {
+  background: linear-gradient(145deg,#eef2ff,#fff 85%);
+  border-color: #dfe4ff;
+}
+
+#content .volunteerProfile .profileStat:nth-child(2) {
+  background: linear-gradient(145deg,#eff6ff,#fff 85%);
+  border-color: #dbeafe;
+}
+
+#content .volunteerProfile .profileStat:nth-child(3) {
+  background: linear-gradient(145deg,#fff7ed,#fff 85%);
+  border-color: #ffedd5;
+}
+
+#content .volunteerProfile .profileStat:nth-child(4) {
+  background: linear-gradient(145deg,#ecfeff,#fff 85%);
+  border-color: #cffafe;
+}
+
+#content .volunteerProfile .profileStat:nth-child(5) {
+  background: linear-gradient(145deg,#fff7ed,#fff 85%);
+  border-color: #fed7aa;
+}
+
+#content .volunteerProfile .profileStat:nth-child(6) {
+  background: linear-gradient(145deg,#ecfdf5,#fff 85%);
+  border-color: #d1fae5;
+}
+
+#content .volunteerProfile .profileStat:nth-child(7) {
+  background: linear-gradient(145deg,#fff1f2,#fff 85%);
+  border-color: #ffe4e6;
+}
+
+#content .volunteerProfile .profileStat strong {
+  font-size: clamp(25px,3vw,34px);
+  line-height: 1;
+  letter-spacing: -.045em;
+}
+
+#content .volunteerProfile .profileStat span {
+  font-weight: 750;
+  font-size: 11px;
+}
+
+#content .volunteerProfile .profileStat::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 0 15px 15px 0;
+  background: currentColor;
+  opacity: .15;
+}
+
+#content .volunteerProfile .completionBox {
+  position: relative;
+  overflow: hidden;
+}
+
+#content .volunteerProfile .completionBox::before {
+  content: "";
+  position: absolute;
+  top: -65px;
+  left: -45px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: rgba(16,185,129,.07);
+  pointer-events: none;
+}
+
+#content .volunteerProfile .completionBox > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+#content .volunteerProfile .completionBox b {
+  font-size: 13px;
+  font-weight: 850;
+}
+
+#content .volunteerProfile .completionBox strong {
+  font-size: clamp(28px,4vw,38px);
+  letter-spacing: -.05em;
+}
+
+#content .volunteerProfile .progressBar {
+  height: 13px;
+  border: 1px solid rgba(148,163,184,.12);
+}
+
+#content .volunteerProfile .progressBar span {
+  position: relative;
+  overflow: hidden;
+}
+
+#content .volunteerProfile .progressBar span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255,255,255,.48) 50%,
+    transparent 80%
+  );
+  transform: translateX(-100%);
+  animation: rouhProfileShimmerV10 2.8s ease-in-out infinite;
+}
+
+@keyframes rouhProfileShimmerV10 {
+  to { transform: translateX(100%); }
+}
+
+#content .volunteerProfile .profileSection > .muted {
+  position: relative;
+  border-right: 3px solid #91a88b;
+  font-weight: 650;
+  background: linear-gradient(90deg,#fff, #f7faf6);
+}
+
+#content .volunteerProfile .profileInfo {
+  min-height: 100px;
+}
+
+#content .volunteerProfile .profileInfo span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .01em;
+}
+
+#content .volunteerProfile .profileInfo b {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  #content .volunteerProfile .profileStat {
+    min-height: 100px;
+  }
+
+  #content .volunteerProfile .profileStat strong {
+    font-size: 27px;
+  }
+
+  #content .volunteerProfile .profileInfo {
+    min-height: 90px;
+  }
+
+  #content .volunteerProfile .completionBox > div:first-child {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 380px) {
+  #content .volunteerProfile .profileStat {
+    min-height: 85px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #content .volunteerProfile .progressBar span::after {
+    animation: none !important;
+  }
+}
+
+
+
+/* =========================================
+   V11 — Volunteer Activity Timeline
+========================================= */
+
+.volunteerProfile .activitySection{
+  margin-top:26px;
+  padding:26px;
+  border:1px solid rgba(100,116,139,.13);
+  border-radius:24px;
+  background:linear-gradient(145deg,#fff,#f8fafc);
+}
+
+.activityHeading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:25px;
+}
+
+.activityHeading h3{
+  margin:0 0 6px;
+  font-size:20px;
+  font-weight:800;
+}
+
+.activityHeading p{
+  margin:0;
+  font-size:13px;
+}
+
+.activityCount{
+  padding:8px 13px;
+  border-radius:30px;
+  background:#eef2ff;
+  color:#4338ca;
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.activityTimeline{
+  position:relative;
+  display:grid;
+  gap:0;
+}
+
+.activityTimeline:before{
+  content:"";
+  position:absolute;
+  top:22px;
+  bottom:22px;
+  right:20px;
+  width:2px;
+  background:linear-gradient(to bottom,#c7d2fe,#e2e8f0);
+}
+
+.activityItem{
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  gap:16px;
+  padding:13px 0;
+}
+
+.activityIcon{
+  position:relative;
+  z-index:1;
+  flex:0 0 42px;
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border:4px solid #fff;
+  border-radius:15px;
+  background:#eef2ff;
+  box-shadow:0 3px 12px rgba(15,23,42,.07);
+  font-size:17px;
+}
+
+.activityContent{
+  flex:1;
+  min-width:0;
+  padding:12px 15px;
+  border:1px solid #edf0f5;
+  border-radius:15px;
+  background:#fff;
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+
+.activityItem:hover .activityContent{
+  transform:translateX(-3px);
+  box-shadow:0 8px 22px rgba(15,23,42,.06);
+}
+
+.activityItemTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.activityItemTop strong{
+  color:#1e293b;
+  font-size:14px;
+  font-weight:800;
+}
+
+.activityItemTop time{
+  color:#94a3b8;
+  font-size:11px;
+}
+
+.activityContent p{
+  margin:7px 0 0;
+  color:#64748b;
+  font-size:13px;
+  line-height:1.7;
+  overflow-wrap:anywhere;
+}
+
+.activityEmpty{
+  padding:35px 15px;
+  text-align:center;
+  border:1px dashed #cbd5e1;
+  border-radius:18px;
+  background:#fff;
+}
+
+.activityEmpty span{
+  display:block;
+  margin-bottom:10px;
+  font-size:30px;
+}
+
+.activityEmpty strong{
+  display:block;
+  color:#334155;
+}
+
+.activityEmpty p{
+  margin:7px 0 0;
+  color:#94a3b8;
+  font-size:13px;
+}
+
+@media(max-width:650px){
+  .volunteerProfile .activitySection{
+    padding:17px;
+    border-radius:19px;
+  }
+
+  .activityHeading{
+    align-items:flex-start;
+  }
+
+  .activityItem{
+    gap:10px;
+  }
+
+  .activityIcon{
+    flex-basis:36px;
+    width:36px;
+    height:36px;
+    border-radius:12px;
+    font-size:15px;
+  }
+
+  .activityTimeline:before{
+    right:17px;
+  }
+
+  .activityContent{
+    padding:11px;
+  }
+
+  .activityItemTop{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .activityContent{
+    transition:none!important;
+  }
+}
+
+
+/* =========================================
+   V12 — Volunteer Profile Task Details
+========================================= */
+
+.volunteerProfile .volunteerTasksSection{
+  margin-top:26px;
+  padding:26px;
+  border:1px solid rgba(100,116,139,.13);
+  border-radius:24px;
+  background:linear-gradient(145deg,#fff,#f8fafc);
+}
+
+.volunteerProfileTasks{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+
+.volunteerTaskCard{
+  min-width:0;
+  padding:19px;
+  border:1px solid #e8edf4;
+  border-radius:19px;
+  background:#fff;
+  box-shadow:0 4px 15px rgba(15,23,42,.035);
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+
+.volunteerTaskCard:hover{
+  transform:translateY(-3px);
+  border-color:#c7d2fe;
+  box-shadow:0 12px 28px rgba(15,23,42,.075);
+}
+
+.volunteerTaskTop,
+.volunteerTaskTitle{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.volunteerTaskTop{
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+.volunteerTaskTitle{
+  min-width:0;
+}
+
+.volunteerTaskIcon{
+  flex:0 0 42px;
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:14px;
+  background:#f1f5f9;
+  font-size:19px;
+}
+
+.volunteerTaskTitle h4{
+  margin:0;
+  color:#1e293b;
+  font-size:15px;
+  font-weight:800;
+  overflow-wrap:anywhere;
+}
+
+.volunteerTaskTitle small{
+  display:block;
+  margin-top:5px;
+  color:#94a3b8;
+  font-size:11px;
+}
+
+.volunteerTaskStatus{
+  padding:7px 11px;
+  border-radius:30px;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.volunteerTaskStatus.new{background:#eff6ff;color:#1d4ed8}
+.volunteerTaskStatus.progress{background:#fff7ed;color:#c2410c}
+.volunteerTaskStatus.submitted{background:#f5f3ff;color:#6d28d9}
+.volunteerTaskStatus.revision{background:#fff1f2;color:#be123c}
+.volunteerTaskStatus.completed{background:#ecfdf5;color:#047857}
+.volunteerTaskStatus.failed{background:#fef2f2;color:#b91c1c}
+
+.volunteerTaskDescription{
+  margin:16px 0;
+  color:#64748b;
+  font-size:13px;
+  line-height:1.8;
+  overflow-wrap:anywhere;
+}
+
+.volunteerTaskDates{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-top:17px;
+  padding-top:15px;
+  border-top:1px solid #f1f5f9;
+}
+
+.volunteerTaskDates div{
+  min-width:0;
+}
+
+.volunteerTaskDates span,
+.volunteerTaskDates b{
+  display:block;
+}
+
+.volunteerTaskDates span{
+  margin-bottom:5px;
+  color:#94a3b8;
+  font-size:11px;
+}
+
+.volunteerTaskDates b{
+  color:#475569;
+  font-size:11px;
+  font-weight:700;
+  overflow-wrap:anywhere;
+}
+
+.volunteerTaskNote{
+  margin-top:14px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:#f8fafc;
+}
+
+.volunteerTaskNote strong{
+  color:#475569;
+  font-size:12px;
+}
+
+.volunteerTaskNote p{
+  margin:6px 0 0;
+  color:#64748b;
+  font-size:12px;
+  line-height:1.7;
+  overflow-wrap:anywhere;
+}
+
+.volunteerTaskNote.revisionNote{
+  background:#fff7ed;
+}
+
+.volunteerTaskAttachment{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+}
+
+.volunteerTaskAttachment .btn{
+  text-decoration:none;
+  font-size:12px;
+}
+
+@media(max-width:850px){
+  .volunteerProfileTasks{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:600px){
+  .volunteerProfile .volunteerTasksSection{
+    padding:16px;
+    border-radius:19px;
+  }
+
+  .volunteerTaskCard{
+    padding:15px;
+  }
+
+  .volunteerTaskTop{
+    align-items:flex-start;
+  }
+
+  .volunteerTaskDates{
+    gap:13px 9px;
+  }
+
+  .volunteerTaskDates b{
+    font-size:10px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .volunteerTaskCard{
+    transition:none!important;
+  }
+}
+
+
+/* =========================================
+   V13 — ROUH RESPONSIVE EXPERIENCE
+========================================= */
+
+/* Tablet and mobile navigation */
+@media (max-width: 900px) {
+  .adminBody #adminView.adminShell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    overflow-x: clip;
+  }
+
+  .adminBody #adminView .sidebar {
+    position: sticky !important;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 13px 16px 8px;
+    border-radius: 0 0 18px 18px;
+    box-shadow: 0 8px 24px rgba(15,23,42,.13);
+  }
+
+  .adminBody #adminView .sidebar .brand {
+    margin-bottom: 8px;
+    padding-bottom: 9px;
+    font-size: 21px;
+  }
+
+  .adminBody #adminView #userBox {
+    margin-bottom: 7px;
+    font-size: 12px;
+  }
+
+  .adminBody #adminView #menu {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 7px 2px 12px !important;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .adminBody #adminView #menu button {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 10px 15px;
+    border-radius: 12px;
+    scroll-snap-align: start;
+    font-size: 12px;
+  }
+
+  .adminBody #adminView #logoutBtn {
+    min-height: 42px;
+    margin-top: 4px;
+    margin-bottom: 5px;
+  }
+
+  .adminBody #adminView .adminMain {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 20px;
+  }
+
+  .adminBody #adminView .topbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .adminBody #adminView .adminTopActions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+
+  .adminBody #adminView #content {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .adminBody #adminView .panel {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .adminBody #adminView .volunteerTableWrap {
+    max-width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 600px) {
+  .adminBody #adminView .sidebar {
+    padding: 10px 12px 6px;
+    border-radius: 0 0 15px 15px;
+  }
+
+  .adminBody #adminView .adminMain {
+    padding: 13px;
+  }
+
+  .adminBody #adminView .topbar {
+    margin-bottom: 17px;
+  }
+
+  .adminBody #adminView .adminPageIdentity {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .adminBody #adminView .adminPageIdentity h1 {
+    font-size: 21px;
+    overflow-wrap: anywhere;
+  }
+
+  .adminBody #adminView .adminTopActions {
+    width: 100%;
+  }
+
+  .adminBody #adminView .adminTopActions .btn {
+    min-height: 42px;
+  }
+
+  .adminBody #adminView .panel {
+    padding: 15px;
+    border-radius: 17px;
+  }
+
+  .adminBody #adminView .rowActions {
+    gap: 7px;
+  }
+
+  .adminBody #adminView .rowActions .btn,
+  .adminBody #adminView button {
+    touch-action: manipulation;
+  }
+
+  .adminBody #adminView input,
+  .adminBody #adminView select,
+  .adminBody #adminView textarea {
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  .volunteerProfileTasks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .volunteerTaskDates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .activityItemTop {
+    gap: 6px;
+  }
+}
+
+/* Extra narrow screens */
+@media (max-width: 380px) {
+  .adminBody #adminView .adminMain {
+    padding: 10px;
+  }
+
+  .adminBody #adminView .sidebar {
+    padding-inline: 9px;
+  }
+
+  .adminBody #adminView #menu button {
+    padding: 9px 12px;
+    font-size: 11px;
+  }
+
+  .adminBody #adminView .panel {
+    padding: 12px;
+  }
+
+  .volunteerTaskDates {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Touch devices */
+@media (hover: none) {
+  .volunteerTaskCard:hover,
+  .activityItem:hover .activityContent {
+    transform: none;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .adminBody #adminView *,
+  .volunteerTaskCard,
+  .activityContent {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+
+/* ROUH SMART SCROLL NAVIGATION V19 */
+.nav {
+  transition:
+    transform .4s cubic-bezier(.22,1,.36,1),
+    opacity .3s ease,
+    background .35s ease,
+    box-shadow .35s ease;
+  will-change: transform, opacity;
+}
+
+.nav.rouh-nav-hidden {
+  transform: translate3d(0, -110%, 0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav {
+    transition:
+      transform .4s cubic-bezier(.22,1,.36,1),
+      opacity .3s ease,
+      background .35s ease,
+      box-shadow .35s ease !important;
+  }
+}
+
+
+/* ROUH SMART SCROLL NAVIGATION V21 */
+.nav.rouh-nav-hidden {
+  transform: translate3d(0, -110%, 0) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
