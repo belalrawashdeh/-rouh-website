@@ -12324,7 +12324,7 @@ function toggleVolunteerPreview(){
       <button type="button"
        class="volunteerActionTrigger"
        aria-label="إجراءات تجريبية"
-       onclick="this.nextElementSibling.classList.toggle('previewMenuOpen')">
+       onclick="window.toggleVolunteerActionMenu(event,this)">
        <span>•••</span>
       </button>
       <div class="volunteerActionMenu previewDemoMenu">
