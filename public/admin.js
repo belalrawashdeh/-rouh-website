@@ -12010,137 +12010,114 @@ function initApprovalCenterV2(){
 
 
 /* ==================================================
-   VOLUNTEER ACTION MENU V3
+   VOLUNTEER ACTION MENU V4
    ================================================== */
 
-window.toggleVolunteerActionMenu=(event,button)=>{
+const volunteerMenuOrigins = new WeakMap();
 
- event.stopPropagation();
+window.toggleVolunteerActionMenu = (event, button) => {
+  event.stopPropagation();
 
- const menu=
-  button
-   .closest('.volunteerActionMenuWrap')
-   ?.querySelector('.volunteerActionMenu');
+  const menu = button
+    .closest('.volunteerActionMenuWrap')
+    ?.querySelector('.volunteerActionMenu');
 
- if(!menu)return;
+  if (!menu) return;
 
+  const alreadyOpen = menu.classList.contains('open');
+  window.closeVolunteerActionMenus();
 
- const alreadyOpen=
-  menu.classList.contains('open');
+  if (alreadyOpen) return;
 
+  const parent = menu.parentNode;
+  const next = menu.nextSibling;
 
- closeVolunteerActionMenus();
+  volunteerMenuOrigins.set(menu, { parent, next });
 
+  document.body.appendChild(menu);
 
- if(alreadyOpen)return;
+  menu.classList.add('open');
+  button.setAttribute('aria-expanded', 'true');
 
+  menu.style.position = 'fixed';
+  menu.style.zIndex = '100500';
+  menu.style.width = '270px';
+  menu.style.maxWidth = 'calc(100vw - 24px)';
+  menu.style.maxHeight = 'min(470px, 70vh)';
 
- menu.classList.add('open');
+  const rect = button.getBoundingClientRect();
 
+  requestAnimationFrame(() => {
+    const menuRect = menu.getBoundingClientRect();
+    const width = menuRect.width;
+    const height = menuRect.height;
+    const gap = 8;
+    const edge = 12;
 
- const rect=
-  button.getBoundingClientRect();
+    let left = rect.right - width;
+    left = Math.max(edge, Math.min(left, window.innerWidth - width - edge));
 
+    const spaceBelow = window.innerHeight - rect.bottom - edge;
+    const spaceAbove = rect.top - edge;
 
- const menuWidth=270;
+    let top;
 
- let left=
-  rect.right-menuWidth;
+    if (height <= spaceBelow || spaceBelow >= spaceAbove) {
+      top = rect.bottom + gap;
+      menu.style.maxHeight = `${Math.max(120, Math.min(470, spaceBelow - gap))}px`;
+    } else {
+      top = rect.top - Math.min(height, spaceAbove) - gap;
+      menu.style.maxHeight = `${Math.max(120, Math.min(470, spaceAbove - gap))}px`;
+    }
 
+    top = Math.max(edge, Math.min(top, window.innerHeight - edge - 80));
 
- if(left<12)
-  left=12;
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+    menu.style.right = 'auto';
+  });
+};
 
+window.closeVolunteerActionMenus = () => {
+  document.querySelectorAll('.volunteerActionMenu.open').forEach(menu => {
+    menu.classList.remove('open');
 
- if(left+menuWidth>
-    window.innerWidth-12){
+    const origin = volunteerMenuOrigins.get(menu);
 
-  left=
-   window.innerWidth-
-   menuWidth-
-   12;
+    if (origin?.parent?.isConnected) {
+      if (origin.next?.parentNode === origin.parent) {
+        origin.parent.insertBefore(menu, origin.next);
+      } else {
+        origin.parent.appendChild(menu);
+      }
+    }
 
- }
+    volunteerMenuOrigins.delete(menu);
+    menu.style.position = '';
+    menu.style.top = '';
+    menu.style.left = '';
+    menu.style.right = '';
+    menu.style.width = '';
+    menu.style.maxWidth = '';
+    menu.style.maxHeight = '';
+    menu.style.zIndex = '';
 
+    document.querySelectorAll('.volunteerActionTrigger[aria-expanded="true"]')
+      .forEach(button => button.setAttribute('aria-expanded', 'false'));
+  });
+};
 
- menu.style.position='fixed';
- menu.style.top=
-  `${rect.bottom+7}px`;
-
- menu.style.left=
-  `${left}px`;
-
- menu.style.right='auto';
-
-
- requestAnimationFrame(()=>{
-
-  const menuRect=
-   menu.getBoundingClientRect();
-
-
-  if(
-   menuRect.bottom>
-   window.innerHeight-12
-  ){
-
-   menu.style.top=
-    `${Math.max(
-     12,
-     rect.top-
-     menuRect.height-
-     7
-    )}px`;
-
+document.addEventListener('click', event => {
+  if (
+    !event.target.closest('.volunteerActionMenu') &&
+    !event.target.closest('.volunteerActionTrigger')
+  ) {
+    window.closeVolunteerActionMenus();
   }
-
- });
-
-};
-
-
-window.closeVolunteerActionMenus=()=>{
-
- document
-  .querySelectorAll(
-   '.volunteerActionMenu.open'
-  )
-  .forEach(menu=>
-   menu.classList.remove('open')
-  );
-
-};
-
-
-document.addEventListener('click',e=>{
-
- if(
-  !e.target.closest(
-   '.volunteerActionMenu'
-  ) &&
-  !e.target.closest(
-   '.volunteerActionTrigger'
-  )
- ){
-  closeVolunteerActionMenus();
- }
-
 });
 
-
-window.addEventListener(
- 'resize',
- closeVolunteerActionMenus
-);
-
-
-window.addEventListener(
- 'scroll',
- closeVolunteerActionMenus,
- true
-);
-
-
+window.addEventListener('resize', window.closeVolunteerActionMenus);
+window.addEventListener('scroll', window.closeVolunteerActionMenus, true);
 
 /* =====================================================
    ROUH ADMIN — PAGE MOTION ENGINE
