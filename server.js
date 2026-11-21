@@ -7,8 +7,8 @@ const { DatabaseSync } = require('node:sqlite');
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
-const UPLOADS = path.join(PUBLIC, 'uploads');
 const DATA = path.join(ROOT, 'data');
+const UPLOADS = path.join(DATA, 'uploads');
 const TASK_SUBMISSIONS = path.join(DATA, 'task-submissions');
 fs.mkdirSync(UPLOADS, { recursive: true });
 fs.mkdirSync(DATA, { recursive: true });
@@ -344,8 +344,32 @@ function publicData(){
 function mime(file){ const ext=path.extname(file).toLowerCase(); return ({'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'application/javascript; charset=utf-8','.jpeg':'image/jpeg','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml','.ico':'image/x-icon'}[ext]||'application/octet-stream'); }
 function serveStatic(req,res){
  let url=decodeURIComponent(req.url.split('?')[0]); if(url==='/') url='/index.html'; if(url==='/admin') url='/admin.html'; if(url==='/volunteer-apply') url='/volunteer-apply.html'; if(url==='/volunteer-register') url='/volunteer-register.html'; if(url==='/volunteer-login') url='/volunteer-login.html'; if(url==='/volunteer-account') url='/volunteer-account.html';
- const file=path.normalize(path.join(PUBLIC,url)); if(!file.startsWith(PUBLIC)) return send(res,403,'Forbidden','text/plain');
- if(fs.existsSync(file)&&fs.statSync(file).isFile()){res.writeHead(200,{'Content-Type':mime(file)}); fs.createReadStream(file).pipe(res); return true;} return false;
+ let file;
+
+ if(url.startsWith('/uploads/')){
+  const relative=url.slice('/uploads/'.length);
+  const persistent=path.resolve(UPLOADS,relative);
+  const legacy=path.resolve(PUBLIC,'uploads',relative);
+
+  const safe=(candidate,base)=>
+   candidate.startsWith(base+path.sep);
+
+  if(!safe(persistent,UPLOADS)||!safe(legacy,path.join(PUBLIC,'uploads')))
+   return send(res,403,'Forbidden','text/plain');
+
+  file=fs.existsSync(persistent)?persistent:legacy;
+ }else{
+  file=path.resolve(PUBLIC,'.'+url);
+  if(file!==PUBLIC&&!file.startsWith(PUBLIC+path.sep))
+   return send(res,403,'Forbidden','text/plain');
+ }
+
+ if(fs.existsSync(file)&&fs.statSync(file).isFile()){
+  res.writeHead(200,{'Content-Type':mime(file)});
+  fs.createReadStream(file).pipe(res);
+  return true;
+ }
+ return false;
 }
 function entityConfig(name){
  if(name==='events') return {table:'events',fields:['title','summary','description','event_date','event_time','location','cover_image','gallery','registration_url','event_state','status']};
