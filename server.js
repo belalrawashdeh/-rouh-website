@@ -14,6 +14,24 @@ fs.mkdirSync(UPLOADS, { recursive: true });
 fs.mkdirSync(DATA, { recursive: true });
 fs.mkdirSync(TASK_SUBMISSIONS, { recursive: true });
 
+// Restore legacy event images into persistent Railway storage.
+const LEGACY_UPLOADS = path.join(PUBLIC, 'uploads');
+
+if (fs.existsSync(LEGACY_UPLOADS)) {
+  for (const name of fs.readdirSync(LEGACY_UPLOADS)) {
+    const source = path.join(LEGACY_UPLOADS, name);
+    const destination = path.join(UPLOADS, name);
+
+    if (
+      fs.statSync(source).isFile() &&
+      !fs.existsSync(destination)
+    ) {
+      fs.copyFileSync(source, destination);
+    }
+  }
+}
+
+
 const db = new DatabaseSync(path.join(DATA, 'rouh.db'));
 db.exec(`
 PRAGMA journal_mode=WAL;
